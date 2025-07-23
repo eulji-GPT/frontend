@@ -16,18 +16,23 @@
       <!-- News Section -->
       <NewsSection />
     </main>
+    <CommonFooter />
   </div>
 </template>
 
 <script setup lang="ts">
+import CommonFooter from './components/common/CommonFooter.vue'
 import { nextTick } from 'vue'
 
-import HeaderSection from './components/HeaderSection.vue'
-import HeroSection from './components/HeroSection.vue'
-import IntroSection from './components/IntroSection.vue'
-import FeaturesSection from './components/FeaturesSection.vue'
-import FaqSection from './components/FaqSection.vue'
-import NewsSection from './components/NewsSection.vue'
+import HeaderSection from './components/layout/HeaderSection.vue'
+import HeroSection from './components/sections/HeroSection.vue'
+import IntroSection from './components/sections/IntroSection.vue'
+import FeaturesSection from './components/sections/FeaturesSection.vue'
+import FaqSection from './components/sections/FaqSection.vue'
+import NewsSection from './components/sections/NewsSection.vue'
+
+// 헤더 높이 상수 분리
+const HEADER_HEIGHT = 100
 
 // 커스텀 스무스 스크롤 함수 (모든 브라우저에서 작동)
 const smoothScrollTo = (target: number, duration: number = 1000) => {
@@ -39,58 +44,50 @@ const smoothScrollTo = (target: number, duration: number = 1000) => {
     if (startTime === null) startTime = currentTime
     const timeElapsed = currentTime - startTime
     const progress = Math.min(timeElapsed / duration, 1)
-    
     // easeInOutCubic easing function
     const ease = progress < 0.5 
       ? 4 * progress * progress * progress 
       : (progress - 1) * (2 * progress - 2) * (2 * progress - 2) + 1
-
     window.scrollTo(0, start + distance * ease)
-
     if (progress < 1) {
       requestAnimationFrame(animation)
     }
   }
-
   requestAnimationFrame(animation)
 }
 
 const scrollToSection = async (id: string) => {
-  console.log(`스크롤 시도: ${id}`) // 디버깅용
   await nextTick()
   const element = document.getElementById(id)
   if (element) {
-    console.log(`요소 찾음: ${id}`) // 디버깅용
-    const headerHeight = 100 // 헤더 높이
     const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
-    const targetPosition = elementPosition - headerHeight
-    console.log(`스크롤 위치: ${targetPosition}`) // 디버깅용
-    // 커스텀 스무스 스크롤 실행
+    const targetPosition = elementPosition - HEADER_HEIGHT
     smoothScrollTo(targetPosition, 800)
-  } else {
-    console.log(`요소를 찾을 수 없음: ${id}`) // 디버깅용
   }
 }
 </script>
 
 <style>
+@import url('/src/assets/pretendard.css');
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: linear-gradient(180deg, #E6EDF3 0%, #02478A 100%);
+  color: #01203E;
 }
 
-/* 네비게이션 링크에 호버 효과 추가 */
+/* 네비게이션 링크에 호버 효과 및 컬러 적용 */
 .nav-list a {
   text-decoration: none;
-  color: inherit;
+  color: #02478A;
   transition: color 0.2s ease;
   position: relative;
+  font-weight: 600;
 }
-
 .nav-list a:hover {
-  color: #4f46e5;
+  color: #02396E;
 }
-
 .nav-list a::after {
   content: '';
   position: absolute;
@@ -98,12 +95,53 @@ body {
   height: 2px;
   bottom: -5px;
   left: 0;
-  background-color: #4f46e5;
+  background-color: #02478A;
   transition: width 0.3s ease;
 }
-
 .nav-list a:hover::after {
   width: 100%;
+}
+
+/* 버튼, 카드, 섹션 등 주요 UI 컬러 적용 예시 */
+.start-btn {
+  background: #02478A;
+  color: #fff;
+  border-radius: 2rem;
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+  box-shadow: 0 4px 16px 0 #B3C8DC33;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.start-btn:hover {
+  background: #02396E;
+  box-shadow: 0 6px 24px 0 #02396E33;
+}
+
+.section, .features-section, .faq-section, .news-section {
+  background: #F8FAFC;
+  border-radius: 1.5rem;
+  box-shadow: 0 2px 12px 0 #B3C8DC33;
+}
+
+.feature-main {
+  background: #02478A;
+  color: #fff;
+}
+.feature-item {
+  background: #E6EDF3;
+  color: #01203E;
+}
+.feature-icon {
+  color: #02478A;
+}
+
+.main-title, .features-title, .faq-header, .news-header {
+  font-family: 'Pretendard', sans-serif;
+}
+
+.highlight {
+  color: #02478A;
 }
 </style>
 
@@ -116,7 +154,7 @@ body {
 }
 
 .header {
-  border-bottom: 3px solid #a084f3;
+  /* border-bottom: 3px solid #a084f3; */
 }
 .faq-accordion {
   border-bottom: 1px solid #f0f0f0;
@@ -303,7 +341,7 @@ body {
 }
 
 .intro-section {
-  border: 2px dotted #a084f3;
+  /* border: 2px dotted #a084f3; */
   border-radius: 1rem;
   margin-top: 3rem;
   background: #fff;
@@ -464,7 +502,7 @@ body {
 }
 
 .faq-section {
-  border: 2px dotted #a084f3;
+  /* border: 2px dotted #a084f3; */
   border-radius: 1rem;
   background: #fff;
   margin-top: 2.5rem;
@@ -475,7 +513,7 @@ body {
   font-size: 1.3rem;
   font-weight: 700;
   margin-bottom: 1.2rem;
-  border-bottom: 2px dotted #a084f3;
+  /* border-bottom: 2px dotted #a084f3; */
   padding-bottom: 0.5rem;
 }
 
@@ -511,7 +549,7 @@ body {
 }
 
 .news-section {
-  border-top: 3px solid #a084f3;
+  /* border-top: 3px solid #a084f3; */
   padding-top: 2.5rem;
   margin-bottom: 4rem;
 }
