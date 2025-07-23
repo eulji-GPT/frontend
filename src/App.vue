@@ -1,134 +1,33 @@
 <template>
   <div class="main-container">
-    <header class="header">
-      <nav class="nav">
-        <div class="logo-text" style="padding:0; background:none;">
-          <img :src="eulLogo" alt="EULGPT 로고" style="height:48px; width:auto; display:block;" />
-        </div>
-        <ul class="nav-list">
-          <li><a href="#intro" @click.prevent="scrollToSection('intro')">서비스 소개</a></li>
-          <li><a href="#features" @click.prevent="scrollToSection('features')">유용한 기능</a></li>
-          <li><a href="#faq" @click.prevent="scrollToSection('faq')">자주 묻는 질문</a></li>
-          <li><a href="#news" @click.prevent="scrollToSection('news')">새로운 소식</a></li>
-        </ul>
-        <div class="auth-links">
-          <span>로그인</span>
-          <span>회원가입</span>
-        </div>
-      </nav>
-    </header>
+    <HeaderSection @scrollToSection="scrollToSection" />
     <main class="main-content">
       <!-- Hero Section -->
-      <div class="title-block">
-        <h1 class="main-title">학교생활의<br><span class="highlight">모든 순간</span>에<br>답하다</h1>
-      </div>
-      <div class="search-bar">
-        <img :src="eulLogo" alt="EULGPT 로고" style="height: 2.5em; width: auto; margin-right: 1.2rem; vertical-align: middle;" />
-        <span class="search-eulgpt">EUL<span class="gpt">GPT</span></span>
-        <span class="search-icon">✚</span>
-      </div>
-      <button class="start-btn">시작하기</button>
+      <HeroSection />
       
       <!-- Intro Section -->
-      <section id="intro" class="section intro-section">
-        <div class="intro-header">궁금한 건 뭐든지, 을GPT와 함께 물어보세요.</div>
-        <div class="intro-content">
-          <div class="intro-text">
-            <div class="intro-title">
-              당신의 대학 생활이 을GPT와 연결될 때,<br>
-              더 빠르고 정확한 정보와 함께<br>
-              캠퍼스 생활이 쉬워집니다.
-            </div>
-            <div class="intro-desc">
-              <span class="intro-icon">✚</span>
-              <span>
-                수업, 학식, 빈 강의실, 학교 정보까지<br>
-                궁금했던 점들을 같이 대화해볼까요?<br>
-                을지대학교 전용 AI 챗봇<br>
-                <b>을GPT</b>가 도와드릴게요.
-              </span>
-            </div>
-          </div>
-          <div class="intro-e">E<sup>*</sup></div>
-        </div>
-      </section>
-      
+      <IntroSection />
       <!-- Features Section -->
-      <section id="features" class="section features-section">
-        <div class="features-header">유용한 기능</div>
-        <div class="features-title">캠퍼스 생활의 모든 순간, 을GPT로 더 똑똑하고 간편하게</div>
-        <div class="features-content">
-          <div class="feature-main">
-            <div class="feature-main-icon">💬</div>
-            <div class="feature-main-title">실시간 응답 서비스</div>
-            <div class="feature-main-desc">학교생활에 필요한 질문, 정보 검색, 일정 확인까지<br>자연스러운 대화형 챗봇의 답변으로 빠르게 찾아보세요.<br>복잡한 메뉴와 시트 조회보다, 언제든 궁금한 걸 물어보세요.</div>
-          </div>
-          <div class="feature-list">
-            <div class="feature-item">
-              <div class="feature-icon">🕑</div>
-              <div class="feature-title">빈 강의실 확인</div>
-              <div class="feature-desc">지금 비어있는 강의실을 바로 확인하고 예약해 보세요.</div>
-            </div>
-            <div class="feature-item">
-              <div class="feature-icon">🍽️</div>
-              <div class="feature-title">학식</div>
-              <div class="feature-desc">실시간 학식 대기 시간<br>공유도, 그래프도 제공합니다.</div>
-            </div>
-            <div class="feature-item">
-              <div class="feature-icon">📚</div>
-              <div class="feature-title">도서관/열람실 자리 예약</div>
-              <div class="feature-desc">원하는 좌석을 미리 확인하고,<br>빠르게 예약하세요.</div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <FeaturesSection />
       
       <!-- FAQ Section -->
-      <section id="faq" class="section faq-section">
-        <div class="faq-header">자주 묻는 질문</div>
-        <div class="faq-list">
-          <div class="faq-item"><span class="faq-q">Q.</span> 을지피티가 뭔가요?</div>
-          <div class="faq-item"><span class="faq-q">Q.</span> 을지피티가 뭔가요?</div>
-          <div class="faq-item"><span class="faq-q">Q.</span> 을지피티가 뭔가요?</div>
-          <div class="faq-item faq-answer"><span class="faq-a">A.</span> 을지피티는 을지대학교 AI 대화형 서비스 입니다.</div>
-          <div class="faq-item"><span class="faq-q">Q.</span> 을지피티가 뭔가요?</div>
-          <div class="faq-item"><span class="faq-q">Q.</span> 을지피티가 뭔가요?</div>
-        </div>
-      </section>
+      <FaqSection />
       
       <!-- News Section -->
-      <section id="news" class="section news-section">
-        <div class="news-header">새로운 소식</div>
-        <div class="news-list">
-          <div class="news-item">
-            <div class="news-title">을지피티 새로운 기능 안내</div>
-            <div class="news-date">2025.07.15</div>
-            <div class="news-desc">새롭게 출시한 을지피티를 통해서 학교생활에 대한 정보나 지식을 얻을 수 있습니다.</div>
-          </div>
-          <div class="news-item">
-            <div class="news-title">을지피티 새로운 기능 안내</div>
-            <div class="news-date">2025.07.15</div>
-          </div>
-          <div class="news-item">
-            <div class="news-title">을지피티 새로운 기능 안내</div>
-            <div class="news-date">2025.07.15</div>
-          </div>
-          <div class="news-item">
-            <div class="news-title">을지피티 새로운 기능 안내</div>
-            <div class="news-date">2025.07.15</div>
-          </div>
-          <div class="news-item">
-            <div class="news-title">을지피티 새로운 기능 안내</div>
-            <div class="news-date">2025.07.15</div>
-          </div>
-        </div>
-      </section>
+      <NewsSection />
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
 import { nextTick } from 'vue'
+
+import HeaderSection from './components/HeaderSection.vue'
+import HeroSection from './components/HeroSection.vue'
+import IntroSection from './components/IntroSection.vue'
+import FeaturesSection from './components/FeaturesSection.vue'
+import FaqSection from './components/FaqSection.vue'
+import NewsSection from './components/NewsSection.vue'
 
 // 커스텀 스무스 스크롤 함수 (모든 브라우저에서 작동)
 const smoothScrollTo = (target: number, duration: number = 1000) => {
@@ -156,22 +55,16 @@ const smoothScrollTo = (target: number, duration: number = 1000) => {
   requestAnimationFrame(animation)
 }
 
-import eulLogo from './assets/eul_logo.png'
 const scrollToSection = async (id: string) => {
   console.log(`스크롤 시도: ${id}`) // 디버깅용
-  
   await nextTick()
-  
   const element = document.getElementById(id)
   if (element) {
     console.log(`요소 찾음: ${id}`) // 디버깅용
-    
     const headerHeight = 100 // 헤더 높이
     const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
     const targetPosition = elementPosition - headerHeight
-
     console.log(`스크롤 위치: ${targetPosition}`) // 디버깅용
-    
     // 커스텀 스무스 스크롤 실행
     smoothScrollTo(targetPosition, 800)
   } else {
@@ -214,7 +107,7 @@ body {
 }
 </style>
 
-<style scoped>
+<style>
 .main-container {
   min-height: 100vh;
   background: #fff;
@@ -224,30 +117,68 @@ body {
 
 .header {
   border-bottom: 3px solid #a084f3;
-  padding: 0.5rem 0;
-  position: sticky;
-  top: 0;
-  background: #fff;
-  z-index: 100;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
-
-.nav {
+.faq-accordion {
+  border-bottom: 1px solid #f0f0f0;
+}
+.faq-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 2rem;
+  font-size: 1.1rem;
+  padding: 0.8rem 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #fff;
+  transition: background 0.2s;
 }
-
-.logo-text {
-  font-size: 2rem;
-  font-weight: 800;
-  color: #4f46e5;
-  letter-spacing: 1px;
+.faq-item.active {
+  background: #f7f9fb;
 }
-
+.faq-q {
+  color: #25345d;
+  font-size: 1.2rem;
+  margin-right: 0.7rem;
+}
+.faq-arrow {
+  margin-left: auto;
+  font-size: 1.1rem;
+  color: #a084f3;
+  transition: transform 0.2s;
+}
+.faq-arrow.open {
+  transform: rotate(180deg);
+}
+.faq-answer {
+  background: #f7f9fb;
+  color: #4f6edb;
+  font-weight: 700;
+  padding: 0.8rem 1.2rem 0.8rem 2.2rem;
+  font-size: 1.05rem;
+  border-top: 1px solid #e0e0f0;
+  border-radius: 0 0 0.7rem 0.7rem;
+}
+.faq-a {
+  color: #4f6edb;
+  font-size: 1.2rem;
+  margin-right: 0.7rem;
+}
+/* 슬라이드 트랜지션 */
+.faq-slide-enter-active, .faq-slide-leave-active {
+  transition: height 0.35s cubic-bezier(.4,0,.2,1), padding 0.35s cubic-bezier(.4,0,.2,1), opacity 0.3s;
+  overflow: hidden;
+}
+.faq-slide-enter-from, .faq-slide-leave-to {
+  height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  opacity: 0;
+}
+.faq-slide-enter-to, .faq-slide-leave-from {
+  height: 2.5em;
+  padding-top: 0.8rem;
+  padding-bottom: 0.8rem;
+  opacity: 1;
+}
 .star {
   color: #a084f3;
   font-size: 1rem;
