@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-// import CommonFooter from './components/common/CommonFooter.vue'
+import CommonFooter from './components/common/CommonFooter.vue'
 import { nextTick } from 'vue'
 
 import HeaderSection from './components/layout/HeaderSection.vue'
@@ -30,6 +30,9 @@ import IntroSection from './components/sections/IntroSection.vue'
 import FeaturesSection from './components/sections/FeaturesSection.vue'
 import FaqSection from './components/sections/FaqSection.vue'
 import NewsSection from './components/sections/NewsSection.vue'
+
+// 헤더 높이 상수 분리
+const HEADER_HEIGHT = 100
 
 // 커스텀 스무스 스크롤 함수 (모든 브라우저에서 작동)
 const smoothScrollTo = (target: number, duration: number = 1000) => {
@@ -41,36 +44,25 @@ const smoothScrollTo = (target: number, duration: number = 1000) => {
     if (startTime === null) startTime = currentTime
     const timeElapsed = currentTime - startTime
     const progress = Math.min(timeElapsed / duration, 1)
-    
     // easeInOutCubic easing function
     const ease = progress < 0.5 
       ? 4 * progress * progress * progress 
       : (progress - 1) * (2 * progress - 2) * (2 * progress - 2) + 1
-
     window.scrollTo(0, start + distance * ease)
-
     if (progress < 1) {
       requestAnimationFrame(animation)
     }
   }
-
   requestAnimationFrame(animation)
 }
 
 const scrollToSection = async (id: string) => {
-  console.log(`스크롤 시도: ${id}`) // 디버깅용
   await nextTick()
   const element = document.getElementById(id)
   if (element) {
-    console.log(`요소 찾음: ${id}`) // 디버깅용
-    const headerHeight = 100 // 헤더 높이
     const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
-    const targetPosition = elementPosition - headerHeight
-    console.log(`스크롤 위치: ${targetPosition}`) // 디버깅용
-    // 커스텀 스무스 스크롤 실행
+    const targetPosition = elementPosition - HEADER_HEIGHT
     smoothScrollTo(targetPosition, 800)
-  } else {
-    console.log(`요소를 찾을 수 없음: ${id}`) // 디버깅용
   }
 }
 </script>

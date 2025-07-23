@@ -1,6 +1,6 @@
 <template>
   <section id="news" class="news-section-image">
-    <div class="news-header-image">새로운 소식</div>
+    <div class="news-header-image text-wrapper-4">새로운 소식</div>
     <div class="news-list-image">
       <div v-if="newsList.length === 0" class="news-empty-image">새로운 소식이 없습니다.</div>
       <div v-for="(news, idx) in newsList" :key="idx" class="news-row-image">
@@ -51,13 +51,17 @@ onMounted(async () => {
 .news-header-image {
   width: 100%;
   max-width: 1100px;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #232834;
   margin-bottom: 2.2rem;
   letter-spacing: -0.01em;
   text-align: left;
   padding-left: 2.5rem;
+}
+.text-wrapper-4 {
+  color: #222;
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-top: -1.00px;
+  position: relative;
 }
 .news-list-image {
   width: 100%;
