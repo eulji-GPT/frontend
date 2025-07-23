@@ -28,25 +28,37 @@ function scrollToSection(id: string) {
 </script>
 
 <style scoped>
+header.header {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  height: 84px;
+  padding: 10px 50px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+}
 .nav {
   display: flex;
   align-items: center;
   width: 100%;
 }
+  
 .logo-text {
-  margin-right: 2rem;
+  margin-right: 32px;
 }
 .nav-list {
   flex: 1;
   display: flex;
-  gap: 2rem;
+  gap: 56px;
   justify-content: center;
 }
 .auth-links {
   margin-left: auto;
   display: flex;
-  gap: 1.5rem;
-  font-size: 1rem;
+  gap: 24px;
+  font-size: 16px;
   color: #222;
   font-weight: 500;
 }
