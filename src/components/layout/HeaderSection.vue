@@ -11,7 +11,7 @@
         <li><a href="#news" @click.prevent="scrollToSection('news')">새로운 소식</a></li>
       </ul>
       <div class="auth-links">
-        <span>로그인</span>
+        <router-link to="/login">로그인</router-link>
         <span>회원가입</span>
       </div>
     </nav>
@@ -19,7 +19,7 @@
 </template>
 
 <script setup lang="ts">
-import eulLogo from '../assets/eul_logo.png'
+import eulLogo from '../../assets/eul_logo.png'
 const emit = defineEmits(['scrollToSection'])
 
 function scrollToSection(id: string) {

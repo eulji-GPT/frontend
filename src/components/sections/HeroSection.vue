@@ -13,5 +13,5 @@
 </template>
 
 <script setup lang="ts">
-import eulLogo from '../assets/eul_logo.png'
+import eulLogo from '../../assets/eul_logo.png'
 </script>
