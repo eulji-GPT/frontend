@@ -2,7 +2,7 @@
   <div :class="['common-footer', className]">
     <div class="text-wrapper">개인정보처리방침</div>
     <p class="div">Copyright ⓒ EULGPT. All Rights Reserved</p>
-    <div class="text-wrapper-2">E-mail: Eu. EULJGPT@gmail.com</div>
+    <div class="text-wrapper-2">E-mail: EULJGPT@gmail.com</div>
   </div>
 </template>
 
@@ -38,7 +38,7 @@ export default {
   align-self: stretch;
   color: #868b97;
   font-family: 'Pretendard', sans-serif;
-  font-size: 1.25rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.01em;
   line-height: 1.3;
@@ -49,7 +49,7 @@ export default {
   align-self: stretch;
   color: #868b97;
   font-family: 'Pretendard', sans-serif;
-  font-size: 1.1rem;
+  font-size: 0.65rem;
   font-weight: 600;
   letter-spacing: 0.01em;
   line-height: 1.3;
@@ -60,7 +60,7 @@ export default {
   align-self: stretch;
   color: #b0b4bb;
   font-family: 'Pretendard', sans-serif;
-  font-size: 1rem;
+  font-size: 0.6rem;
   font-weight: 400;
   letter-spacing: 0.01em;
   line-height: 1.3;
