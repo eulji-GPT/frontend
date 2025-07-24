@@ -1,70 +1,8 @@
 <template>
-  <div class="main-container">
-    <HeaderSection @scrollToSection="scrollToSection" />
-    <main class="main-content">
-      <!-- Hero Section -->
-      <HeroSection />
-      
-      <!-- Intro Section -->
-      <IntroSection />
-      <!-- Features Section -->
-      <FeaturesSection />
-      
-      <!-- FAQ Section -->
-      <FaqSection />
-      
-      <!-- News Section -->
-      <NewsSection />
-    </main>
-    <CommonFooter />
-  </div>
+  <router-view />
 </template>
 
 <script setup lang="ts">
-import CommonFooter from './components/common/CommonFooter.vue'
-import { nextTick } from 'vue'
-
-import HeaderSection from './components/layout/HeaderSection.vue'
-import HeroSection from './components/sections/HeroSection.vue'
-import IntroSection from './components/sections/IntroSection.vue'
-import FeaturesSection from './components/sections/FeaturesSection.vue'
-import FaqSection from './components/sections/FaqSection.vue'
-import NewsSection from './components/sections/NewsSection.vue'
-
-// 헤더 높이 상수 분리
-const HEADER_HEIGHT = 100
-
-// 커스텀 스무스 스크롤 함수 (모든 브라우저에서 작동)
-const smoothScrollTo = (target: number, duration: number = 1000) => {
-  const start = window.pageYOffset
-  const distance = target - start
-  let startTime: number | null = null
-
-  const animation = (currentTime: number) => {
-    if (startTime === null) startTime = currentTime
-    const timeElapsed = currentTime - startTime
-    const progress = Math.min(timeElapsed / duration, 1)
-    // easeInOutCubic easing function
-    const ease = progress < 0.5 
-      ? 4 * progress * progress * progress 
-      : (progress - 1) * (2 * progress - 2) * (2 * progress - 2) + 1
-    window.scrollTo(0, start + distance * ease)
-    if (progress < 1) {
-      requestAnimationFrame(animation)
-    }
-  }
-  requestAnimationFrame(animation)
-}
-
-const scrollToSection = async (id: string) => {
-  await nextTick()
-  const element = document.getElementById(id)
-  if (element) {
-    const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
-    const targetPosition = elementPosition - HEADER_HEIGHT
-    smoothScrollTo(targetPosition, 800)
-  }
-}
 </script>
 
 <style>
@@ -73,7 +11,7 @@ const scrollToSection = async (id: string) => {
 body {
   margin: 0;
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: linear-gradient(180deg, #E6EDF3 0%, #02478A 100%);
+  background: #fff;
   color: #01203E;
 }
 
@@ -120,62 +58,6 @@ body {
 
 .section, .features-section, .faq-section, .news-section {
   background: #F8FAFC;
-  border-radius: 1.5rem;
-  box-shadow: 0 2px 12px 0 #B3C8DC33;
-}
-
-.feature-main {
-  background: #02478A;
-  color: #fff;
-}
-.feature-item {
-  background: #E6EDF3;
-  color: #01203E;
-}
-.feature-icon {
-  color: #02478A;
-}
-
-.main-title, .features-title, .faq-header, .news-header {
-  font-family: 'Pretendard', sans-serif;
-}
-
-.highlight {
-  color: #02478A;
-}
-</style>
-
-<style>
-.main-container {
-  min-height: 100vh;
-  background: #fff;
-  display: flex;
-  flex-direction: column;
-}
-
-.header {
-  /* border-bottom: 3px solid #a084f3; */
-}
-.faq-accordion {
-  border-bottom: 1px solid #f0f0f0;
-}
-.faq-item {
-  display: flex;
-  align-items: center;
-  font-size: 1.1rem;
-  padding: 0.8rem 1.2rem;
-  font-weight: 600;
-  cursor: pointer;
-  background: #fff;
-  transition: background 0.2s;
-}
-.faq-item.active {
-  background: #f7f9fb;
-}
-.faq-q {
-  color: #25345d;
-  font-size: 1.2rem;
-  margin-right: 0.7rem;
 }
 .faq-arrow {
   margin-left: auto;

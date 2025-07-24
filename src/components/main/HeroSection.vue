@@ -15,7 +15,7 @@ import heroImg from '../../assets/Group-48097225.svg'
 import { useRouter } from 'vue-router'
 const router = useRouter()
 function goToChatApp() {
-  router.push('/chatapp')
+  router.push('/chat')
 }
 </script>
 
