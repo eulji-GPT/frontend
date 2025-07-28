@@ -38,7 +38,7 @@ function goToChatApp() {
   display: flex;
   align-items: center;
   gap: 31px;
-  width: 671px;
+  width: px;
 }
 
 .hero-section {
