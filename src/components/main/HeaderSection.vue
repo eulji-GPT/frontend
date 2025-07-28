@@ -12,7 +12,7 @@
       </ul>
       <div class="auth-links">
         <router-link to="/login">로그인</router-link>
-        <span>회원가입</span>
+        <router-link to="/signup">회원가입</router-link>
       </div>
     </nav>
   </header>

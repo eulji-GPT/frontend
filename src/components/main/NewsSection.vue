@@ -26,11 +26,13 @@ const newsList = ref<NewsItem[]>([])
 onMounted(async () => {
   try {
     const res = await fetch('/news.json')
-    if (res.ok) {
-      newsList.value = await res.json()
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`)
     }
+    newsList.value = await res.json()
   } catch (e) {
     newsList.value = []
+    console.error("Could not fetch news data:", e)
   }
 })
 </script>
