@@ -11,21 +11,22 @@
             <span :class="['faq-arrow-icon', {open: openFaqIdx === idx}]">▼</span>
           </span>
         </div>
-        <transition name="faq-slide">
-          <div v-if="openFaqIdx === idx" class="faq-answer-wrapper">
-            <div class="faq-answer-card">
-              <span class="faq-a-label">A.</span>
-              <span class="faq-a-text">{{ faq.a }}</span>
-            </div>
+        <div 
+          :class="['faq-answer-wrapper', { open: openFaqIdx === idx }]"
+          :style="{ maxHeight: openFaqIdx === idx ? `${answerHeights[idx] || 200}px` : '0px' }"
+        >
+          <div class="faq-answer-card" :ref="el => setAnswerRef(el, idx)">
+            <span class="faq-a-label">A.</span>
+            <span class="faq-a-text">{{ faq.a }}</span>
           </div>
-        </transition>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick, type ComponentPublicInstance } from 'vue'
 
 interface FaqItem {
   q: string;
@@ -34,41 +35,51 @@ interface FaqItem {
 
 const faqList = ref<FaqItem[]>([])
 const openFaqIdx = ref<number|null>(null)
+const answerHeights = ref<Record<number, number>>({})
+const answerRefs = ref<Record<number, HTMLElement>>({})
 
-function toggleFaq(idx: number) {
-  openFaqIdx.value = openFaqIdx.value === idx ? null : idx
+function setAnswerRef(el: HTMLElement | Element | ComponentPublicInstance | null, idx: number) {
+  if (el && el instanceof HTMLElement) {
+    answerRefs.value[idx] = el
+  }
+}
+
+async function toggleFaq(idx: number) {
+  const isOpening = openFaqIdx.value !== idx
+  
+  if (isOpening) {
+    openFaqIdx.value = idx
+    await nextTick()
+    
+    // 실제 콘텐츠 높이 측정
+    const answerEl = answerRefs.value[idx]
+    if (answerEl) {
+      answerHeights.value[idx] = answerEl.scrollHeight + 48 // padding 포함
+    }
+  } else {
+    openFaqIdx.value = null
+  }
 }
 
 onMounted(async () => {
   try {
     const res = await fetch('/faq.json')
-    if (res.ok) {
-      faqList.value = await res.json()
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`)
     }
-  } catch (e) {
-    // 개발용 더미 데이터
-    faqList.value = [
-      {
-        q: '울지피티가 뭔가요?',
-        a: '울지피티는 울지대학교 AI 대화형 서비스 입니다.'
-      },
-      {
-        q: '울지피티가 뭔가요?',
-        a: '울지피티는 AI 기반 대화형 서비스로, 다양한 질문에 답변해드립니다.'
-      },
-      {
-        q: '울지피티가 뭔가요?',
-        a: '학습과 업무에 도움을 주는 AI 어시스턴트입니다.'
-      },
-      {
-        q: '울지피티가 뭔가요?',
-        a: '24시간 언제든지 이용 가능한 AI 서비스입니다.'
-      },
-      {
-        q: '울지피티가 뭔가요?',
-        a: '사용자의 다양한 요청에 실시간으로 응답하는 서비스입니다.'
+    faqList.value = await res.json()
+    
+    // 모든 답변의 높이를 미리 측정
+    await nextTick()
+    faqList.value.forEach((_, idx) => {
+      const answerEl = answerRefs.value[idx]
+      if (answerEl) {
+        answerHeights.value[idx] = answerEl.scrollHeight + 48
       }
-    ]
+    })
+  } catch (e) {
+    faqList.value = []
+    console.error("Could not fetch FAQ data:", e)
   }
 })
 </script>
@@ -122,11 +133,25 @@ onMounted(async () => {
   transition: background-color 0.2s ease;
 }
 
-.faq-question-row:hover {
+.faq-question-row {
+  position: relative;
+}
+
+.faq-question-row::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -40px;
+  right: -40px;
+  bottom: 0;
   background-color: #f9fafb;
-  margin: 0 -40px;
-  padding-left: 40px;
-  padding-right: 40px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: -1;
+}
+
+.faq-question-row:hover::before {
+  opacity: 1;
 }
 
 .faq-q-label {
@@ -155,7 +180,7 @@ onMounted(async () => {
 .faq-arrow-icon {
   font-size: 1.2rem;
   color: #888;
-  transition: transform 0.3s ease, color 0.2s ease;
+  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), color 0.2s ease;
   display: inline-block;
 }
 
@@ -166,7 +191,15 @@ onMounted(async () => {
 
 .faq-answer-wrapper {
   width: 100%;
-  padding-bottom: 24px;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+              opacity 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  max-height: 0;
+  opacity: 0;
+}
+
+.faq-answer-wrapper.open {
+  opacity: 1;
 }
 
 .faq-answer-card {
@@ -176,8 +209,15 @@ onMounted(async () => {
   display: flex;
   align-items: flex-start;
   gap: 18px;
-  padding: 32px 48px;
+  padding: 24px 48px;
+  margin-bottom: 24px;
   box-sizing: border-box;
+  transform: translateY(0);
+  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.faq-answer-wrapper:not(.open) .faq-answer-card {
+  transform: translateY(-8px);
 }
 
 .faq-a-label {
@@ -195,41 +235,6 @@ onMounted(async () => {
   flex: 1;
 }
 
-/* 자연스러운 FAQ 슬라이드 트랜지션 */
-.faq-slide-enter-active {
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  overflow: hidden;
-}
-
-.faq-slide-leave-active {
-  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  overflow: hidden;
-}
-
-.faq-slide-enter-from {
-  max-height: 0;
-  opacity: 0;
-  transform: translateY(-10px);
-}
-
-.faq-slide-enter-to {
-  max-height: 300px;
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.faq-slide-leave-from {
-  max-height: 300px;
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.faq-slide-leave-to {
-  max-height: 0;
-  opacity: 0;
-  transform: translateY(-10px);
-}
-
 .faq-empty {
   color: #aaa;
   font-size: 1.1rem;
@@ -244,14 +249,13 @@ onMounted(async () => {
     padding: 80px 30px;
   }
   
-  .faq-question-row:hover {
-    margin: 0 -30px;
-    padding-left: 30px;
-    padding-right: 30px;
+  .faq-question-row::before {
+    left: -30px;
+    right: -30px;
   }
   
   .faq-answer-card {
-    padding: 28px 36px;
+    padding: 24px 36px;
   }
 }
 
@@ -270,10 +274,9 @@ onMounted(async () => {
     gap: 12px;
   }
   
-  .faq-question-row:hover {
-    margin: 0 -20px;
-    padding-left: 20px;
-    padding-right: 20px;
+  .faq-question-row::before {
+    left: -20px;
+    right: -20px;
   }
   
   .faq-q-label {
@@ -285,8 +288,9 @@ onMounted(async () => {
   }
   
   .faq-answer-card {
-    padding: 24px 28px;
+    padding: 20px 28px;
     gap: 12px;
+    margin-bottom: 20px;
   }
   
   .faq-a-label {
@@ -295,10 +299,6 @@ onMounted(async () => {
   
   .faq-a-text {
     font-size: 1.1rem;
-  }
-  
-  .faq-answer-wrapper {
-    padding-bottom: 20px;
   }
 }
 
@@ -316,10 +316,9 @@ onMounted(async () => {
     gap: 8px;
   }
   
-  .faq-question-row:hover {
-    margin: 0 -16px;
-    padding-left: 16px;
-    padding-right: 16px;
+  .faq-question-row::before {
+    left: -16px;
+    right: -16px;
   }
   
   .faq-q-label {
@@ -331,8 +330,9 @@ onMounted(async () => {
   }
   
   .faq-answer-card {
-    padding: 20px 24px;
+    padding: 18px 24px;
     gap: 10px;
+    margin-bottom: 16px;
   }
   
   .faq-a-label {
