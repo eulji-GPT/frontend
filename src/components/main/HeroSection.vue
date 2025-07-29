@@ -99,10 +99,12 @@ function goToChatApp() {
 }
 
 .hero-btn-wrapper {
-  width: 100%;
   display: flex;
   justify-content: center;
-  margin-top: 120px;
+  align-items: center;
+  width: 100vw;
+  margin-top: 40px;
+  transform: translateX(-90px);
 }
 
 .start-btn {

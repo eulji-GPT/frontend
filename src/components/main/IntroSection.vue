@@ -1,5 +1,5 @@
 <template>
-  <section id="intro" class="section intro-section">
+  <section id="intro" class="section intro-section" style="background: var(--Primary-200, #F3F8FF);">
     <div class="intro-header">궁금한 건 뭐든지, 을GPT와 함께 물어보세요.</div>
     <div class="intro-content">
       <div class="intro-text">
