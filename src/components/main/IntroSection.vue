@@ -22,14 +22,17 @@
 
 <style scoped>
 .intro-section {
-  background: #F3F8FF !important;
-
-  width: 100%;
+  width: 100vw;
+  min-width: 100vw;
+  min-height: 100vh;
+  height: auto;
+  background: var(--Primary-200, #F3F8FF) !important;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 4rem 0;
-  background: #fff;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
 }
 
 .intro-content {
