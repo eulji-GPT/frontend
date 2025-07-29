@@ -9,7 +9,9 @@
           캠퍼스 생활이 쉬워집니다.
         </p>
       </div>
-      <img src="../../assets/IntroSection/EULGPT-3D-Logo.svg" alt="EULGPT 3D 로고" class="eulgpt-logo-svg" />
+      <div class="intro-image">
+        <img src="../../assets/IntroSection/EULGPT-3D-Logo.svg" alt="EULGPT 3D 로고" class="intro-image-svg" />
+      </div>
     </div>
   </div>
 </template>
@@ -20,6 +22,8 @@
 
 <style scoped>
 .intro-section {
+  background: #F3F8FF !important;
+
   width: 100%;
   display: flex;
   justify-content: center;
@@ -75,7 +79,7 @@
   max-height: 468px;
   flex-shrink: 0;
   aspect-ratio: 1/1;
-  background: url('../../assets/IntroSection/intro-image.svg') lightgray 50% / cover no-repeat;
+  background: url('../../assets/IntroSection/intro-image.svg') / cover no-repeat;
   border-radius: 12px; /* 선택사항 */
 }
 
@@ -98,10 +102,11 @@
     width: 90vw;
   }
   
-  .eulgpt-logo-svg {
+  .intro-image {
     width: 50vw;
-    height: auto;
+    height: 50vw;
     max-width: 400px;
+    max-height: 400px;
   }
 }
 
@@ -129,8 +134,9 @@
   
   .intro-image {
     width: 70vw;
-    height: auto;
+    height: 70vw;
     max-width: 300px;
+    max-height: 300px;
   }
 }
 
@@ -146,7 +152,8 @@
   
   .intro-image {
     width: 80vw;
-    height: auto;
+    height: 80vw;
     max-width: 250px;
+    max-height: 250px;
   }
 }</style>
