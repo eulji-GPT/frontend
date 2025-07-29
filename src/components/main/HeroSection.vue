@@ -1,13 +1,14 @@
 <template>
   <div class="hero-section">
     <div class="title-block">
-      <div class="main-title-row" style="display: flex; align-items: center; gap: 31px;">
+      <div class="main-title-row">
         <div class="main-title-frame">
           <h1 class="main-title">
             학교생활의<br />
             <span class="gradient-title">모든 순간에 답하다</span>
           </h1>
         </div>
+        <img class="hero-svg" src="../../assets/HeroSection/Frame-2147227367.svg" alt="장식 이미지" />
         <div class="main-title-extra-frame">
           <!-- 여기에 원하는 내용을 추가하세요 -->
         </div>
@@ -21,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import heroImg from '../../assets/Group-48097225.svg'
+import heroImg from '../../assets/HeroSection/Group-48097225.svg'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -36,21 +37,34 @@ function goToChatApp() {
 
 .main-title-row {
   display: flex;
-  align-items: center;
-  gap: 31px;
-  width: px;
+  align-items: flex-start;
+  justify-content: space-between;
+  width: 1406px;
+  gap: 0;
+}
+
+.hero-svg {
+  width: 555px;
+  height: 128px;
+  object-fit: contain;
+  display: block;
+  padding: 0 !important;
+  margin: 0 !important;
+  position: relative;
+  top: -155px;
+  left: 80px;
 }
 
 .hero-section {
   width: 100vw;
   min-height: 100vh;
   margin: 0;
-  padding: 160px 0 104px 180px;
+  padding: 0px 180px 0px 180px;
   background: linear-gradient(180deg, #FFF 60.58%, #F3F8FF 100%);
   border-radius: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   box-sizing: border-box;
   opacity: 1;
@@ -67,16 +81,25 @@ function goToChatApp() {
 }
 
 .main-title {
-  max-width: 671px;
-  color: var(--Black, #000);
+  /* Title/Bold0 */
   font-family: 'Pretendard', sans-serif;
-  font-size: 4rem; /* 64px */
+  font-size: 64px;
   font-style: normal;
   font-weight: 700;
-  line-height: 90px;
-  text-align: left;
+  line-height: 90px; /* 140.625% */
+  color: var(--Black, #000);
   letter-spacing: 0.14em;
+  text-align: left;
   margin: 0;
+  width: 851px; /* 671 + 180 */
+  height: 180px;
+  max-width: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 0 0 180px;
+  position: relative;
+  top: -155px;
 }
 
 .gradient-title {
@@ -93,16 +116,17 @@ function goToChatApp() {
   width: 100%;
   max-width: 100%;
   height: auto;
-  margin: 2.5rem 0 0 -180px;
   display: block;
   object-fit: contain;
 }
 
 .hero-btn-wrapper {
-  width: 100%;
   display: flex;
   justify-content: center;
-  margin-top: 120px;
+  align-items: center;
+  width: 100vw;
+  margin-top: 40px;
+  transform: translateX(-180px);
 }
 
 .start-btn {
