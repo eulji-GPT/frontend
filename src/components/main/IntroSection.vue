@@ -10,7 +10,7 @@
         </p>
       </div>
       <div class="intro-image">
-        <img src="../../assets/IntroSection/EULGPT-3D-Logo.svg" alt="EULGPT 3D 로고" class="intro-image-svg" />
+        <img src="../../assets/Introsection/EULGPT-3D-Logo.svg" alt="EULGPT 3D 로고" class="intro-image-svg" />
       </div>
     </div>
   </div>
