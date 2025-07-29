@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import heroImg from '../../assets/Group-48097225.svg'
+import heroImg from '../../assets/HeroSection/Group-48097225.svg'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
