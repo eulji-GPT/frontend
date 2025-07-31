@@ -327,6 +327,8 @@ button {
   border-radius: 5.001px;
 }
 .group-d {
+  width: 25px;
+  height: 25px;
   background: url('./icon/학식당.svg') no-repeat center;
   background-size: cover;
   z-index: 32;
@@ -443,8 +445,8 @@ button {
   position: relative;
   width: 23px;
   height: 23px;
-  background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-31/LAggf25J0m.png)
-    no-repeat center;
+  background: url('./icon/회색원.svg') no-repeat center;
+
   background-size: cover;
   z-index: 43;
   border-radius: 50%;
@@ -466,8 +468,7 @@ button {
   position: relative;
   width: 23px;
   height: 24px;
-  background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-31/iOezR9XJsU.png)
-    no-repeat center;
+  background: url('./icon/notification.svg') no-repeat center;
   background-size: cover;
   z-index: 45;
 }
@@ -491,8 +492,7 @@ button {
   position: relative;
   width: 18px;
   height: 18px;
-  background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-31/SMBaVrFnBf.png)
-    no-repeat center;
+  background: url('./icon/vinfo.svg') no-repeat center;
   background-size: cover;
   z-index: 47;
 }
@@ -515,17 +515,19 @@ button {
 }
 .frame-14 {
   display: flex;
-  flex-direction: column;
+  max-width: 710px;
+  padding: 0 4px;
+  justify-content: center;
   align-items: center;
+  gap: 4px;
+  flex-direction: column;
   align-self: center;
   flex-wrap: nowrap;
   flex-shrink: 0;
-  gap: 17px;
   position: relative;
   min-width: 0;
   width: 770px;
   height: 92px;
-  padding: 16px 10px 16px 10px;
   background: #f8fbff;
   border: 1px solid #f3f4f6;
   z-index: 49;
@@ -543,21 +545,9 @@ button {
     max-width: 98vw;
   }
 }
-.frame-15 {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: nowrap;
-  flex-shrink: 0;
-  gap: 4px;
-  position: relative;
-  width: 141px;
-  padding: 0 4px 0 4px;
-  z-index: 50;
-  max-width: 710px;
-}
+
 .ask-anything {
-  flex-grow: 1;
+  flex-grow: 0;
   flex-shrink: 0;
   flex-basis: auto;
   position: relative;
@@ -570,6 +560,8 @@ button {
   text-align: left;
   white-space: nowrap;
   z-index: 51;
+  align-self: flex-start;
+  padding-left: 14px;
 }
 .frame-16 {
   display: flex;
@@ -603,8 +595,7 @@ button {
   position: relative;
   width: 13.5px;
   height: 13.5px;
-  background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-31/ftNjVTs1UO.png)
-    no-repeat center;
+  background: url('./icon/plus.svg') no-repeat center;
   background-size: cover;
   z-index: 54;
 }
@@ -630,8 +621,7 @@ button {
   position: relative;
   width: 13px;
   height: 16px;
-  background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-31/ZrdKzUDJJP.png)
-    no-repeat center;
+  background: url('./icon/UP_Vector.svg') no-repeat center;
   background-size: 100% 100%;
   z-index: 56;
 }
@@ -778,8 +768,7 @@ button {
   position: relative;
   width: 12px;
   height: 12px;
-  background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-31/pLeFDcykd9.png)
-    no-repeat center;
+  background: url('./icon/plus.svg') no-repeat center;
   background-size: cover;
   z-index: 5;
 }
@@ -800,7 +789,7 @@ button {
   overflow: hidden;
   border-radius: 100px;
 }
-.vector-21 {
+/* .vector-21 {
   flex-shrink: 0;
   position: relative;
   width: 13px;
@@ -809,7 +798,7 @@ button {
     no-repeat center;
   background-size: 100% 100%;
   z-index: 7;
-}
+} */
 .input-button-22 {
   display: flex;
   align-items: center;
@@ -882,8 +871,8 @@ button {
   position: relative;
   width: 8px;
   height: 15px;
-  background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-31/j7YT7a8JTW.png)
-    no-repeat center;
+  background: url('./icon/mulmum.svg') no-repeat center;
+
   background-size: 100% 100%;
   z-index: 62;
 }

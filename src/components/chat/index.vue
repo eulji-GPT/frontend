@@ -29,8 +29,6 @@
             </div>
             <div class="frame-9">
               <div class="group-a">
-                <div class="frame-b"></div>
-                <div class="frame-c"></div>
                 <div class="group-d"></div>
               </div>
               <span class="status">학식당 현황</span>
@@ -60,9 +58,7 @@
       <!-- ...기존 채팅 내용 및 입력창 등... -->
       <div class="frame-13">
         <div class="frame-14">
-          <div class="frame-15">
-            <span class="ask-anything">무엇이든 물어보세요.</span>
-          </div>
+          <span class="ask-anything">무엇이든 물어보세요.</span>
           <div class="frame-16">
             <div class="input-state-button"><div class="vector-17"></div></div>
             <div class="input-state-button-18"><div class="vector-19"></div></div>
