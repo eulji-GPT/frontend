@@ -1,5 +1,5 @@
 <template>
-  <div class="intro-section">
+  <div class="intro-section" id="intro">
     <div class="intro-content">
       <div class="intro-text">
         <h2 class="intro-header">궁금한 건 뭐든지, 을GPT와 함께 물어보세요.</h2>
@@ -84,6 +84,7 @@
   aspect-ratio: 1/1;
   background: url('../../assets/IntroSection/intro-image.svg') / cover no-repeat;
   border-radius: 12px; /* 선택사항 */
+  margin-top: -120px;
 }
 
 /* 태블릿 크기 조정 */
