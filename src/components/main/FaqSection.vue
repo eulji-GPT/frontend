@@ -8,7 +8,7 @@
           <span class="faq-q-label">Q.</span>
           <span class="faq-q-text">{{ faq.q }}</span>
           <span class="faq-arrow-btn">
-            <span :class="['faq-arrow-icon', {open: openFaqIdx === idx}]">▼</span>
+            <img :class="['faq-arrow-icon', {open: openFaqIdx === idx}]" src="../../assets/FaqSection/icn_under_^.svg" alt="arrow" />
           </span>
         </div>
         <div 
@@ -207,10 +207,11 @@ onMounted(async () => {
   background: #f7f9fb;
   border-radius: 16px;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: center;
   gap: 18px;
   padding: 24px 48px;
-  margin-bottom: 24px;
+  /* margin-bottom: 24px; */
   box-sizing: border-box;
   transform: translateY(0);
   transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -233,6 +234,10 @@ onMounted(async () => {
   color: #222;
   line-height: 1.6;
   flex: 1;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  height: 100%;
 }
 
 .faq-empty {
