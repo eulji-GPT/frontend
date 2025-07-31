@@ -1,3 +1,26 @@
+/* Chat messages area: smooth scroll and custom scrollbar */
+.chat-messages-area {
+  /* 기존 스타일 유지하고 아래 추가 */
+  scroll-behavior: smooth; /* 부드러운 스크롤 */
+}
+
+/* 자연스러운 스크롤바 스타일 */
+.chat-messages-area::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-messages-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-messages-area::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.chat-messages-area::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
 .chat-content-col {
   display: flex;
   flex-direction: column;
@@ -142,7 +165,8 @@ button {
   height: 10.391px;
   top: 1.603px;
   left: 95.61px;
-  background: url('./icon/Union.svg') no-repeat center;
+  background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-31/XMrsiJsZg5.png)
+    no-repeat center;
   background-size: cover;
   z-index: 15;
 }
@@ -151,8 +175,8 @@ button {
   position: relative;
   width: 22px;
   height: 22px;
-  background: url('./icon/write.svg') no-repeat center;
-
+  background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-31/SLV8Hf7yf3.png)
+    no-repeat center;
   background-size: cover;
   z-index: 16;
   overflow: hidden;
@@ -269,7 +293,8 @@ button {
   position: relative;
   width: 25px;
   height: 25px;
-  background: url('./icon/도서관.svg') no-repeat center;
+  background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-31/MxNQJV51Vc.png)
+    no-repeat center;
   background-size: cover;
   z-index: 26;
 }
@@ -327,11 +352,34 @@ button {
   border-radius: 5.001px;
 }
 .group-d {
-  width: 25px;
-  height: 25px;
-  background: url('./icon/학식당.svg') no-repeat center;
-  background-size: cover;
+  position: absolute;
+  width: 56.33%;
+  height: 82.37%;
+  top: 11.63%;
+  left: 18.45%;
   z-index: 32;
+}
+.group-e {
+  position: absolute;
+  width: 51.71%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-31/k8NEUMjqMw.png)
+    no-repeat center;
+  background-size: 100% 100%;
+  z-index: 33;
+}
+.group-f {
+  position: absolute;
+  width: 25.9%;
+  height: 88.37%;
+  top: 6.77%;
+  left: 74.1%;
+  background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-31/N6DoiTisUV.png)
+    no-repeat center;
+  background-size: 100% 100%;
+  z-index: 34;
 }
 .status {
   flex-shrink: 0;
@@ -445,8 +493,8 @@ button {
   position: relative;
   width: 23px;
   height: 23px;
-  background: url('./icon/회색원.svg') no-repeat center;
-
+  background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-31/LAggf25J0m.png)
+    no-repeat center;
   background-size: cover;
   z-index: 43;
   border-radius: 50%;
@@ -468,7 +516,8 @@ button {
   position: relative;
   width: 23px;
   height: 24px;
-  background: url('./icon/notification.svg') no-repeat center;
+  background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-31/iOezR9XJsU.png)
+    no-repeat center;
   background-size: cover;
   z-index: 45;
 }
@@ -492,7 +541,8 @@ button {
   position: relative;
   width: 18px;
   height: 18px;
-  background: url('./icon/vinfo.svg') no-repeat center;
+  background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-31/SMBaVrFnBf.png)
+    no-repeat center;
   background-size: cover;
   z-index: 47;
 }
@@ -502,9 +552,9 @@ button {
   align-items: center;
   flex-wrap: nowrap;
   gap: 15px;
-  width: 100%;
-  min-width: 200px;
-  max-width: 900px;
+  width: 770px;
+  min-width: 0;
+  max-width: 100vw;
   min-height: 80px;
   max-height: 200px;
   background: #ffffff;
@@ -515,26 +565,24 @@ button {
 }
 .frame-14 {
   display: flex;
-  max-width: 710px;
-  padding: 0 4px;
-  justify-content: center;
-  align-items: center;
-  gap: 4px;
   flex-direction: column;
+  align-items: center;
   align-self: center;
   flex-wrap: nowrap;
   flex-shrink: 0;
+  gap: 17px;
   position: relative;
   min-width: 0;
   width: 770px;
   height: 92px;
+  padding: 16px 10px 16px 10px;
   background: #f8fbff;
   border: 1px solid #f3f4f6;
   z-index: 49;
   overflow: hidden;
   border-radius: 15px;
-  margin-left: auto;
-  margin-right: auto;
+  /* margin-left: auto; */
+  /* margin-right: auto; */
   max-width: 100vw;
 }
 @media (max-width: 1024px) {
@@ -545,9 +593,21 @@ button {
     max-width: 98vw;
   }
 }
-
+.frame-15 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  gap: 4px;
+  position: relative;
+  width: 141px;
+  padding: 0 4px 0 4px;
+  z-index: 50;
+  max-width: 710px;
+}
 .ask-anything {
-  flex-grow: 0;
+  flex-grow: 1;
   flex-shrink: 0;
   flex-basis: auto;
   position: relative;
@@ -560,8 +620,6 @@ button {
   text-align: left;
   white-space: nowrap;
   z-index: 51;
-  align-self: flex-start;
-  padding-left: 14px;
 }
 .frame-16 {
   display: flex;
@@ -595,7 +653,8 @@ button {
   position: relative;
   width: 13.5px;
   height: 13.5px;
-  background: url('./icon/plus.svg') no-repeat center;
+  background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-31/ftNjVTs1UO.png)
+    no-repeat center;
   background-size: cover;
   z-index: 54;
 }
@@ -621,7 +680,8 @@ button {
   position: relative;
   width: 13px;
   height: 16px;
-  background: url('./icon/UP_Vector.svg') no-repeat center;
+  background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-31/ZrdKzUDJJP.png)
+    no-repeat center;
   background-size: 100% 100%;
   z-index: 56;
 }
@@ -768,7 +828,8 @@ button {
   position: relative;
   width: 12px;
   height: 12px;
-  background: url('./icon/plus.svg') no-repeat center;
+  background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-31/pLeFDcykd9.png)
+    no-repeat center;
   background-size: cover;
   z-index: 5;
 }
@@ -789,7 +850,7 @@ button {
   overflow: hidden;
   border-radius: 100px;
 }
-/* .vector-21 {
+.vector-21 {
   flex-shrink: 0;
   position: relative;
   width: 13px;
@@ -798,7 +859,7 @@ button {
     no-repeat center;
   background-size: 100% 100%;
   z-index: 7;
-} */
+}
 .input-button-22 {
   display: flex;
   align-items: center;
@@ -871,8 +932,8 @@ button {
   position: relative;
   width: 8px;
   height: 15px;
-  background: url('./icon/mulmum.svg') no-repeat center;
-
+  background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-31/j7YT7a8JTW.png)
+    no-repeat center;
   background-size: 100% 100%;
   z-index: 62;
 }
