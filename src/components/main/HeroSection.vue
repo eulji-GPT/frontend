@@ -50,7 +50,7 @@ function goToChatApp() {
   padding: 0 !important;
   margin: 0 !important;
   position: absolute;
-  top: -19.38vh; /* -155/800 * 100 */
+  top: -10.38vh; /* /* -155/800 * 100 */
   right: -230px;
 }
 
@@ -133,9 +133,13 @@ function goToChatApp() {
 
 .start-btn {
   display: flex;
-  width: 12.5vw; /* 180/1440 * 100 */
-  height: 6.25vh; /* 50/800 * 100 */
-  padding: min(13px, 1vh) min(60px, 4vw);
+  width: clamp(120px, 12.5vw, 180px);
+  height: clamp(38px, 6.25vh, 50px);
+  min-width: 120px;
+  min-height: 38px;
+  max-width: 180px;
+  max-height: 50px;
+  padding: 0;
   justify-content: center;
   align-items: center;
   gap: 8px;
@@ -144,7 +148,7 @@ function goToChatApp() {
   color: white;
   border: none;
   cursor: pointer;
-  font-size: min(16px, 1.2vw);
+  font-size: clamp(13px, 1.2vw, 16px);
   font-weight: 500;
   transition: all 0.3s ease;
 }
@@ -223,9 +227,9 @@ function goToChatApp() {
   }
   
   .start-btn {
-    width: min(160px, 40vw);
-    height: min(45px, 6vh);
-    font-size: min(14px, 3.5vw);
+    width: clamp(100px, 40vw, 160px);
+    height: clamp(32px, 6vh, 45px);
+    font-size: clamp(12px, 3.5vw, 14px);
   }
 }
 
@@ -250,9 +254,9 @@ function goToChatApp() {
   }
   
   .start-btn {
-    width: min(140px, 50vw);
-    height: min(40px, 7vh);
-    font-size: min(12px, 4vw);
+    width: clamp(90px, 50vw, 140px);
+    height: clamp(28px, 7vh, 40px);
+    font-size: clamp(11px, 4vw, 12px);
   }
   
   .hero-section {

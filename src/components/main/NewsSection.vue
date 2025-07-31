@@ -47,8 +47,8 @@ onMounted(async () => {
   border-radius: 18px;
   box-shadow: 0 2px 12px 0 rgba(79, 110, 219, 0.04);
   padding: 2.5rem 0 2.5rem 0;
-  margin-top: 2.5rem;
-  margin-bottom: 2.5rem;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 .news-header-image {
   width: 100%;

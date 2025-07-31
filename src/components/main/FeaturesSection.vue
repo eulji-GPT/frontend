@@ -1,5 +1,5 @@
 <template>
-  <section class="features-section">
+<section class="features-section" id="features">
     <div class="features-container">
       <div class="features-frame">
         <div class="features-title">유용한 기능</div>
@@ -70,7 +70,7 @@
   max-width: 1440px;
   height: 100%;
   margin: 0 auto;
-  padding: 128px 180px 127px 180px;
+  padding: 0 180px 127px 180px;
   box-sizing: border-box;
   background: transparent;
 }
@@ -102,6 +102,11 @@
   margin-bottom: 0;
   margin-top: 0;
   padding-left: 0;
+}
+
+.features-section {
+  /* ...기존 코드... */
+  scroll-margin-top: 84px;
 }
 
 .features-subtitle {
