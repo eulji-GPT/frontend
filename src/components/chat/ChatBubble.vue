@@ -1,9 +1,6 @@
 <template>
-  <div :class="['chat-bubble', align, { 'loading': isLoading, 'streaming': isStreaming }]">
-    <span v-if="isLoading" class="loading-dots">
-      <span></span><span></span><span></span>
-    </span>
-    <div v-else class="message-content">
+  <div :class="['chat-bubble', align, { 'streaming': isStreaming }]">
+    <div class="message-content">
       <slot />
       <span v-if="isStreaming" class="streaming-cursor">|</span>
     </div>
@@ -15,10 +12,6 @@ const props = defineProps({
   align: {
     type: String,
     default: 'right',
-  },
-  isLoading: {
-    type: Boolean,
-    default: false,
   },
   isStreaming: {
     type: Boolean,
@@ -54,39 +47,6 @@ const props = defineProps({
   /* 챗봇 메시지 - 좌측 정렬 */
   background: #fff;
   border: 1px solid #e5e7eb;
-}
-
-
-.loading-dots {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.loading-dots span {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #9ca3af;
-  animation: loading 1.4s infinite ease-in-out;
-}
-
-.loading-dots span:nth-child(1) { animation-delay: -0.32s; }
-.loading-dots span:nth-child(2) { animation-delay: -0.16s; }
-
-@keyframes loading {
-  0%, 80%, 100% {
-    transform: scale(0.8);
-    opacity: 0.5;
-  }
-  40% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.chat-bubble.loading {
-  min-width: 60px;
 }
 
 /* 스트리밍 커서 애니메이션 */

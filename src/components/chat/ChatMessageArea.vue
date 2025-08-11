@@ -1,7 +1,11 @@
 <template>
   <div class="chat-messages-area" ref="messagesContainer">
     <div v-for="(msg, idx) in messages" :key="idx" class="message-wrapper">
-      <ChatBubble :align="msg.isUser ? 'right' : 'left'" :is-loading="msg.isLoading" :is-streaming="msg.isStreaming">
+      <div v-if="msg.isLoading" class="loading-indicator">
+        <LottieLoader />
+        <span class="loading-text">Searching...</span>
+      </div>
+      <ChatBubble v-else :align="msg.isUser ? 'right' : 'left'" :is-loading="false" :is-streaming="msg.isStreaming">
         {{ msg.text }}
       </ChatBubble>
     </div>
@@ -11,6 +15,7 @@
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue';
 import ChatBubble from './ChatBubble.vue';
+import LottieLoader from './LottieLoader.vue';
 import type { ChatMessage } from '../../composables/useChat';
 
 const props = defineProps<{
@@ -48,6 +53,23 @@ watch(() => props.messages, () => {
   width: 100%;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  margin-left: 20px;
+}
+
+.loading-text {
+  color: #9ca3af;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .message-wrapper :deep(.chat-bubble.right) {

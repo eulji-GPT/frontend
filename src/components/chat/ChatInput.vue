@@ -1,25 +1,30 @@
 <template>
-  <div :class="['common-chatinputbox', className]">
-    <div class="textarea-wrapper">
-      <textarea
-        ref="textareaRef"
-        placeholder="무엇이든 물어보세요."
-        v-model="inputValue"
-        @keydown.enter.exact.prevent="onSend"
-        @input="autoGrow"
-        :disabled="isLoading"
-        rows="1"
-      ></textarea>
-    </div>
-    <div class="frame-3">
-      <div class="input-state-button"><div class="vector-17"></div></div>
-      <div 
-        class="input-state-button-18" 
-        @click="onSend"
-        :class="{ 'disabled': isLoading }"
-      >
-        <div class="vector-19"></div>
+  <div>
+    <div :class="['common-chatinputbox', className]">
+      <div class="textarea-wrapper">
+        <textarea
+          ref="textareaRef"
+          placeholder="무엇이든 물어보세요."
+          v-model="inputValue"
+          @keydown.enter.exact.prevent="onSend"
+          @input="autoGrow"
+          :disabled="isLoading"
+          rows="1"
+        ></textarea>
       </div>
+      <div class="frame-3">
+        <div class="input-state-button"><div class="vector-17"></div></div>
+        <div 
+          class="input-state-button-18" 
+          @click="onSend"
+          :class="{ 'disabled': isLoading }"
+        >
+          <div class="vector-19"></div>
+        </div>
+      </div>
+    </div>
+    <div class="disclaimer-text">
+      EULGPT도 실수할 수 있어요. EULGPT도 함께 배워 나갈게요.
     </div>
   </div>
 </template>
@@ -158,6 +163,18 @@ textarea:disabled {
 .vector-17, .vector-19 {
   width: 20px;
   height: 20px;
+}
+
+.disclaimer-text {
+  width: 278px;
+  color: var(--Gray-300, #9CA3AF);
+  text-align: center;
+  font-family: Pretendard;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+  margin: 18px auto 18px auto;
 }
 
 </style>
