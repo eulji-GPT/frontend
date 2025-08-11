@@ -1,3 +1,4 @@
+<!-- Test comment to force re-compilation -->
 <template>
   <div class="main-container">
     <div class="chatbot-sidebar-wrapper">
@@ -10,7 +11,7 @@
               <div class="union"></div>
             </div>
           </div>
-          <div class="edit-icon"></div>
+          <div class="edit-icon" @click="startNewChat"></div>
         </div>
         <div class="frame-2">
           <div class="chatbot-menu-item">
@@ -23,27 +24,20 @@
             </div>
             <div class="frame-7">
               <div class="group-8"></div>
-              <span class="library-study-room-reservation"
-                >도서관 ∙ 열람실 자리 예약</span
-              >
+              <span class="library-study-room-reservation">도서관 ∙ 열람실 자리 예약</span>
             </div>
             <div class="frame-9">
-              <div class="group-a">
-                <div class="group-d"></div>
-              </div>
+              <div class="group-a"></div>
               <span class="status">학식당 현황</span>
             </div>
           </div>
-          <div class="frame-10">
-            <div class="chat-list-link">
-              <span class="conversation-list">대화 리스트</span>
-            </div>
-            <div class="frame-11">
-              <div class="chat-list-container">
-                <span class="start-chat">지금 바로 대화를 시작해보세요</span>
-              </div>
-            </div>
-          </div>
+          <ChatHistory 
+            :chatHistory="chatHistory" 
+            :currentChatId="currentChatId" 
+            @selectChat="selectChat"
+            @startNewChat="startNewChat"
+            @deleteChat="deleteChat"
+          />
         </div>
       </div>
       <div class="side-footer">
@@ -55,306 +49,390 @@
       </div>
     </div>
     <div class="chat-content-col">
-      <!-- 메시지 표시 영역 -->
-      <div class="chat-messages-area">
-        <div v-for="(msg, idx) in messages" :key="idx" class="message-wrapper">
-          <ChatBubble :align="msg.isUser ? 'right' : 'left'">
-            {{ msg.text }}
-          </ChatBubble>
-        </div>
-      </div>
-      
-      <!-- 하단 입력 영역 -->
-      <div class="frame-13">
-        <div class="frame-14">
-          <div style="display: flex; width: 100%; flex-direction: row; align-items: flex-end;">
-            <div class="ask-anything">
-              <input
-                type="text"
-                placeholder="무엇이든 물어보세요."
-                v-model="inputValue"
-                @keyup.enter="handleSend"
-                @input="console.log('입력 변경:', $event.target.value)"
-                :disabled="isLoading"
-                style="width: 100%; border: none; outline: none; background: transparent; font-size: 16px; color: #222;"
-              />
-            </div>
-            <div class="frame-16">
-              <div class="input-state-button"><div class="vector-17"></div></div>
-              <div 
-                class="input-state-button-18" 
-                @click="() => { console.log('버튼 클릭 처리 시작'); handleSend(); }"
-                :class="{ 'disabled': isLoading }"
-              >
-                <div class="vector-19"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="frame-1a">
-          <span class="privacy-policy">개인정보 처리방침</span
-          ><span class="vertical-line">|</span
-          ><span class="copyright-text"
-            >Copyright ⓒ EULGPT. All Rights Reserved
-          </span>
-        </div>
-      </div>
+      <ChatMessageArea :messages="messages" />
+      <ChatInput :isLoading="isLoading" @sendMessage="handleSendMessage" />
     </div>
-    <div class="input-button-22"><div class="button-group"></div></div>
   </div>
 </template>
 
-<script setup>
-import { ref, nextTick } from 'vue';
-import ChatBubble from './ChatBubble.vue';
+<script setup lang="ts">
+import { ref } from 'vue';
+import ChatHistory from './ChatHistory.vue';
+import ChatMessageArea from './ChatMessageArea.vue';
+import ChatInput from './ChatInput.vue';
+import { useChat } from '../../composables/useChat';
 import "./index.css";
 
-const inputValue = ref("");
-const messages = ref([]);
-const messagesContainer = ref(null);
-const isLoading = ref(false);
+const { 
+  messages, 
+  chatHistory, 
+  currentChatId, 
+  isLoading, 
+  startNewChat, 
+  selectChat, 
+  deleteChat, 
+  handleSend 
+} = useChat();
 
-// Gemini API 설정 - 스트리밍 지원
-const GEMINI_API_KEY = '//////'; // 실제 API 키로 교체하세요
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:streamGenerateContent';
+const handleSendMessage = (message: string) => {
+  const inputValue = ref(message);
+  handleSend(inputValue);
+};
 
-// 스트리밍 Gemini API 호출 함수
-async function callGeminiStreamAPI(message, messageIndex) {
-  try {
-    const response = await fetch(GEMINI_API_URL, {
-      method: 'POST',
-      headers: {
-        'x-goog-api-key': GEMINI_API_KEY,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                text: message
-              }
-            ]
-          }
-        ]
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let accumulatedText = '';
-
-    // 로딩 상태를 일반 메시지로 변경
-    if (messages.value[messageIndex]) {
-      messages.value[messageIndex] = {
-        text: '',
-        isUser: false,
-        timestamp: new Date(),
-        isLoading: false,
-        isStreaming: true
-      };
-    }
-
-
-    let gotResponse = false;
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      const chunk = decoder.decode(value, { stream: true });
-      const lines = chunk.split('\n');
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed) continue;
-        if (trimmed === 'data: [DONE]') continue;
-        if (trimmed.startsWith('data: ')) {
-          try {
-            const jsonStr = trimmed.slice(6);
-            const data = JSON.parse(jsonStr);
-            if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
-              const newText = data.candidates[0].content.parts[0].text || '';
-              if (newText) {
-                gotResponse = true;
-                accumulatedText += newText;
-                if (messages.value[messageIndex]) {
-                  messages.value[messageIndex] = {
-                    text: accumulatedText,
-                    isUser: false,
-                    timestamp: new Date(),
-                    isLoading: false,
-                    isStreaming: true
-                  };
-                }
-                scrollToBottom();
-              }
-            }
-          } catch (parseError) {
-            // JSON 파싱 실패는 무시
-          }
-        }
-      }
-    }
-
-    // 스트리밍 완료
-    if (messages.value[messageIndex]) {
-      messages.value[messageIndex] = {
-        text: gotResponse ? accumulatedText : '응답을 받지 못했습니다.',
-        isUser: false,
-        timestamp: new Date(),
-        isLoading: false,
-        isStreaming: false
-      };
-    }
-
-  } catch (error) {
-    console.error('Gemini 스트리밍 API 호출 오류:', error);
-    if (messages.value[messageIndex]) {
-      messages.value[messageIndex] = {
-        text: '죄송합니다. 현재 응답을 생성할 수 없습니다. 잠시 후 다시 시도해주세요.',
-        isUser: false,
-        timestamp: new Date(),
-        isLoading: false,
-        isStreaming: false
-      };
-    }
-  }
-}
-
-async function handleSend() {
-  if (!inputValue.value.trim() || isLoading.value) return;
-  
-  // userMessage를 함수 시작 부분에서 선언
-  const userMessage = inputValue.value.trim();
-  
-  // 유저 메시지 추가
-  messages.value.push({
-    text: userMessage,
-    isUser: true,
-    timestamp: new Date()
-  });
-  
-  // 입력 필드 초기화
-  inputValue.value = "";
-  scrollToBottom();
-  
-  // 로딩 상태 활성화
-  isLoading.value = true;
-  
-  // 로딩 메시지 추가 - 인덱스를 먼저 계산
-  const loadingMessageIndex = messages.value.length;
-  messages.value.push({
-    text: "답변을 생성하고 있습니다...",
-    isUser: false,
-    timestamp: new Date(),
-    isLoading: true,
-    isStreaming: false
-  });
-  
-  scrollToBottom();
-  
-  try {
-    // 스트리밍 API 호출
-    await callGeminiStreamAPI(userMessage, loadingMessageIndex);
-  } catch (error) {
-    console.error('스트리밍 오류:', error);
-    if (messages.value[loadingMessageIndex]) {
-      messages.value[loadingMessageIndex] = {
-        text: "죄송합니다. 오류가 발생했습니다. 다시 시도해주세요.",
-        isUser: false,
-        timestamp: new Date(),
-        isLoading: false,
-        isStreaming: false
-      };
-    }
-  } finally {
-    isLoading.value = false;
-    scrollToBottom();
-  }
-}
-
-// 스크롤 함수
-function scrollToBottom() {
-  nextTick(() => {
-    if (messagesContainer.value) {
-      messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
-    }
-  });
-}
 </script>
 
 <style scoped>
-.chat-messages-area {
+/* Keep only the styles for the main layout */
+.main-container {
+  display: flex;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+}
+
+.chatbot-sidebar-wrapper {
   display: flex;
   flex-direction: column;
-  width: 100%;
-  max-width: 770px; /* frame-14와 같은 최대 너비 */
+  width: 270px;
+  height: 100vh;
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
+}
+
+.chat-content-col {
+  display: flex;
+  flex-direction: column;
   flex: 1;
-  padding: 20px 10px;
-  overflow-y: auto;
-  gap: 8px;
-  margin: 0 auto; /* 중앙 정렬 */
-  scroll-behavior: smooth; /* 부드러운 스크롤 */
+  min-width: 0; /* Important for child flex shrinkage */
+  height: 100vh;
 }
 
-.message-wrapper {
-  width: 100%;
+/* Other layout styles from the original file can be kept here */
+.frame {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  flex: 1 1 0%;
+  min-height: 0;
+  position: relative;
+  width: 100%;
+  padding: 8px 0 0 0;
+  z-index: 9;
+}
+.chatbot-logo-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  gap: 49px;
+  position: relative;
+  width: 100%;
+  height: 36px;
+  padding: 0 20px 0 20px;
+  background: #ffffff;
+  /* border-right removed to prevent double lines */
+  z-index: 10;
+}
+.frame-1 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  gap: 15px;
+  position: relative;
+  width: 145px;
+  z-index: 11;
+}
+.common-icon {
+  flex-shrink: 0;
+  position: relative;
+  width: 24px;
+  height: 24px;
+  background: url('./icon/-three.svg') no-repeat center;
+  background-size: cover;
+  z-index: 12;
+  overflow: hidden;
+}
+.group {
+  flex-shrink: 0;
+  position: relative;
+  width: 106px;
+  height: 36.3px;
+  z-index: 13;
+}
+.eulgpt {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  position: absolute;
+  height: 36.3px;
+  top: 0;
+  left: 0;
+  color: #02478a;
+  font-family: Poppins, var(--default-font-family);
+  font-size: 24.023174285888672px;
+  font-weight: 700;
+  line-height: 36.035px;
+  text-align: left;
+  white-space: nowrap;
+  letter-spacing: 0.48px;
+  z-index: 14;
+}
+.union {
+  position: absolute;
+  width: 10.39px;
+  height: 10.391px;
+  top: 1.603px;
+  left: 95.61px;
+  background: url('./icon/Union.svg') no-repeat center;
+  background-size: cover;
+  z-index: 15;
+}
+.edit-icon {
+  flex-shrink: 0;
+  position: relative;
+  width: 22px;
+  height: 22px;
+  background: url('./icon/write.svg') no-repeat center;
+  background-size: cover;
+  z-index: 16;
+  overflow: hidden;
+}
+.frame-2 {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  align-self: stretch;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  gap: 40px;
+  position: relative;
+  min-width: 0;
+  height: 681px;
+  padding: 20px 0 0 0;
+  z-index: 17;
+}
+.chatbot-menu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  gap: 16px;
+  position: relative;
+  width: 100%;
+  padding: 0 20px 0 20px;
+  background: #ffffff;
+  z-index: 18;
+}
+.frame-3 {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  gap: 10px;
+  position: relative;
+  width: 115px;
+  z-index: 19;
+}
+.group-4 {
+  flex-shrink: 0;
+  position: relative;
+  width: 25px;
+  height: 27.004px;
+  z-index: 20;
+}
+.group-5 {
+  position: relative;
+  width: 14.078px;
+  height: 9.751px;
+  margin: 0 0 0 5.582px;
+  background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-31/CcpStAfx5O.png)
+    no-repeat center;
+  background-size: 100% 100%;
+  z-index: 21;
+  border-radius: 6.251px;
+}
+.frame-6 {
+  position: relative;
+  width: 25px;
+  height: 22.003px;
+  margin: -4.751px 0 0 0;
+  background: rgba(2, 71, 138, 0.1);
+  z-index: 22;
+  overflow: hidden;
+  border-radius: 6.251px;
+}
+.day {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  position: absolute;
+  height: 54px;
+  top: -16.5px;
+  left: 3.75px;
+  color: #02478a;
+  font-family: Pretendard, var(--default-font-family);
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 54px;
+  text-align: left;
+  white-space: nowrap;
+  z-index: 23;
+}
+.empty-classroom-check {
+  flex-shrink: 0;
+  flex-basis: auto;
+  position: relative;
+  height: 23px;
+  color: #000000;
+  font-family: Pretendard, var(--default-font-family);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 23px;
+  text-align: left;
+  white-space: nowrap;
+  z-index: 24;
+}
+.frame-7 {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  gap: 10px;
+  position: relative;
+  min-width: 0;
+  z-index: 25;
+}
+.group-8 {
+  flex-shrink: 0;
+  position: relative;
+  width: 25px;
+  height: 25px;
+  background: url('./icon/도서관.svg') no-repeat center;
+  background-size: cover;
+  z-index: 26;
+}
+.library-study-room-reservation {
+  flex-shrink: 0;
+  flex-basis: auto;
+  position: relative;
+  height: 23px;
+  color: #000000;
+  font-family: Pretendard, var(--default-font-family);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 23px;
+  text-align: left;
+  white-space: nowrap;
+  z-index: 27;
+}
+.frame-9 {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  gap: 10px;
+  position: relative;
+  width: 99px;
+  z-index: 28;
+}
+.group-a {
+  flex-shrink: 0;
+  position: relative;
+  width: 25px;
+  height: 25px;
+  background: url('./icon/학식당.svg') no-repeat center;
+  background-size: cover;
+  z-index: 29;
+}
+.status {
+  flex-shrink: 0;
+  flex-basis: auto;
+  position: relative;
+  height: 23px;
+  color: #000000;
+  font-family: Pretendard, var(--default-font-family);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 23px;
+  text-align: left;
+  white-space: nowrap;
+  z-index: 35;
+}
+.side-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  position: relative;
+  width: 100%;
+  height: 59px;
+  padding: 20px 10px 20px 20px;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  z-index: 42;
+}
+.ellipse {
+  flex-shrink: 0;
+  position: relative;
+  width: 23px;
+  height: 23px;
+  background: url('./icon/회색원.svg') no-repeat center;
+  background-size: cover;
+  z-index: 43;
+  border-radius: 50%;
+}
+.frame-12 {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  gap: 15px;
+  position: relative;
+  width: 80px;
+  padding: 10px 10px 10px 10px;
+  z-index: 44;
+}
+.notification {
+  flex-shrink: 0;
+  position: relative;
+  width: 23px;
+  height: 24px;
+  background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-31/iOezR9XJsU.png)
+    no-repeat center;
+  background-size: cover;
+  z-index: 45;
+}
+.icon-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  gap: 4px;
+  position: relative;
+  width: 22px;
+  height: 22px;
+  padding: 2px 2px 2px 2px;
+  z-index: 46;
+  overflow: hidden;
+}
+.vector {
+  flex-shrink: 0;
+  position: relative;
+  width: 18px;
+  height: 18px;
+  background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-31/SMBaVrFnBf.png)
+    no-repeat center;
+  background-size: cover;
+  z-index: 47;
 }
 
-/* ChatBubble의 정렬을 위한 추가 스타일 */
-.message-wrapper :deep(.chat-bubble.right) {
-  align-self: flex-end;
-}
-
-.message-wrapper :deep(.chat-bubble.left) {
-  align-self: flex-start;
-}
-
-/* 기존 .user-message 스타일 비활성화 */
-.user-message {
-  display: none;
-}
-
-/* 로딩 상태 스타일 */
-.input-state-button-18.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-input:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-/* 자연스러운 스크롤바 스타일 */
-.chat-messages-area::-webkit-scrollbar {
-  width: 6px;
-}
-
-.chat-messages-area::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.chat-messages-area::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 3px;
-}
-
-.chat-messages-area::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
-}
-
-/* 반응형 디자인 */
-@media (max-width: 1024px) {
-  .chat-messages-area {
-    width: 90vw;
-    max-width: 98vw;
-  }
-}
 </style>
