@@ -19,7 +19,7 @@ const routes = [
   },
   {
     path: '/crew',
-    component: () => import('../components/crew/Desktop20.vue')
+    component: () => import('../components/crew/Desktop21.vue')
   },
   {
     path: '/crew-main',

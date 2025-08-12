@@ -114,22 +114,22 @@ const faqs = ref<FAQ[]>([
   {
     question: "을지피티가 뭔가요?",
     answer: "Ai 대화형 서비스 입니다. Ai 대화형 서비스 입니다.",
-    iconSrc: "grida://assets-reservation/images/I888:6747;479:3609"
+    iconSrc: "https://via.placeholder.com/40x40/4789EE/FFFFFF?text=?"
   },
   {
     question: "을지피티가 뭔가요?",
     answer: "Ai 대화형 서비스 입니다. Ai 대화형 서비스 입니다.",
-    iconSrc: "grida://assets-reservation/images/I888:6748;479:3609"
+    iconSrc: "https://via.placeholder.com/40x40/4789EE/FFFFFF?text=?"
   },
   {
     question: "을지피티가 뭔가요?",
     answer: "Ai 대화형 서비스 입니다. Ai 대화형 서비스 입니다.",
-    iconSrc: "grida://assets-reservation/images/I888:6749;479:3609"
+    iconSrc: "https://via.placeholder.com/40x40/4789EE/FFFFFF?text=?"
   },
   {
     question: "을지피티가 뭔가요?",
     answer: "Ai 대화형 서비스 입니다. Ai 대화형 서비스 입니다.",
-    iconSrc: "grida://assets-reservation/images/I888:6750;479:3609"
+    iconSrc: "https://via.placeholder.com/40x40/4789EE/FFFFFF?text=?"
   }
 ]);
 </script>
