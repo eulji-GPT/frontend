@@ -5,9 +5,14 @@
         <LottieLoader />
         <span class="loading-text">Searching...</span>
       </div>
-      <ChatBubble v-else :align="msg.isUser ? 'right' : 'left'" :is-loading="false" :is-streaming="msg.isStreaming">
-        {{ msg.text }}
-      </ChatBubble>
+      <ChatBubble 
+        v-else 
+        :align="msg.isUser ? 'right' : 'left'" 
+        :is-loading="false" 
+        :is-streaming="msg.isStreaming || false"
+        :content="msg.text || ''"
+        :use-markdown="!msg.isUser"
+      />
     </div>
   </div>
 </template>
@@ -43,7 +48,7 @@ watch(() => props.messages, () => {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 770px;
+  max-width: 1000px; /* 770px에서 1000px로 확장 */
   flex: 1 1 auto; /* Let it grow and shrink */
   overflow-y: auto; /* It must scroll its own content */
   min-height: 0; /* Important for shrinking below its content size */
@@ -97,9 +102,20 @@ watch(() => props.messages, () => {
   background: rgba(0, 0, 0, 0.3);
 }
 
+@media (max-width: 1200px) {
+  .chat-messages-area {
+    max-width: 90vw;
+  }
+}
+
 @media (max-width: 1024px) {
   .chat-messages-area {
-    width: 90vw;
+    max-width: 95vw;
+  }
+}
+
+@media (max-width: 768px) {
+  .chat-messages-area {
     max-width: 98vw;
   }
 }

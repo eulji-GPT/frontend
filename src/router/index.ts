@@ -16,6 +16,14 @@ const routes = [
   {
     path: '/lotte-preview',
     component: () => import('../views/LottiePreview.vue')
+  },
+  {
+    path: '/crew',
+    component: () => import('../components/crew/Desktop20.vue')
+  },
+  {
+    path: '/crew-main',
+    component: () => import('../components/crew/CrewMain.vue')
   }
 ]
 

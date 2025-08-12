@@ -1,6 +1,17 @@
 <template>
   <div>
     <div :class="['common-chatinputbox', className]">
+      <!-- 이미지 미리보기 -->
+      <div v-if="selectedImages.length > 0" class="image-preview-container">
+        <div 
+          v-for="(image, index) in selectedImages" 
+          :key="index" 
+          class="image-preview"
+        >
+          <img :src="image.preview" :alt="`업로드된 이미지 ${index + 1}`" />
+          <button @click="removeImage(index)" class="remove-image-btn">×</button>
+        </div>
+      </div>
       <div class="textarea-wrapper">
         <textarea
           ref="textareaRef"
@@ -13,13 +24,25 @@
         ></textarea>
       </div>
       <div class="frame-3">
-        <div class="input-state-button"><div class="vector-17"></div></div>
+        <div class="input-state-button" @click="triggerImageUpload" title="이미지 업로드">
+          <div class="vector-17"></div>
+          <input 
+            ref="imageInput" 
+            type="file" 
+            accept="image/*" 
+            @change="handleImageUpload" 
+            style="display: none" 
+            multiple
+          />
+        </div>
         <div 
           class="input-state-button-18" 
-          @click="onSend"
-          :class="{ 'disabled': isLoading }"
+          @click="isStreaming ? onStop() : onSend()"
+          :class="{ 'disabled': isLoading && !isStreaming, 'stop-button': isStreaming }"
+          :title="isStreaming ? '답변 중지' : '메시지 전송'"
         >
-          <div class="vector-19"></div>
+          <div v-if="isStreaming" class="stop-icon">⏹</div>
+          <div v-else class="vector-19"></div>
         </div>
       </div>
     </div>
@@ -34,15 +57,19 @@ import { ref, watch, onMounted, nextTick } from 'vue';
 
 const props = defineProps<{
   isLoading: boolean;
+  isStreaming: boolean;
   className?: string;
 }>();
 
 const emit = defineEmits<{
-  (e: 'sendMessage', message: string): void;
+  (e: 'sendMessage', message: string, images?: File[]): void;
+  (e: 'stopResponse'): void;
 }>();
 
 const inputValue = ref('');
+const selectedImages = ref<Array<{ file: File; preview: string }>>([]);
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
+const imageInput = ref<HTMLInputElement | null>(null);
 
 const autoGrow = () => {
   if (textareaRef.value) {
@@ -60,9 +87,11 @@ onMounted(() => {
 });
 
 const onSend = () => {
-  if (inputValue.value.trim() && !props.isLoading) {
-    emit('sendMessage', inputValue.value);
+  if ((inputValue.value.trim() || selectedImages.value.length > 0) && !props.isLoading && !props.isStreaming) {
+    const images = selectedImages.value.map(img => img.file);
+    emit('sendMessage', inputValue.value, images.length > 0 ? images : undefined);
     inputValue.value = '';
+    selectedImages.value = [];
     // Reset height after sending
     nextTick(() => {
       if (textareaRef.value) {
@@ -70,6 +99,48 @@ const onSend = () => {
       }
     });
   }
+};
+
+const onStop = () => {
+  emit('stopResponse');
+};
+
+const triggerImageUpload = () => {
+  if (imageInput.value) {
+    imageInput.value.click();
+  }
+};
+
+const handleImageUpload = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const files = target.files;
+  
+  if (files) {
+    Array.from(files).forEach(file => {
+      // 파일 크기 체크 (20MB 제한)
+      if (file.size > 20 * 1024 * 1024) {
+        alert('이미지 파일 크기는 20MB를 초과할 수 없습니다.');
+        return;
+      }
+      
+      // 이미지 미리보기 생성
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        selectedImages.value.push({
+          file: file,
+          preview: e.target?.result as string
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  
+  // input 초기화
+  target.value = '';
+};
+
+const removeImage = (index: number) => {
+  selectedImages.value.splice(index, 1);
 };
 </script>
 
@@ -86,7 +157,8 @@ const onSend = () => {
   overflow: hidden;
   padding: 16px 10px;
   position: relative;
-  width: 770px;
+  width: 1000px; /* 770px에서 1000px로 확장 */
+  max-width: 1000px;
   min-width: 0;
   flex-shrink: 0; /* Prevent shrinking */
 }
@@ -160,9 +232,28 @@ textarea:disabled {
   cursor: not-allowed;
 }
 
+.input-state-button-18.stop-button {
+  border-radius: 100px;
+  border: 1px solid var(--Black, #000);
+  background: var(--Black, #000);
+}
+
+.input-state-button-18.stop-button:hover {
+  background: #374151;
+}
+
+.stop-icon {
+  font-size: 16px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .vector-17, .vector-19 {
   width: 20px;
   height: 20px;
+  filter: brightness(0) invert(1); /* 흰색으로 변경 */
 }
 
 .disclaimer-text {
@@ -175,6 +266,83 @@ textarea:disabled {
   font-weight: 500;
   line-height: normal;
   margin: 18px auto 18px auto;
+}
+
+.image-preview-container {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+  padding: 8px 0;
+}
+
+.image-preview {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+
+.image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #dc2626;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.remove-image-btn:hover {
+  background: #b91c1c;
+}
+
+.input-state-button {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.input-state-button:hover {
+  background-color: #e5e7eb;
+}
+
+/* 반응형 설정 */
+@media (max-width: 1200px) {
+  .common-chatinputbox {
+    width: 90vw;
+    max-width: 90vw;
+  }
+}
+
+@media (max-width: 1024px) {
+  .common-chatinputbox {
+    width: 95vw;
+    max-width: 95vw;
+  }
+}
+
+@media (max-width: 768px) {
+  .common-chatinputbox {
+    width: 98vw;
+    max-width: 98vw;
+  }
 }
 
 </style>

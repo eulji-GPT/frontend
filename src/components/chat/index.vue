@@ -37,6 +37,7 @@
             @selectChat="selectChat"
             @startNewChat="startNewChat"
             @deleteChat="deleteChat"
+            @updateChatTitle="updateChatTitle"
           />
         </div>
       </div>
@@ -50,7 +51,12 @@
     </div>
     <div class="chat-content-col">
       <ChatMessageArea :messages="messages" />
-      <ChatInput :isLoading="isLoading" @sendMessage="handleSendMessage" />
+      <ChatInput 
+        :isLoading="isLoading" 
+        :isStreaming="isStreaming"
+        @sendMessage="handleSendMessage" 
+        @stopResponse="stopResponse"
+      />
     </div>
   </div>
 </template>
@@ -68,15 +74,18 @@ const {
   chatHistory, 
   currentChatId, 
   isLoading, 
+  isStreaming,
   startNewChat, 
   selectChat, 
   deleteChat, 
-  handleSend 
+  handleSend,
+  stopResponse,
+  updateChatTitle
 } = useChat();
 
-const handleSendMessage = (message: string) => {
+const handleSendMessage = (message: string, images?: File[]) => {
   const inputValue = ref(message);
-  handleSend(inputValue);
+  handleSend(inputValue, images);
 };
 
 </script>
