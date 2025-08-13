@@ -63,8 +63,10 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 import HeaderSection from '../main/HeaderSection.vue';
 
+const router = useRouter();
 const KAKAO_REST_API_KEY = 'YOUR_KAKAO_REST_API_KEY';
 const REDIRECT_URI = window.location.origin + '/login';
 
@@ -72,8 +74,8 @@ const isLoading = ref(false);
 const errorMessage = ref('');
 
 const handleEulgptSignup = () => {
-  // EULGPT 직접 회원가입 로직
-  console.log('EULGPT 회원가입');
+  // EULGPT 회원가입 페이지로 이동
+  router.push('/signup');
 };
 
 const handleKakaoLogin = () => {

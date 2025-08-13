@@ -1,4 +1,4 @@
-import { ref, nextTick, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 
 export interface ChatMessage {
   text: string;
@@ -242,7 +242,7 @@ export function useChat() {
       let errorMessage = '죄송합니다. 오류가 발생했습니다.';
       
       // 사용자가 중지한 경우
-      if (error.name === 'AbortError') {
+      if ((error as Error).name === 'AbortError') {
         errorMessage = '답변이 중지되었습니다.';
         console.log('⏹️ 사용자가 답변을 중지했습니다.');
       } else if (error instanceof TypeError && error.message.includes('fetch')) {
@@ -288,7 +288,7 @@ export function useChat() {
       formData.append('message', message);
       
       // 이미지들을 FormData에 추가
-      images.forEach((image, index) => {
+      images.forEach((image, _) => {
         formData.append('images', image);
       });
 
@@ -360,7 +360,7 @@ export function useChat() {
       
       let errorMessage = '죄송합니다. 오류가 발생했습니다.';
       
-      if (error.name === 'AbortError') {
+      if ((error as Error).name === 'AbortError') {
         errorMessage = '답변이 중지되었습니다.';
         console.log('⏹️ 사용자가 답변을 중지했습니다.');
       } else if (error instanceof TypeError && error.message.includes('fetch')) {
@@ -388,7 +388,7 @@ export function useChat() {
     }
   }
 
-  async function handleSend(inputValue: ref<string>, images?: File[]) {
+  async function handleSend(inputValue: { value: string }, images?: File[]) {
     if ((!inputValue.value.trim() && !images?.length) || isLoading.value) return;
 
     const userMessageText = inputValue.value.trim();

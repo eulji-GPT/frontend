@@ -88,9 +88,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import HeaderSection from '../main/HeaderSection.vue';
-import { useRouter } from 'vue-router';
+// import { useRouter } from 'vue-router';
 
-const router = useRouter();
+// const router = useRouter();
 
 // 체크박스 이미지 (실제 이미지 경로로 교체 필요)
 const checkedIcon = '/src/assets/checkbox-checked.svg';
