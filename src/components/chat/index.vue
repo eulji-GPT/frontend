@@ -1,7 +1,8 @@
 <!-- Test comment to force re-compilation -->
 <template>
   <div class="main-container">
-    <div class="chatbot-sidebar-wrapper">
+    <div class="mobile-overlay" v-if="showMobileOverlay" @click="toggleSidebar"></div>
+    <div class="chatbot-sidebar-wrapper" :class="{ 'mobile-hidden': !sidebarVisible }" :style="{ width: sidebarWidth + 'px' }">
       <div class="frame">
         <div class="chatbot-logo-header">
           <div class="frame-1">
@@ -48,21 +49,39 @@
           <div class="icon-info"><div class="vector"></div></div>
         </div>
       </div>
+      <div 
+        class="sidebar-resizer"
+        v-if="!isMobile"
+        @mousedown="startResize"
+        :class="{ 'resizing': isResizing }"
+      ></div>
     </div>
     <div class="chat-content-col">
-      <ChatMessageArea :messages="messages" />
-      <ChatInput 
-        :isLoading="isLoading" 
-        :isStreaming="isStreaming"
-        @sendMessage="handleSendMessage" 
-        @stopResponse="stopResponse"
-      />
+      <div class="mobile-header">
+        <button class="mobile-menu-toggle" @click="toggleSidebar">
+          <div class="hamburger-icon"></div>
+        </button>
+        <div class="mobile-logo">
+          <span class="eulgpt-mobile">EULGPT</span>
+        </div>
+      </div>
+      <div class="chat-main-area">
+        <ChatMessageArea :messages="messages" />
+        <div class="chat-input-area">
+          <ChatInput 
+            :isLoading="isLoading" 
+            :isStreaming="isStreaming"
+            @sendMessage="handleSendMessage" 
+            @stopResponse="stopResponse"
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import ChatHistory from './ChatHistory.vue';
 import ChatMessageArea from './ChatMessageArea.vue';
 import ChatInput from './ChatInput.vue';
@@ -88,6 +107,72 @@ const handleSendMessage = (message: string, images?: File[]) => {
   handleSend(inputValue, images);
 };
 
+const isMobile = ref(false);
+const sidebarVisible = ref(true);
+const sidebarWidth = ref(Number(localStorage.getItem('sidebarWidth')) || 270);
+const isResizing = ref(false);
+const minSidebarWidth = 200;
+const maxSidebarWidth = 500;
+
+const showMobileOverlay = computed(() => isMobile.value && sidebarVisible.value);
+
+const checkMobileSize = () => {
+  isMobile.value = window.innerWidth <= 768;
+  if (isMobile.value) {
+    sidebarVisible.value = false;
+  } else {
+    sidebarVisible.value = true;
+  }
+};
+
+const toggleSidebar = () => {
+  sidebarVisible.value = !sidebarVisible.value;
+};
+
+const startResize = (e: MouseEvent) => {
+  if (isMobile.value) return;
+  
+  isResizing.value = true;
+  const startX = e.clientX;
+  const startWidth = sidebarWidth.value;
+  
+  const handleMouseMove = (moveEvent: MouseEvent) => {
+    const deltaX = moveEvent.clientX - startX;
+    const newWidth = startWidth + deltaX;
+    
+    if (newWidth >= minSidebarWidth && newWidth <= maxSidebarWidth) {
+      sidebarWidth.value = newWidth;
+    }
+  };
+  
+  const handleMouseUp = () => {
+    isResizing.value = false;
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    
+    // 사이드바 크기를 localStorage에 저장
+    localStorage.setItem('sidebarWidth', sidebarWidth.value.toString());
+  };
+  
+  document.addEventListener('mousemove', handleMouseMove);
+  document.addEventListener('mouseup', handleMouseUp);
+  document.body.style.cursor = 'col-resize';
+  document.body.style.userSelect = 'none';
+  
+  e.preventDefault();
+};
+
+onMounted(() => {
+  checkMobileSize();
+  window.addEventListener('resize', checkMobileSize);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobileSize);
+});
+
 </script>
 
 <style scoped>
@@ -102,10 +187,13 @@ const handleSendMessage = (message: string, images?: File[]) => {
 .chatbot-sidebar-wrapper {
   display: flex;
   flex-direction: column;
+  position: relative;
   width: 270px;
   height: 100vh;
   background: #ffffff;
   border-right: 1px solid #e5e7eb;
+  min-width: 200px;
+  max-width: 500px;
 }
 
 .chat-content-col {
@@ -114,6 +202,8 @@ const handleSendMessage = (message: string, images?: File[]) => {
   flex: 1;
   min-width: 0; /* Important for child flex shrinkage */
   height: 100vh;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 /* Other layout styles from the original file can be kept here */
@@ -132,9 +222,9 @@ const handleSendMessage = (message: string, images?: File[]) => {
 .chatbot-logo-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   flex-wrap: nowrap;
   flex-shrink: 0;
-  gap: 49px;
   position: relative;
   width: 100%;
   height: 36px;
@@ -146,12 +236,12 @@ const handleSendMessage = (message: string, images?: File[]) => {
 .frame-1 {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   flex-wrap: nowrap;
-  flex-shrink: 0;
+  flex-shrink: 1;
   gap: 15px;
   position: relative;
-  width: 145px;
+  min-width: 0;
   z-index: 11;
 }
 .common-icon {
@@ -165,9 +255,9 @@ const handleSendMessage = (message: string, images?: File[]) => {
   overflow: hidden;
 }
 .group {
-  flex-shrink: 0;
+  flex-shrink: 1;
   position: relative;
-  width: 106px;
+  min-width: 0;
   height: 36.3px;
   z-index: 13;
 }
@@ -175,26 +265,26 @@ const handleSendMessage = (message: string, images?: File[]) => {
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
-  position: absolute;
+  position: relative;
   height: 36.3px;
-  top: 0;
-  left: 0;
   color: #02478a;
   font-family: Poppins, var(--default-font-family);
-  font-size: 24.023174285888672px;
+  font-size: 24px;
   font-weight: 700;
-  line-height: 36.035px;
+  line-height: 36px;
   text-align: left;
   white-space: nowrap;
   letter-spacing: 0.48px;
   z-index: 14;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .union {
   position: absolute;
   width: 10.39px;
   height: 10.391px;
   top: 1.603px;
-  left: 95.61px;
+  right: 0;
   background: url('./icon/Union.svg') no-repeat center;
   background-size: cover;
   z-index: 15;
@@ -442,6 +532,275 @@ const handleSendMessage = (message: string, images?: File[]) => {
     no-repeat center;
   background-size: cover;
   z-index: 47;
+}
+
+/* Mobile overlay */
+.mobile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  display: none;
+}
+
+/* Mobile header */
+.mobile-header {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.mobile-menu-toggle {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.mobile-menu-toggle:hover {
+  background: #f3f4f6;
+}
+
+.hamburger-icon {
+  width: 20px;
+  height: 2px;
+  background: #02478a;
+  position: relative;
+}
+
+.hamburger-icon::before,
+.hamburger-icon::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 2px;
+  background: #02478a;
+  left: 0;
+}
+
+.hamburger-icon::before {
+  top: -6px;
+}
+
+.hamburger-icon::after {
+  top: 6px;
+}
+
+.mobile-logo .eulgpt-mobile {
+  color: #02478a;
+  font-family: Poppins, var(--default-font-family);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+/* Sidebar resizer */
+.sidebar-resizer {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  background: transparent;
+  z-index: 1001;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar-resizer:hover {
+  background: rgba(59, 130, 246, 0.3);
+}
+
+.sidebar-resizer.resizing {
+  background: rgba(59, 130, 246, 0.5);
+}
+
+.sidebar-resizer::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-50%);
+  width: 2px;
+  height: 40px;
+  background: #d1d5db;
+  border-radius: 1px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.sidebar-resizer:hover::after,
+.sidebar-resizer.resizing::after {
+  opacity: 1;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .main-container {
+    position: relative;
+  }
+  
+  .mobile-overlay {
+    display: block;
+  }
+  
+  .mobile-header {
+    display: flex;
+  }
+  
+  .chatbot-sidebar-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px !important;
+    min-width: unset !important;
+    max-width: unset !important;
+    height: 100vh;
+    z-index: 1000;
+    transform: translateX(0);
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .chatbot-sidebar-wrapper.mobile-hidden {
+    transform: translateX(-100%);
+  }
+  
+  .sidebar-resizer {
+    display: none;
+  }
+  
+  .chat-content-col {
+    width: 100%;
+    margin-left: 0;
+    padding: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .chatbot-sidebar-wrapper {
+    width: 100% !important;
+  }
+  
+  .chatbot-logo-header {
+    padding: 0 12px;
+    height: auto;
+    min-height: 36px;
+  }
+  
+  .frame-1 {
+    gap: 8px;
+  }
+  
+  .eulgpt {
+    font-size: 18px;
+    line-height: 28px;
+    height: auto;
+  }
+  
+  .union {
+    width: 8px;
+    height: 8px;
+    top: 2px;
+  }
+  
+  .edit-icon {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .chatbot-menu-item {
+    padding: 0 12px;
+  }
+  
+  .empty-classroom-check,
+  .library-study-room-reservation,
+  .status {
+    font-size: 13px;
+  }
+  
+  .mobile-logo .eulgpt-mobile {
+    font-size: 18px;
+  }
+  
+  .chat-content-col {
+    padding: 0;
+  }
+}
+
+/* Small mobile additional breakpoint */
+@media (max-width: 320px) {
+  .chatbot-logo-header {
+    padding: 0 8px;
+  }
+  
+  .frame-1 {
+    gap: 6px;
+  }
+  
+  .eulgpt {
+    font-size: 16px;
+    line-height: 24px;
+  }
+  
+  .common-icon {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .edit-icon {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .chat-content-col {
+    padding: 0;
+  }
+}
+
+/* Medium screens */
+@media (max-width: 640px) and (min-width: 481px) {
+  .chatbot-logo-header {
+    padding: 0 16px;
+  }
+  
+  .eulgpt {
+    font-size: 20px;
+    line-height: 32px;
+  }
+  
+  .chat-content-col {
+    padding: 0;
+  }
+}
+
+/* Tablet styles */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .chatbot-sidebar-wrapper {
+    width: 240px;
+  }
+  
+  .chatbot-logo-header {
+    padding: 0 16px;
+  }
+  
+  .chatbot-menu-item {
+    padding: 0 16px;
+  }
+  
+  .chat-content-col {
+    padding: 0;
+  }
 }
 
 </style>

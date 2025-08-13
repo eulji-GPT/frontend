@@ -66,4 +66,57 @@ export default {
   line-height: 1.3;
   position: relative;
 }
+
+/* 태블릿 반응형 */
+@media (max-width: 1024px) {
+  .common-footer {
+    padding: 10px 100px;
+    height: 100px;
+  }
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+  .common-footer {
+    padding: 15px 40px;
+    height: 90px;
+    gap: 8px;
+  }
+  
+  .common-footer .text-wrapper {
+    font-size: 0.75rem;
+    text-align: center;
+  }
+  
+  .common-footer .div {
+    font-size: 0.6rem;
+    text-align: center;
+  }
+  
+  .common-footer .text-wrapper-2 {
+    font-size: 0.55rem;
+    text-align: center;
+  }
+}
+
+/* 소형 모바일 반응형 */
+@media (max-width: 480px) {
+  .common-footer {
+    padding: 15px 20px;
+    height: 80px;
+    gap: 6px;
+  }
+  
+  .common-footer .text-wrapper {
+    font-size: 0.7rem;
+  }
+  
+  .common-footer .div {
+    font-size: 0.55rem;
+  }
+  
+  .common-footer .text-wrapper-2 {
+    font-size: 0.5rem;
+  }
+}
 </style>

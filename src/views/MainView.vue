@@ -54,4 +54,60 @@ const scrollToSection = async (id: string) => {
 
 <style>
 @import url('/src/assets/pretendard.css');
+
+.main-container {
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.main-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 전역 반응형 설정 */
+@media (max-width: 1440px) {
+  .main-container {
+    max-width: 100vw;
+  }
+}
+
+@media (max-width: 1024px) {
+  .main-container {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-container {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-container {
+    font-size: 12px;
+  }
+}
+
+/* 스크롤 스무스 처리 */
+html {
+  scroll-behavior: smooth;
+}
+
+/* 모바일에서 가로 스크롤 방지 */
+body {
+  overflow-x: hidden;
+}
+
+/* 터치 디바이스 최적화 */
+@media (hover: none) and (pointer: coarse) {
+  .main-container {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
 </style>

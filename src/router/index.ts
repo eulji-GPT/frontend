@@ -10,6 +10,14 @@ const routes = [
     component: () => import('../views/LoginView.vue')
   },
   {
+    path: '/signup',
+    component: () => import('../views/SignupView.vue')
+  },
+  {
+    path: '/signup-agreement',
+    component: () => import('../components/login/SignupAgreementComponent.vue')
+  },
+  {
     path: '/chat',
     component: () => import('../components/chat/index.vue')
   },
@@ -19,7 +27,7 @@ const routes = [
   },
   {
     path: '/crew',
-    component: () => import('../components/crew/Desktop21.vue')
+    component: () => import('../components/crew/Desktop20.vue')
   },
   {
     path: '/crew-main',

@@ -85,6 +85,7 @@ watch(() => props.messages, () => {
   align-self: flex-start;
 }
 
+
 .chat-messages-area::-webkit-scrollbar {
   width: 6px;
 }

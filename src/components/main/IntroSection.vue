@@ -39,8 +39,10 @@
   display: flex;
   width: 72.5vw; /* 1044/1440 * 100 */
   align-items: center;
-  gap: 2rem;
+  justify-content: space-between;
+  gap: 3rem;
   max-width: 1044px;
+  padding: 2rem 0;
 }
 
 .intro-text {
@@ -77,14 +79,21 @@
 
 .intro-image {
   width: 32.5vw; /* 468/1440 * 100 */
-  height: 58.5vh; /* 468/800 * 100 */
+  height: 32.5vw; /* 비율 유지를 위해 width와 동일하게 */
   max-width: 468px;
   max-height: 468px;
   flex-shrink: 0;
   aspect-ratio: 1/1;
-  background: url('../../assets/IntroSection/intro-image.svg') / cover no-repeat;
-  border-radius: 12px; /* 선택사항 */
-  margin-top: -120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+}
+
+.intro-image-svg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 /* 태블릿 크기 조정 */
@@ -111,6 +120,7 @@
     height: 50vw;
     max-width: 400px;
     max-height: 400px;
+    margin-top: 0;
   }
 }
 
@@ -141,6 +151,7 @@
     height: 70vw;
     max-width: 300px;
     max-height: 300px;
+    margin-top: 0;
   }
 }
 
@@ -159,5 +170,6 @@
     height: 80vw;
     max-width: 250px;
     max-height: 250px;
+    margin-top: 0;
   }
 }</style>

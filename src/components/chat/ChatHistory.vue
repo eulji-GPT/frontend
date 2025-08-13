@@ -20,7 +20,7 @@
             class="title-edit-input"
             maxlength="50"
           />
-          <span v-else>{{ chat.title }}</span>
+          <span v-else class="chat-title">{{ chat.title }}</span>
           <button @click.stop="$emit('deleteChat', chat.id)" class="delete-chat-button">x</button>
         </div>
       </div>
@@ -89,15 +89,22 @@ const cancelEditing = () => {
   position: relative;
   width: 100%;
   height: 532px;
-  padding: 0 20px 0 20px;
+  padding: 0 20px;
   z-index: 36;
 }
 .chat-list-link {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 20px;
+  padding: 0;
   width: 100%;
+}
+
+.conversation-list {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  font-family: Pretendard, var(--default-font-family);
 }
 
 
@@ -114,10 +121,13 @@ const cancelEditing = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px;
-  border-radius: 5px;
+  padding: 8px 12px;
+  border-radius: 6px;
   cursor: pointer;
   border: 1px solid transparent;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
 }
 
 .chat-history-item:hover {
@@ -129,12 +139,33 @@ const cancelEditing = () => {
   background-color: #f0f6ff;
 }
 
+.chat-title {
+  flex: 1;
+  font-size: 14px;
+  font-family: Pretendard, var(--default-font-family);
+  font-weight: 500;
+  color: #374151;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  margin-right: 8px;
+}
+
 .delete-chat-button {
   background: transparent;
   border: none;
   color: #9ca3af;
   cursor: pointer;
   visibility: hidden;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  font-size: 16px;
+  line-height: 1;
 }
 
 .chat-history-item:hover .delete-chat-button {
@@ -159,7 +190,7 @@ const cancelEditing = () => {
   flex-shrink: 0;
   gap: 5px;
   position: relative;
-  width: 216px;
+  width: 100%;
   z-index: 39;
 }
 .chat-list-container {
@@ -169,8 +200,8 @@ const cancelEditing = () => {
   flex-shrink: 0;
   gap: 4px;
   position: relative;
-  width: 216px;
-  padding: 10px 15px 10px 15px;
+  width: 100%;
+  padding: 10px 15px;
   z-index: 40;
 }
 .start-chat {
@@ -188,7 +219,36 @@ const cancelEditing = () => {
   white-space: nowrap;
   z-index: 41;
   overflow: hidden;
-  max-width: 168px;
+  width: 100%;
   max-height: 17px;
+}
+
+/* Responsive styles for small sidebars */
+@media (max-width: 1200px) {
+  .frame-10 {
+    padding: 0 16px;
+  }
+  
+  .chat-history-item {
+    padding: 6px 10px;
+  }
+  
+  .chat-title {
+    font-size: 13px;
+  }
+  
+  .conversation-list {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  .frame-10 {
+    padding: 0 12px;
+  }
+  
+  .chat-history-item {
+    padding: 8px 12px;
+  }
 }
 </style>

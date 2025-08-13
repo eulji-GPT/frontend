@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div :class="['common-chatinputbox', className]">
+    <div :class="['chat-input-box', className]">
       <!-- 이미지 미리보기 -->
       <div v-if="selectedImages.length > 0" class="image-preview-container">
         <div 
@@ -145,22 +145,21 @@ const removeImage = (index: number) => {
 </script>
 
 <style scoped>
-.common-chatinputbox {
+.chat-input-box {
   align-items: stretch;
-  background-color: #f8fbff; /* Assuming --primary-100 is this */
+  background-color: #f8fbff;
   border: 1px solid;
-  border-color: #f3f4f6; /* Assuming --gray-100 is this */
+  border-color: #f3f4f6;
   border-radius: 15px;
   display: flex;
   flex-direction: column;
   gap: 17px;
   overflow: hidden;
-  padding: 16px 10px;
+  padding: 0 20px;
   position: relative;
-  width: 1000px; /* 770px에서 1000px로 확장 */
-  max-width: 1000px;
-  min-width: 0;
-  flex-shrink: 0; /* Prevent shrinking */
+  max-width: 550px;
+  width: 550px;
+  box-sizing: border-box;
 }
 
 .textarea-wrapper {
@@ -324,24 +323,96 @@ textarea:disabled {
 }
 
 /* 반응형 설정 */
-@media (max-width: 1200px) {
-  .common-chatinputbox {
-    width: 90vw;
-    max-width: 90vw;
-  }
-}
-
 @media (max-width: 1024px) {
-  .common-chatinputbox {
-    width: 95vw;
-    max-width: 95vw;
+  .chat-input-box {
+    max-width: 500px;
+    width: 500px;
+    padding: 0 16px;
+    gap: 14px;
+  }
+  
+  .frame-3 {
+    gap: 8px;
   }
 }
 
 @media (max-width: 768px) {
-  .common-chatinputbox {
-    width: 98vw;
-    max-width: 98vw;
+  .chat-input-box {
+    max-width: calc(100vw - 32px);
+    width: calc(100vw - 32px);
+    padding: 0 16px;
+    border-radius: 12px;
+  }
+  
+  .disclaimer-text {
+    width: auto;
+    max-width: 100%;
+    margin: 12px auto;
+    font-size: 9px;
+  }
+  
+  .image-preview {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-input-box {
+    max-width: calc(100vw - 24px);
+    width: calc(100vw - 24px);
+    padding: 0 14px;
+    gap: 12px;
+    border-radius: 10px;
+  }
+  
+  .input-state-button,
+  .input-state-button-18 {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .vector-17, .vector-19 {
+    width: 16px;
+    height: 16px;
+  }
+  
+  textarea {
+    font-size: 14px;
+    line-height: 22px;
+  }
+  
+  .image-preview {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .disclaimer-text {
+    font-size: 8px;
+    margin: 10px auto;
+  }
+}
+
+@media (max-width: 320px) {
+  .chat-input-box {
+    max-width: calc(100vw - 16px);
+    width: calc(100vw - 16px);
+    padding: 0 12px;
+  }
+  
+  .frame-3 {
+    gap: 6px;
+  }
+  
+  .input-state-button,
+  .input-state-button-18 {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .vector-17, .vector-19 {
+    width: 14px;
+    height: 14px;
   }
 }
 

@@ -87,11 +87,13 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   gap: 17px;
-  max-width: 770px;
+  max-width: 550px;
   overflow: hidden;
   padding: 16px 10px;
   position: relative;
-  width: 770px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .common-chatinputbox .div {
@@ -185,5 +187,137 @@ export default defineComponent({
   height: 34px !important;
   position: relative !important;
   width: 34px !important;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .common-chatinputbox {
+    max-width: 500px;
+    width: 100%;
+    padding: 12px 16px;
+    gap: 14px;
+  }
+  
+  .common-chatinputbox .div {
+    gap: 8px;
+  }
+  
+  .common-chatinputbox .button-wrapper,
+  .common-chatinputbox .div-wrapper,
+  .common-chatinputbox .frame-2 {
+    width: 90px;
+    height: 90px;
+  }
+}
+
+@media (max-width: 768px) {
+  .common-chatinputbox {
+    max-width: 100%;
+    width: calc(100% - 32px);
+    margin: 0 16px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    min-width: 280px;
+  }
+  
+  .common-chatinputbox .div {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  
+  .common-chatinputbox .button-wrapper,
+  .common-chatinputbox .div-wrapper,
+  .common-chatinputbox .frame-2 {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .common-chatinputbox .button {
+    width: 20px;
+    height: 20px;
+    left: 42px;
+    top: 4px;
+  }
+  
+  .common-chatinputbox .icon-instance {
+    width: 16px !important;
+    height: 16px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .common-chatinputbox {
+    width: calc(100% - 24px);
+    margin: 0 12px;
+    padding: 10px 14px;
+    gap: 12px;
+    border-radius: 10px;
+    min-width: 260px;
+  }
+  
+  .common-chatinputbox .div {
+    gap: 5px;
+  }
+  
+  .common-chatinputbox .button-wrapper,
+  .common-chatinputbox .div-wrapper,
+  .common-chatinputbox .frame-2 {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .common-chatinputbox .button {
+    width: 18px;
+    height: 18px;
+    left: 35px;
+    top: 3px;
+  }
+  
+  .common-chatinputbox .icon-instance {
+    width: 14px !important;
+    height: 14px !important;
+  }
+  
+  .common-chatinputbox .instance-node {
+    width: 30px !important;
+    height: 30px !important;
+  }
+}
+
+@media (max-width: 320px) {
+  .common-chatinputbox {
+    width: calc(100% - 16px);
+    margin: 0 8px;
+    padding: 8px 12px;
+    min-width: 240px;
+  }
+  
+  .common-chatinputbox .div {
+    gap: 4px;
+  }
+  
+  .common-chatinputbox .button-wrapper,
+  .common-chatinputbox .div-wrapper,
+  .common-chatinputbox .frame-2 {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .common-chatinputbox .button {
+    width: 16px;
+    height: 16px;
+    left: 28px;
+    top: 2px;
+  }
+  
+  .common-chatinputbox .icon-instance {
+    width: 12px !important;
+    height: 12px !important;
+  }
+  
+  .common-chatinputbox .instance-node {
+    width: 28px !important;
+    height: 28px !important;
+  }
 }
 </style>

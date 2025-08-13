@@ -123,30 +123,29 @@
 
 .features-content-frame {
   display: flex;
-  width: 1013px;
-  align-items: center;
+  width: 100%;
+  max-width: 1013px;
+  align-items: flex-start;
   gap: 45px;
   margin-top: 40px;
   margin-left: auto;
   margin-right: auto;
   align-self: center;
-  /* border: 2px dashed #ff6f00; */
-  /* background: rgba(255, 223, 186, 0.3); */
 }
 
 .Frame2147227299 {
   display: flex;
-  width: 411px;
-  height: 568px;
+  width: 100%;
+  max-width: 411px;
+  min-height: 568px;
   padding: 56px 35px 30px 35px;
   flex-direction: column;
   align-items: stretch;
   gap: 36px;
-  flex-shrink: 0;
+  flex: 1;
   border-radius: 35px;
   background: var(--Primary-400, #02478A);
-  /* border: 2px solid #fff200; */
-  /* color and font-size removed to prevent inheritance issues for child */
+  box-sizing: border-box;
 }
 
 .features-inner-svg {
@@ -188,17 +187,14 @@
 
 .Frame2147227348 {
   display: flex;
-  width: 557px;
-  height: 568px;
-  /* padding: 56px 35px 30px 35px; */
+  width: 100%;
+  max-width: 557px;
+  min-height: 568px;
   flex-direction: column;
   align-items: stretch;
   gap: 25px;
-  flex-shrink: 0;
-  /* border-radius: 35px; */
-  /* background: #fff; */
-  /* border: 2px solid #e0e0e0;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04); */
+  flex: 1;
+  box-sizing: border-box;
 }
 
 .features-section-block {
@@ -263,6 +259,139 @@
   border-radius: 1px;
 }
 
+/* 태블릿 반응형 */
+@media (max-width: 1024px) {
+  .features-container {
+    padding: 0 100px 80px 100px;
+  }
+  
+  .features-content-frame {
+    flex-direction: column;
+    gap: 40px;
+    align-items: center;
+  }
+  
+  .Frame2147227299,
+  .Frame2147227348 {
+    width: 100%;
+    max-width: 600px;
+  }
+  
+  .Frame2147227299 {
+    min-height: auto;
+    padding: 40px 30px 30px 30px;
+  }
+  
+  .features-title {
+    font-size: 20px;
+  }
+  
+  .features-subtitle {
+    font-size: 28px;
+  }
+}
 
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+  .features-container {
+    padding: 0 20px 60px 20px;
+  }
+  
+  .features-content-frame {
+    gap: 30px;
+    margin-top: 30px;
+  }
+  
+  .Frame2147227299 {
+    padding: 30px 24px 24px 24px;
+    gap: 24px;
+  }
+  
+  .features-inner-title {
+    font-size: 20px;
+  }
+  
+  .features-inner-desc {
+    font-size: 14px;
+    line-height: 22px;
+  }
+  
+  .features-section-block {
+    padding: 24px;
+    gap: 20px;
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .features-section-icon {
+    margin-right: 0;
+    margin-bottom: 12px;
+    max-height: 80px;
+  }
+  
+  .features-section-title {
+    font-size: 18px;
+  }
+  
+  .features-section-desc {
+    font-size: 13px;
+  }
+  
+  .features-title {
+    font-size: 18px;
+    text-align: center;
+  }
+  
+  .features-subtitle {
+    font-size: 22px;
+    text-align: center;
+  }
+}
+
+/* 소형 모바일 반응형 */
+@media (max-width: 480px) {
+  .features-container {
+    padding: 0 16px 50px 16px;
+  }
+  
+  .Frame2147227299 {
+    padding: 24px 20px 20px 20px;
+    gap: 20px;
+  }
+  
+  .features-inner-title {
+    font-size: 18px;
+  }
+  
+  .features-inner-desc {
+    font-size: 13px;
+    line-height: 20px;
+  }
+  
+  .features-section-block {
+    padding: 20px;
+    gap: 16px;
+  }
+  
+  .features-section-icon {
+    max-height: 60px;
+  }
+  
+  .features-section-title {
+    font-size: 16px;
+  }
+  
+  .features-section-desc {
+    font-size: 12px;
+  }
+  
+  .features-title {
+    font-size: 16px;
+  }
+  
+  .features-subtitle {
+    font-size: 20px;
+  }
+}
 
 </style>
