@@ -68,7 +68,7 @@ const email = ref('');
 const verificationCode = ref('');
 const isVerificationSent = ref(false);
 const timeLeft = ref(1200); // 20분 = 1200초
-let timer: NodeJS.Timeout | null = null;
+let timer: ReturnType<typeof setInterval> | null = null;
 
 const formattedTime = computed(() => {
   const minutes = Math.floor(timeLeft.value / 60);
