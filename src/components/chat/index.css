@@ -552,6 +552,15 @@ button {
   padding: 10px 10px 10px 10px;
   z-index: 44;
 }
+.notification-container {
+  position: relative;
+  z-index: 10000;
+}
+
+.notification-container * {
+  pointer-events: auto;
+}
+
 .notification {
   flex-shrink: 0;
   position: relative;
@@ -560,7 +569,9 @@ button {
   background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-31/iOezR9XJsU.png)
     no-repeat center;
   background-size: cover;
-  z-index: 45;
+  z-index: 10001;
+  cursor: pointer;
+  pointer-events: auto;
 }
 .icon-info {
   display: flex;
@@ -574,8 +585,10 @@ button {
   width: 22px;
   height: 22px;
   padding: 2px 2px 2px 2px;
-  z-index: 46;
+  z-index: 10001;
   overflow: hidden;
+  cursor: pointer;
+  pointer-events: auto;
 }
 .vector {
   flex-shrink: 0;

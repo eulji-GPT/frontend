@@ -45,8 +45,14 @@
       <div class="side-footer">
         <div class="ellipse"></div>
         <div class="frame-12">
-          <div class="notification"></div>
-          <div class="icon-info"><div class="vector"></div></div>
+          <div class="notification-container" @click="toggleNotificationDropdown">
+            <div class="notification"></div>
+            <NotificationDropdown :isVisible="showNotificationDropdown" />
+          </div>
+          <div class="icon-info" @click="toggleInfoPanel">
+            <div class="vector"></div>
+            <InfoPanel :isVisible="showInfoPanel" />
+          </div>
         </div>
       </div>
       <div 
@@ -85,6 +91,8 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import ChatHistory from './ChatHistory.vue';
 import ChatMessageArea from './ChatMessageArea.vue';
 import ChatInput from './ChatInput.vue';
+import NotificationDropdown from '../common/NotificationDropdown.vue';
+import InfoPanel from '../common/InfoPanel.vue';
 import { useChat } from '../../composables/useChat';
 import "./index.css";
 
@@ -113,6 +121,8 @@ const sidebarWidth = ref(Number(localStorage.getItem('sidebarWidth')) || 270);
 const isResizing = ref(false);
 const minSidebarWidth = 200;
 const maxSidebarWidth = 500;
+const showNotificationDropdown = ref(false);
+const showInfoPanel = ref(false);
 
 const showMobileOverlay = computed(() => isMobile.value && sidebarVisible.value);
 
@@ -127,6 +137,24 @@ const checkMobileSize = () => {
 
 const toggleSidebar = () => {
   sidebarVisible.value = !sidebarVisible.value;
+};
+
+const toggleNotificationDropdown = (event: Event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  console.log('Notification icon clicked!');
+  showNotificationDropdown.value = !showNotificationDropdown.value;
+  showInfoPanel.value = false; // 다른 패널 닫기
+  console.log('Notification dropdown toggled:', showNotificationDropdown.value);
+};
+
+const toggleInfoPanel = (event: Event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  console.log('Info icon clicked!');
+  showInfoPanel.value = !showInfoPanel.value;
+  showNotificationDropdown.value = false; // 다른 패널 닫기
+  console.log('Info panel toggled:', showInfoPanel.value);
 };
 
 const startResize = (e: MouseEvent) => {
@@ -164,13 +192,25 @@ const startResize = (e: MouseEvent) => {
   e.preventDefault();
 };
 
+const handleClickOutside = (event: Event) => {
+  const target = event.target as HTMLElement;
+  if (!target.closest('.notification-container')) {
+    showNotificationDropdown.value = false;
+  }
+  if (!target.closest('.icon-info')) {
+    showInfoPanel.value = false;
+  }
+};
+
 onMounted(() => {
   checkMobileSize();
   window.addEventListener('resize', checkMobileSize);
+  document.addEventListener('click', handleClickOutside);
 });
 
 onUnmounted(() => {
   window.removeEventListener('resize', checkMobileSize);
+  document.removeEventListener('click', handleClickOutside);
 });
 
 </script>
