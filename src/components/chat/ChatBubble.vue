@@ -1,8 +1,24 @@
 <template>
   <div :class="['chat-bubble', align, { 'streaming': isStreaming }]">
     <div class="message-content">
-      <div v-if="content && useMarkdown" v-html="renderedContent" class="markdown-content"></div>
-      <div v-else-if="content" v-text="content"></div>
+      <!-- 파일 미리보기 (사용자 메시지에서만) -->
+      <div v-if="images && images.length > 0 && align === 'right'" class="message-files">
+        <div 
+          v-for="(file, index) in images" 
+          :key="index" 
+          class="message-file"
+        >
+          <img v-if="file.type.startsWith('image/')" :src="getFilePreview(file)" :alt="file.name" class="message-image" />
+          <div v-else class="message-pdf">
+            <span class="pdf-icon">📄</span>
+            <span class="pdf-name">{{ file.name }}</span>
+          </div>
+        </div>
+      </div>
+      <div v-if="content">
+        <div v-if="useMarkdown" v-html="renderedContent" class="markdown-content"></div>
+        <div v-else v-text="content"></div>
+      </div>
       <div v-else>
         <slot />
       </div>
@@ -39,10 +55,19 @@ const props = defineProps({
   content: {
     type: String,
     default: '',
+  },
+  images: {
+    type: Array,
+    default: () => []
   }
 });
 
 const slots = useSlots();
+
+// 파일 미리보기를 위한 함수
+const getFilePreview = (file) => {
+  return URL.createObjectURL(file);
+};
 
 // 마크다운 렌더링
 const renderedContent = computed(() => {
@@ -184,6 +209,60 @@ const renderedContent = computed(() => {
   border: none;
   border-top: 1px solid #e5e7eb;
   margin: 1.5em 0;
+}
+
+/* 파일 미리보기 스타일 */
+.message-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.message-file {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.message-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.message-pdf {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4px;
+  height: 100%;
+  background-color: #f9fafb;
+}
+
+.message-pdf .pdf-icon {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.message-pdf .pdf-name {
+  font-size: 8px;
+  font-family: Pretendard, sans-serif;
+  color: #666;
+  word-break: break-all;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.2;
 }
 </style>
 

@@ -8,7 +8,7 @@
         <span class="start-chat">지금 바로 대화를 시작해보세요</span>
       </div>
       <div v-else class="chat-list-container-history">
-        <div v-for="chat in chatHistory" :key="chat.id" @click="$emit('selectChat', chat.id)" @dblclick="startEditing(chat.id)" class="chat-history-item" :class="{ active: currentChatId === chat.id }">
+        <div v-for="chat in chatHistory" :key="chat.id" @click="$emit('selectChat', chat.id)" @dblclick="startEditing(chat.id)" @contextmenu="showContextMenu($event, chat.id)" class="chat-history-item" :class="{ active: currentChatId === chat.id }">
           <input 
             v-if="editingChatId === chat.id"
             v-model="editingTitle"
@@ -25,12 +25,19 @@
         </div>
       </div>
     </div>
+    <ChatContextMenu 
+      :isVisible="contextMenuVisible" 
+      :position="contextMenuPosition"
+      @editTitle="handleEditTitle"
+      @deleteChat="handleDeleteChat"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick } from 'vue';
+import { ref, nextTick, onMounted, onUnmounted } from 'vue';
 import type { ChatSession } from '../../composables/useChat';
+import ChatContextMenu from './ChatContextMenu.vue';
 
 const props = defineProps<{
   chatHistory: ChatSession[];
@@ -47,6 +54,9 @@ const emit = defineEmits<{
 const editingChatId = ref<string | null>(null);
 const editingTitle = ref<string>('');
 const editInput = ref<HTMLInputElement[]>([]);
+const contextMenuVisible = ref(false);
+const contextMenuPosition = ref({ top: '0px', left: '0px' });
+const contextMenuChatId = ref<string | null>(null);
 
 const startEditing = (chatId: string) => {
   const chat = props.chatHistory.find(c => c.id === chatId);
@@ -75,6 +85,43 @@ const cancelEditing = () => {
   editingChatId.value = null;
   editingTitle.value = '';
 };
+
+const showContextMenu = (event: MouseEvent, chatId: string) => {
+  event.preventDefault();
+  contextMenuChatId.value = chatId;
+  contextMenuPosition.value = {
+    top: `${event.clientY}px`,
+    left: `${event.clientX}px`
+  };
+  contextMenuVisible.value = true;
+};
+
+const hideContextMenu = () => {
+  contextMenuVisible.value = false;
+  contextMenuChatId.value = null;
+};
+
+const handleEditTitle = () => {
+  if (contextMenuChatId.value) {
+    startEditing(contextMenuChatId.value);
+  }
+  hideContextMenu();
+};
+
+const handleDeleteChat = () => {
+  if (contextMenuChatId.value) {
+    emit('deleteChat', contextMenuChatId.value);
+  }
+  hideContextMenu();
+};
+
+onMounted(() => {
+  document.addEventListener('click', hideContextMenu);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', hideContextMenu);
+});
 </script>
 
 <style scoped>
@@ -114,7 +161,7 @@ const cancelEditing = () => {
   flex-direction: column;
   gap: 5px;
   width: 100%;
-  overflow-y: auto;
+  overflow-y: hidden;
 }
 
 .chat-history-item {
@@ -128,6 +175,7 @@ const cancelEditing = () => {
   width: 100%;
   box-sizing: border-box;
   transition: all 0.2s ease;
+  position: relative;
 }
 
 .chat-history-item:hover {
@@ -135,20 +183,28 @@ const cancelEditing = () => {
 }
 
 .chat-history-item.active {
-  border-color: #02478a;
-  background-color: #f0f6ff;
+  display: flex;
+  justify-content: flex-start;
+  flex-direction: row;
+  align-items: center;
+  flex: none;
+  gap: 4px;
+  border-radius: 10px;
+  width: 216px;
+  height: 37px;
+  background-color: rgb(240, 246, 255);
+  box-sizing: border-box;
+  padding: 10px 15px;
 }
 
 .chat-title {
-  flex: 1;
-  font-size: 14px;
-  font-family: Pretendard, var(--default-font-family);
-  font-weight: 500;
-  color: #374151;
+  color: black;
   text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-  margin-right: 8px;
+  font-size: 14px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 500;
+  line-height: 23px;
+  text-align: left;
 }
 
 .delete-chat-button {
@@ -166,6 +222,8 @@ const cancelEditing = () => {
   border-radius: 3px;
   font-size: 16px;
   line-height: 1;
+  position: absolute;
+  right: 15px;
 }
 
 .chat-history-item:hover .delete-chat-button {

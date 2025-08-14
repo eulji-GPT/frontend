@@ -1,49 +1,53 @@
 <template>
   <div>
     <div :class="['chat-input-box', className]">
-      <!-- 이미지 미리보기 -->
-      <div v-if="selectedImages.length > 0" class="image-preview-container">
+      <!-- 파일 미리보기 -->
+      <div v-if="selectedImages.length > 0" class="file-preview-container">
         <div 
-          v-for="(image, index) in selectedImages" 
+          v-for="(file, index) in selectedImages" 
           :key="index" 
-          class="image-preview"
+          class="file-preview"
         >
-          <img :src="image.preview" :alt="`업로드된 이미지 ${index + 1}`" />
-          <button @click="removeImage(index)" class="remove-image-btn">×</button>
+          <img v-if="file.type === 'image'" :src="file.preview" :alt="`업로드된 이미지 ${index + 1}`" />
+          <div v-else class="pdf-preview">
+            <span class="pdf-icon">📄</span>
+            <span class="pdf-name">{{ file.file.name }}</span>
+          </div>
+          <button @click="removeImage(index)" class="remove-file-btn">×</button>
         </div>
       </div>
-      <div class="textarea-wrapper">
-        <textarea
-          ref="textareaRef"
-          placeholder="무엇이든 물어보세요."
-          v-model="inputValue"
-          @keydown.enter.exact.prevent="onSend"
-          @input="autoGrow"
-          :disabled="isLoading"
-          rows="1"
-        ></textarea>
+      <div class="text-container">
+        <div class="textarea-wrapper">
+          <textarea
+            ref="textareaRef"
+            placeholder="무엇이든 물어보세요."
+            v-model="inputValue"
+            @keydown.enter.exact.prevent="onSend"
+            @input="autoGrow"
+            :disabled="isLoading"
+            rows="1"
+          ></textarea>
+        </div>
       </div>
-      <div class="frame-3">
-        <div class="input-state-button" @click="triggerImageUpload" title="이미지 업로드">
-          <div class="vector-17"></div>
-          <input 
-            ref="imageInput" 
-            type="file" 
-            accept="image/*" 
-            @change="handleImageUpload" 
-            style="display: none" 
-            multiple
-          />
-        </div>
-        <div 
-          class="input-state-button-18" 
-          @click="isStreaming ? onStop() : onSend()"
-          :class="{ 'disabled': isLoading && !isStreaming, 'stop-button': isStreaming }"
-          :title="isStreaming ? '답변 중지' : '메시지 전송'"
-        >
-          <div v-if="isStreaming" class="stop-icon">⏹</div>
-          <div v-else class="vector-19"></div>
-        </div>
+      <div class="input-state-button" @click="triggerImageUpload" title="이미지 업로드">
+        <div class="vector-17"></div>
+        <input 
+          ref="imageInput" 
+          type="file" 
+          accept="image/*,.pdf" 
+          @change="handleFileUpload" 
+          style="display: none" 
+          multiple
+        />
+      </div>
+      <div 
+        class="input-state-button-18" 
+        @click="isStreaming ? onStop() : onSend()"
+        :class="{ 'disabled': isLoading && !isStreaming, 'stop-button': isStreaming }"
+        :title="isStreaming ? '답변 중지' : '메시지 전송'"
+      >
+        <div v-if="isStreaming" class="stop-icon">⏹</div>
+        <div v-else class="vector-19"></div>
       </div>
     </div>
     <div class="disclaimer-text">
@@ -67,7 +71,7 @@ const emit = defineEmits<{
 }>();
 
 const inputValue = ref('');
-const selectedImages = ref<Array<{ file: File; preview: string }>>([]);
+const selectedImages = ref<Array<{ file: File; preview: string; type: 'image' | 'pdf' }>>([]);
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
 const imageInput = ref<HTMLInputElement | null>(null);
 
@@ -111,7 +115,7 @@ const triggerImageUpload = () => {
   }
 };
 
-const handleImageUpload = (event: Event) => {
+const handleFileUpload = (event: Event) => {
   const target = event.target as HTMLInputElement;
   const files = target.files;
   
@@ -119,19 +123,31 @@ const handleImageUpload = (event: Event) => {
     Array.from(files).forEach(file => {
       // 파일 크기 체크 (20MB 제한)
       if (file.size > 20 * 1024 * 1024) {
-        alert('이미지 파일 크기는 20MB를 초과할 수 없습니다.');
+        alert('파일 크기는 20MB를 초과할 수 없습니다.');
         return;
       }
       
-      // 이미지 미리보기 생성
-      const reader = new FileReader();
-      reader.onload = (e) => {
+      const fileType = file.type.startsWith('image/') ? 'image' : 'pdf';
+      
+      if (fileType === 'image') {
+        // 이미지 미리보기 생성
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          selectedImages.value.push({
+            file: file,
+            preview: e.target?.result as string,
+            type: 'image'
+          });
+        };
+        reader.readAsDataURL(file);
+      } else if (file.type === 'application/pdf') {
+        // PDF 파일 처리
         selectedImages.value.push({
           file: file,
-          preview: e.target?.result as string
+          preview: '', // PDF는 미리보기 이미지 없음
+          type: 'pdf'
         });
-      };
-      reader.readAsDataURL(file);
+      }
     });
   }
   
@@ -146,25 +162,39 @@ const removeImage = (index: number) => {
 
 <style scoped>
 .chat-input-box {
-  align-items: stretch;
-  background-color: #f8fbff;
-  border: 1px solid;
-  border-color: #f3f4f6;
-  border-radius: 15px;
   display: flex;
+  justify-content: flex-start;
   flex-direction: column;
+  align-items: flex-start;
   gap: 17px;
-  overflow: hidden;
-  padding: 0 20px;
-  position: relative;
-  max-width: 550px;
-  width: 550px;
+  border: solid 1px rgb(243, 244, 246);
+  border-radius: 15px;
+  align-self: stretch;
+  width: 770px;
+  background-color: rgb(248, 251, 255);
   box-sizing: border-box;
+  padding: 16px 10px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.text-container {
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+  align-items: center;
+  flex: none;
+  gap: 4px;
+  box-sizing: border-box;
+  padding: 0px 4px;
+  z-index: 1;
+  position: relative;
+  margin: 0 50px;
 }
 
 .textarea-wrapper {
   flex: 1;
-  min-width: 0; /* Prevent overflow */
+  min-width: 0;
 }
 
 textarea {
@@ -172,14 +202,18 @@ textarea {
   border: none;
   outline: none;
   background: transparent;
+  color: black;
+  text-overflow: ellipsis;
   font-size: 16px;
-  color: #222;
-  font-family: Pretendard, var(--default-font-family);
-  resize: none;
-  overflow-y: auto; /* Allow scrollbar when needed */
-  max-height: 150px; /* Set a max height */
+  font-family: Pretendard, sans-serif;
+  font-weight: 500;
   line-height: 25px;
-  box-sizing: border-box; /* Better height calculation */
+  text-align: left;
+  resize: none;
+  overflow-y: auto;
+  max-height: 150px;
+  box-sizing: border-box;
+  flex: 1;
 }
 
 textarea:disabled {
@@ -187,31 +221,28 @@ textarea:disabled {
   cursor: not-allowed;
 }
 
-.frame-3 {
-  align-items: center;
-  align-self: stretch;
-  display: flex;
-  flex: 0 0 auto;
-  justify-content: space-between;
-  position: relative;
-  width: 100%;
-}
 
 .input-state-button {
   width: 34px;
   height: 34px;
+  object-fit: cover;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  background-color: #f8fbff; /* Primary/100 */
+  background-color: #f8fbff;
   border-radius: 8px;
+  position: absolute;
+  bottom: 16px;
+  left: 10px;
+  z-index: 2;
 }
 
 .input-state-button-18 {
-  display: flex;
   width: 34px;
   height: 34px;
+  object-fit: cover;
+  display: flex;
   padding: 6px;
   justify-content: center;
   align-items: center;
@@ -220,6 +251,10 @@ textarea:disabled {
   border: 1px solid var(--Gray-200, #E5E7EB);
   background: var(--Gray-600, #1F2937);
   cursor: pointer;
+  position: absolute;
+  bottom: 16px;
+  right: 10px;
+  z-index: 2;
 }
 
 .input-state-button-18:hover {
@@ -267,50 +302,83 @@ textarea:disabled {
   margin: 18px auto 18px auto;
 }
 
-.image-preview-container {
+.file-preview-container {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 10px;
-  padding: 8px 0;
+  justify-content: flex-start;
+  flex-direction: row;
+  align-items: flex-start;
+  flex: none;
+  gap: 10px;
+  box-sizing: border-box;
 }
 
-.image-preview {
-  position: relative;
-  width: 80px;
-  height: 80px;
-  border-radius: 8px;
+.file-preview {
+  width: 110px;
+  height: 110px;
   overflow: hidden;
-  border: 1px solid #e5e7eb;
+  border: solid 1px rgb(240, 246, 255);
+  border-radius: 20px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.image-preview img {
+.file-preview img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.remove-image-btn {
+.pdf-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 8px;
+  height: 100%;
+}
+
+.pdf-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.pdf-name {
+  font-size: 10px;
+  font-family: Pretendard, sans-serif;
+  color: #666;
+  word-break: break-all;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.remove-file-btn {
+  width: 23px;
+  height: 23px;
+  object-fit: cover;
   position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 20px;
-  height: 20px;
+  right: 8px;
+  top: 8px;
   border-radius: 50%;
-  background: #dc2626;
+  background: rgba(0, 0, 0, 0.5);
   color: white;
   border: none;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s;
 }
 
-.remove-image-btn:hover {
-  background: #b91c1c;
+.remove-file-btn:hover {
+  background: rgba(0, 0, 0, 0.7);
 }
 
 .input-state-button {
@@ -351,9 +419,9 @@ textarea:disabled {
     font-size: 9px;
   }
   
-  .image-preview {
-    width: 60px;
-    height: 60px;
+  .file-preview {
+    width: 90px;
+    height: 90px;
   }
 }
 
@@ -382,9 +450,9 @@ textarea:disabled {
     line-height: 22px;
   }
   
-  .image-preview {
-    width: 50px;
-    height: 50px;
+  .file-preview {
+    width: 80px;
+    height: 80px;
   }
   
   .disclaimer-text {

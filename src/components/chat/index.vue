@@ -72,6 +72,14 @@
         </div>
       </div>
       <div class="chat-main-area">
+        <div class="chat-header">
+          <div class="mode-selector-container">
+            <ChatModeSelector 
+              :currentMode="chatMode" 
+              @modeChange="handleModeChange"
+            />
+          </div>
+        </div>
         <ChatMessageArea :messages="messages" />
         <div class="chat-input-area">
           <ChatInput 
@@ -91,9 +99,11 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import ChatHistory from './ChatHistory.vue';
 import ChatMessageArea from './ChatMessageArea.vue';
 import ChatInput from './ChatInput.vue';
+import ChatModeSelector from './ChatModeSelector.vue';
 import NotificationDropdown from '../common/NotificationDropdown.vue';
 import InfoPanel from '../common/InfoPanel.vue';
 import { useChat } from '../../composables/useChat';
+import type { ChatMode } from '../../composables/useChat';
 import "./index.css";
 
 const { 
@@ -102,17 +112,23 @@ const {
   currentChatId, 
   isLoading, 
   isStreaming,
+  chatMode,
   startNewChat, 
   selectChat, 
   deleteChat, 
   handleSend,
   stopResponse,
-  updateChatTitle
+  updateChatTitle,
+  setChatMode
 } = useChat();
 
 const handleSendMessage = (message: string, images?: File[]) => {
-  const inputValue = ref(message);
+  const inputValue = { value: message };
   handleSend(inputValue, images);
+};
+
+const handleModeChange = (mode: ChatMode) => {
+  setChatMode(mode);
 };
 
 const isMobile = ref(false);

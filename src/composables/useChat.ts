@@ -7,6 +7,8 @@ export interface ChatMessage {
   isLoading?: boolean;
   isStreaming?: boolean;
   images?: File[];
+  currentStep?: string;
+  cotSteps?: string[];
 }
 
 export interface ChatSession {
@@ -145,6 +147,197 @@ export function useChat() {
     return message.substring(0, 20);
   }
 
+  async function callFastAPICotChat(message: string, messageIndex: number) {
+    const apiUrl = getAPIUrl('cot');
+    console.log("🧠 CoT FastAPI 호출 시작:", apiUrl);
+    console.log("📤 CoT 전송 메시지:", message);
+    console.log("🔄 CoT 요청 본문:", JSON.stringify({ question: message, context: null }));
+    
+    // 새로운 AbortController 생성
+    currentController = new AbortController();
+    
+    const currentChat = chatHistory.value.find(c => c.id === currentChatId.value);
+    if (!currentChat) return;
+
+    // CoT 단계들 정의
+    const cotSteps = [
+      "문제 분석 중...",
+      "관련 정보 수집 중...",
+      "논리적 추론 중...",
+      "해답 검증 중...",
+      "최종 답변 생성 중..."
+    ];
+
+    let currentStepIndex = 0;
+    const updateStep = () => {
+      if (currentStepIndex < cotSteps.length && currentChat.messages[messageIndex]) {
+        currentChat.messages[messageIndex].currentStep = cotSteps[currentStepIndex];
+        currentChat.messages[messageIndex].cotSteps = cotSteps;
+        currentStepIndex++;
+      }
+    };
+
+    // 단계별 업데이트를 위한 인터벌
+    const stepInterval = setInterval(updateStep, 1500);
+    updateStep(); // 즉시 첫 단계 시작
+
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: currentController.signal,
+        body: JSON.stringify({ question: message, context: null })
+      });
+
+      clearInterval(stepInterval);
+
+      console.log("📥 CoT 응답 상태:", response.status, response.statusText);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("❌ CoT HTTP 오류 응답 상세:");
+        console.error("Status:", response.status);
+        console.error("StatusText:", response.statusText);
+        console.error("Headers:", Object.fromEntries(response.headers.entries()));
+        console.error("Body:", errorText);
+        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log("✅ CoT FastAPI 응답 데이터:", data);
+      
+      if (currentChat.messages[messageIndex]) {
+        currentChat.messages[messageIndex] = {
+          ...currentChat.messages[messageIndex],
+          text: '',
+          isLoading: false,
+          isStreaming: true,
+          currentStep: "답변 출력 중...",
+          cotSteps: cotSteps
+        };
+      }
+      
+      isStreaming.value = true;
+
+      // CoT 응답을 타이핑 효과로 표시
+      if (data.success && (data.response || data.final_answer)) {
+        const responseText = data.response || data.final_answer;
+        let currentIndex = 0;
+        
+        console.log("🧠 CoT 최종 답변:", responseText);
+        console.log("🔍 CoT 분석 결과:", data.analysis);
+        console.log("📊 CoT 추론 과정:", data.reasoning);
+        
+        const typeWriter = () => {
+          // 중지된 경우 타이핑 중단
+          if (!isStreaming.value) {
+            if (currentChat.messages[messageIndex]) {
+              currentChat.messages[messageIndex].isStreaming = false;
+              currentChat.messages[messageIndex].currentStep = undefined;
+              currentChat.messages[messageIndex].cotSteps = undefined;
+              saveChatHistory();
+            }
+            return;
+          }
+          
+          if (currentIndex < responseText.length && currentChat.messages[messageIndex]) {
+            currentChat.messages[messageIndex].text = responseText.substring(0, currentIndex + 1);
+            currentIndex++;
+            setTimeout(typeWriter, 20); // 20ms 간격으로 한 글자씩 표시
+          } else if (currentChat.messages[messageIndex]) {
+            currentChat.messages[messageIndex].isStreaming = false;
+            currentChat.messages[messageIndex].currentStep = undefined;
+            currentChat.messages[messageIndex].cotSteps = undefined;
+            isStreaming.value = false; // 스트리밍 완료
+            saveChatHistory();
+          }
+        };
+        
+        typeWriter();
+      } else {
+        if (currentChat.messages[messageIndex]) {
+          currentChat.messages[messageIndex].text = data.error || 'CoT 응답을 받지 못했습니다.';
+          currentChat.messages[messageIndex].isStreaming = false;
+          currentChat.messages[messageIndex].currentStep = undefined;
+          currentChat.messages[messageIndex].cotSteps = undefined;
+          isStreaming.value = false;
+          saveChatHistory();
+        }
+      }
+    } catch (error: any) {
+      clearInterval(stepInterval);
+      
+      let errorMessage = '죄송합니다. CoT 추론 중 오류가 발생했습니다.';
+      
+      if (error.name === 'AbortError') {
+        errorMessage = 'CoT 추론이 취소되었습니다.';
+        console.log('⏹️ CoT 요청이 취소되었습니다');
+      } else if (error instanceof TypeError && error.message.includes('fetch')) {
+        errorMessage = 'CoT 서버와 연결할 수 없습니다. 잠시 후 다시 시도해주세요.';
+        console.error('🔌 CoT 서버 연결 실패: FastAPI CoT 엔드포인트가 실행되지 않았을 수 있습니다.');
+      } else if (error instanceof Error) {
+        if (error.message.includes('500')) {
+          if (error.message.includes('질문 분석 실패')) {
+            errorMessage = '🔍 CoT 질문 분석 중 오류가 발생했습니다.\n\n' +
+                          '• Gemini 모델의 응답 형식에 문제가 있습니다\n' +
+                          '• 질문을 더 명확하고 구체적으로 작성해보세요\n' +
+                          '• 일반 모드를 사용하시면 정상적으로 답변받을 수 있습니다\n\n' +
+                          '💡 일반 모드로 자동 전환하시겠습니까?';
+          } else {
+            errorMessage = '⚠️ CoT 엔진에서 오류가 발생했습니다.\n\n' + 
+                          '• 모델 로딩 중이거나 메모리 부족일 수 있습니다\n' +
+                          '• 잠시 후 다시 시도하거나 일반 모드를 사용해보세요\n' +
+                          '• 문제가 지속되면 관리자에게 문의해주세요';
+          }
+        } else if (error.message.includes('404')) {
+          errorMessage = '🔍 CoT 엔드포인트를 찾을 수 없습니다.\n\n' +
+                        '• FastAPI 서버에서 /cot 경로가 구현되지 않았을 수 있습니다\n' +
+                        '• 일반 모드를 사용해주세요';
+        } else if (error.message.includes('timeout')) {
+          errorMessage = '⏰ CoT 처리 시간이 초과되었습니다.\n\n' +
+                        '• 복잡한 추론으로 인해 시간이 오래 걸릴 수 있습니다\n' +
+                        '• 더 간단한 질문으로 다시 시도해보세요';
+        } else {
+          errorMessage = '🔌 CoT 연결에 문제가 발생했습니다.\n\n' +
+                        '• 네트워크 연결을 확인해주세요\n' +
+                        '• 잠시 후 다시 시도해주세요';
+        }
+        console.error('❌ CoT FastAPI 상세 오류:', error.message);
+      }
+      
+      // CoT 질문 분석 실패 시 일반 모드로 폴백
+      if (error.message.includes('질문 분석 실패')) {
+        console.log('🔄 CoT 실패로 인한 일반 모드 폴백 시작...');
+        try {
+          // 일반 모드로 같은 질문 재요청
+          await callFastAPIChat(message, messageIndex);
+          return; // 일반 모드로 성공하면 종료
+        } catch (fallbackError) {
+          console.error('❌ 일반 모드 폴백도 실패:', fallbackError);
+          errorMessage = '🚫 CoT와 일반 모드 모두 실패했습니다.\n\n' +
+                        '• 서버에 일시적인 문제가 있을 수 있습니다\n' +
+                        '• 잠시 후 다시 시도해주세요';
+        }
+      }
+
+      if (currentChat.messages[messageIndex]) {
+        currentChat.messages[messageIndex] = {
+          text: errorMessage,
+          isUser: false,
+          timestamp: new Date(),
+          isLoading: false,
+          isStreaming: false,
+          currentStep: undefined,
+          cotSteps: undefined
+        };
+      }
+      
+      isStreaming.value = false;
+    }
+  }
+
   async function callFastAPIChat(message: string, messageIndex: number) {
     const apiUrl = getAPIUrl(chatMode.value);
     console.log("🚀 FastAPI 호출 시작:", apiUrl, "(모드:", chatMode.value, ")");
@@ -194,7 +387,8 @@ export function useChat() {
           ...currentChat.messages[messageIndex],
           text: '',
           isLoading: false,
-          isStreaming: true
+          isStreaming: true,
+          currentStep: undefined // 로딩 단계 제거
         };
       }
       
@@ -210,6 +404,7 @@ export function useChat() {
           if (!isStreaming.value) {
             if (currentChat.messages[messageIndex]) {
               currentChat.messages[messageIndex].isStreaming = false;
+              currentChat.messages[messageIndex].currentStep = undefined;
               saveChatHistory();
             }
             return;
@@ -221,6 +416,7 @@ export function useChat() {
             setTimeout(typeWriter, 20); // 20ms 간격으로 한 글자씩 표시
           } else if (currentChat.messages[messageIndex]) {
             currentChat.messages[messageIndex].isStreaming = false;
+            currentChat.messages[messageIndex].currentStep = undefined;
             isStreaming.value = false; // 스트리밍 완료
             saveChatHistory();
           }
@@ -231,6 +427,7 @@ export function useChat() {
         if (currentChat.messages[messageIndex]) {
           currentChat.messages[messageIndex].text = data.error || '응답을 받지 못했습니다.';
           currentChat.messages[messageIndex].isStreaming = false;
+          currentChat.messages[messageIndex].currentStep = undefined;
           isStreaming.value = false;
           saveChatHistory();
         }
@@ -262,6 +459,7 @@ export function useChat() {
         currentChat.messages[messageIndex].text = errorMessage;
         currentChat.messages[messageIndex].isLoading = false;
         currentChat.messages[messageIndex].isStreaming = false;
+        currentChat.messages[messageIndex].currentStep = undefined;
       }
       
       isStreaming.value = false;
@@ -314,7 +512,8 @@ export function useChat() {
           ...currentChat.messages[messageIndex],
           text: '',
           isLoading: false,
-          isStreaming: true
+          isStreaming: true,
+          currentStep: undefined
         };
       }
       
@@ -411,16 +610,27 @@ export function useChat() {
     isLoading.value = true;
 
     const loadingMessageIndex = currentChat.messages.length;
+    const modeMessages = {
+      general: "일반 대화 처리 중...",
+      university: "대학생 전용 정보 검색 중...",
+      study: "학습 도우미 분석 중...",
+      career: "진로 상담 정보 수집 중...",
+      cot: "단계별 추론 시작..."
+    };
+
     currentChat.messages.push({
-      text: "답변을 생성하고 있습니다...",
+      text: modeMessages[chatMode.value] || "답변을 생성하고 있습니다...",
       isUser: false,
       timestamp: new Date(),
       isLoading: true,
+      currentStep: modeMessages[chatMode.value] || "답변을 생성하고 있습니다...",
     });
 
     try {
       if (images && images.length > 0) {
         await callFastAPIChatWithImages(userMessageText, images, loadingMessageIndex);
+      } else if (chatMode.value === 'cot') {
+        await callFastAPICotChat(userMessageText, loadingMessageIndex);
       } else {
         await callFastAPIChat(userMessageText, loadingMessageIndex);
       }
