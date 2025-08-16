@@ -44,8 +44,22 @@
   overflow: hidden;
 }
 
-.chat-header {
+.chat-messages-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
   width: 100%;
+  height: 100%;
+  flex: 1;
+  padding-bottom: 120px; /* 입력창 높이만큼 여백 추가 */
+  box-sizing: border-box;
+}
+
+.mode-selector-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: auto;
   display: flex;
   justify-content: flex-start;
   align-items: center;
@@ -53,8 +67,9 @@
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(243, 244, 246, 0.8);
-  z-index: 10;
-  position: relative;
+  border-right: 1px solid rgba(243, 244, 246, 0.8);
+  border-radius: 0 0 12px 0;
+  z-index: 1000;
 }
 
 .mode-selector-container {
@@ -70,11 +85,15 @@
   padding: 20px;
   flex-shrink: 0;
   background: transparent;
+  min-height: 80px;
+  position: sticky;
+  bottom: 0;
+  z-index: 100;
 }
 
 /* 모바일에서 반응형 스타일 */
 @media (max-width: 768px) {
-  .chat-header {
+  .mode-selector-header {
     padding: 12px 16px;
   }
   
@@ -83,13 +102,18 @@
     min-width: 180px;
   }
   
+  .chat-messages-container {
+    padding-bottom: 110px; /* 모바일에서 약간 작게 */
+  }
+  
   .chat-input-area {
     padding: 16px;
+    min-height: 70px;
   }
 }
 
 @media (max-width: 480px) {
-  .chat-header {
+  .mode-selector-header {
     padding: 10px 12px;
   }
   
@@ -98,13 +122,18 @@
     min-width: 160px;
   }
   
+  .chat-messages-container {
+    padding-bottom: 100px; /* 소형 모바일에서 더 작게 */
+  }
+  
   .chat-input-area {
     padding: 12px;
+    min-height: 60px;
   }
 }
 
 @media (max-width: 320px) {
-  .chat-header {
+  .mode-selector-header {
     padding: 8px 10px;
   }
   
@@ -113,8 +142,13 @@
     min-width: 140px;
   }
   
+  .chat-messages-container {
+    padding-bottom: 90px; /* 초소형 화면에서 최소한으로 */
+  }
+  
   .chat-input-area {
     padding: 10px;
+    min-height: 50px;
   }
 }
 .sidebar-inner {

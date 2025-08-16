@@ -1,22 +1,20 @@
 <template>
   <div class="hero-section">
-    <div class="title-block">
-      <div class="main-title-row">
-        <div class="main-title-frame">
-          <h1 class="main-title">
-            학교생활의<br />
-            <span class="gradient-title">모든 순간에 답하다</span>
-          </h1>
-        </div>
+    <div class="main-content-wrapper">
+      <div class="title-and-decoration">
+        <h1 class="main-title">
+          학교생활의<br />
+          <span class="gradient-text">모든 순간</span>에 답하다
+        </h1>
         <img class="hero-svg" src="../../assets/HeroSection/Frame-2147227367.svg" alt="장식 이미지" />
-        <div class="main-title-extra-frame">
-          <!-- 여기에 원하는 내용을 추가하세요 -->
-        </div>
+      </div>
+      <div class="hero-bottom-section">
+        <img class="hero-image" :src="heroImg" alt="EULGPT 메인 이미지" />
       </div>
     </div>
-    <img class="hero-image" :src="heroImg" alt="EULGPT 메인 이미지" />
-    <div class="hero-btn-wrapper">
-      <button class="start-btn" @click="goToChatApp">시작하기</button>
+    <!-- 고정 버튼을 hero-section 외부로 이동 -->
+    <div class="floating-btn-wrapper">
+      <button class="floating-start-btn" @click="goToChatApp">시작하기</button>
     </div>
   </div>
 </template>
@@ -43,126 +41,145 @@ function goToChatApp() {
 }
 
 .hero-svg {
-  width: 38.19vw; /* 550/1440 * 100 */
-  height: 16vh; /* 128/800 * 100 */
+  width: auto;
+  height: auto;
+  max-width: 500px;
   object-fit: contain;
   display: block;
-  padding: 0 !important;
-  margin: 0 !important;
-  position: absolute;
-  top: -10.38vh; /* /* -155/800 * 100 */
-  right: -230px;
 }
 
 .hero-section {
-  width: 100%;
+  width: 100vw;
+  min-width: 100vw;
+  height: 800px;
   min-height: 100vh;
-  margin: 0;
-  padding: 0;
-  background: linear-gradient(180deg, #FFF 60.58%, #F3F8FF 100%);
-  border-radius: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  box-sizing: border-box;
-  opacity: 1;
-  transform: translateY(0);
-  transition: all 0.6s ease-in-out;
+  overflow-x: hidden;
+  background: linear-gradient(-180deg, white, rgb(243, 248, 255));
   position: relative;
-  overflow: hidden;
+  align-self: stretch;
+  flex-shrink: 0;
+  margin: 0;
 }
 
-.title-block {
-  width: 100%;
+.main-content-wrapper {
   display: flex;
+  justify-content: flex-start;
   flex-direction: column;
-  margin: 2.5rem 0 0 0;
-  padding: 0 12.5vw; /* 180/1440 * 100 */
-  align-items: flex-start;
+  align-items: center;
+  flex: none;
+  gap: 59px;
+  width: 1414px;
+  max-width: calc(100vw - 26px);
+  height: 536px;
+  box-sizing: border-box;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 160px;
+}
+
+.title-and-decoration {
+  display: flex;
+  justify-content: flex-start;
+  flex-direction: row;
+  align-items: center;
+  gap: 112px;
+  align-self: flex-start;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .main-title {
-  /* Title/Bold0 */
-  font-family: 'Pretendard', sans-serif;
-  font-size: 4.44vw; /* 64/1440 * 100 */
-  font-style: normal;
+  text-overflow: ellipsis;
+  font-size: 64px;
+  font-family: Pretendard, sans-serif;
   font-weight: 700;
-  line-height: 11.25vh; /* 90/800 * 100 */
-  color: var(--Black, #000);
-  letter-spacing: 0.14em;
+  line-height: 90px;
   text-align: left;
+  width: 671px;
+  color: var(--Black, #000);
   margin: 0;
-  width: 59.1vw; /* 851/1440 * 100 */
-  height: 22.5vh; /* 180/800 * 100 */
   max-width: none;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  display: block;
   padding: 0;
   position: relative;
-  top: -19.38vh; /* -155/800 * 100 */
 }
 
-.gradient-title {
+.gradient-text {
   background: var(--Gradiant-200, linear-gradient(254deg, #17315F 5.17%, #02478A 45.43%, #0A6ECF 80.95%));
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  color: transparent;
-  display: inline;
+  /* Title/Bold0 */
+  font-family: Pretendard;
+  font-size: 64px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 90px;
+}
+
+
+.hero-bottom-section {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+  height: 127px;
+  align-self: flex-start;
 }
 
 .hero-image {
-  text-decoration: none;
-  width: calc(100% - 360px); /* 좌우 180px씩 제외 */
-  max-width: calc(100% - 360px);
-  height: auto;
-  display: block;
+  width: auto;
+  height: 127px;
   object-fit: contain;
-  margin: 0 180px; /* 좌우 180px 여백 */
 }
 
-.hero-btn-wrapper {
+/* 플로팅 버튼 스타일 */
+.floating-btn-wrapper {
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.floating-start-btn {
+  pointer-events: auto;
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;
-  margin-top: 40px;
-}
-
-.start-btn {
-  display: flex;
-  width: clamp(120px, 12.5vw, 180px);
-  height: clamp(38px, 6.25vh, 50px);
-  min-width: 120px;
-  min-height: 38px;
-  max-width: 180px;
-  max-height: 50px;
-  padding: 0;
-  justify-content: center;
-  align-items: center;
+  flex: none;
   gap: 8px;
+  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
   border-radius: 30px;
-  background: var(--Black, #000);
+  background-color: #000;
+  box-sizing: border-box;
+  padding: 13px 60px;
   color: white;
+  font-size: 18px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 700;
+  text-align: center;
   border: none;
   cursor: pointer;
-  font-size: clamp(13px, 1.2vw, 16px);
-  font-weight: 500;
   transition: all 0.3s ease;
+  min-width: 120px;
+  text-overflow: ellipsis;
 }
 
-.start-btn:hover {
-  background: #333;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+.floating-start-btn:hover {
+  background-color: rgb(2, 71, 138);
+  box-shadow: 0px 6px 8px 0px rgba(2, 71, 138, 0.35);
+  transform: translateY(-1px);
 }
 
-.start-btn:active {
+.floating-start-btn:active {
+  background-color: rgb(1, 60, 116);
+  box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.15);
   transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
+
 
 /* 태블릿 크기에서의 추가 조정 */
 @media (max-width: 1024px) {
@@ -262,4 +279,5 @@ function goToChatApp() {
   .hero-section {
     padding: 0px max(20px, 5vw) 0px max(20px, 5vw);
   }
-}</style>
+}
+</style>

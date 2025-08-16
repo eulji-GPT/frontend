@@ -39,7 +39,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import eulLogo from '../../assets/eul_logo.png'
+import eulLogo from '../../assets/eul_logo.svg'
 
 const emit = defineEmits(['scrollToSection'])
 const isMobileMenuOpen = ref(false)

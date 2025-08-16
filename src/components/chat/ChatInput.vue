@@ -16,38 +16,47 @@
           <button @click="removeImage(index)" class="remove-file-btn">×</button>
         </div>
       </div>
-      <div class="text-container">
-        <div class="textarea-wrapper">
-          <textarea
-            ref="textareaRef"
-            placeholder="무엇이든 물어보세요."
-            v-model="inputValue"
-            @keydown.enter.exact.prevent="onSend"
-            @input="autoGrow"
-            :disabled="isLoading"
-            rows="1"
-          ></textarea>
+      <div class="input-content">
+        <div class="text-container">
+          <div class="textarea-wrapper">
+            <textarea
+              ref="textareaRef"
+              placeholder="무엇이든 물어보세요."
+              v-model="inputValue"
+              @keydown.enter.exact.prevent="onSend"
+              @input="autoGrow"
+              :disabled="isLoading"
+              rows="1"
+            ></textarea>
+          </div>
         </div>
-      </div>
-      <div class="input-state-button" @click="triggerImageUpload" title="이미지 업로드">
-        <div class="vector-17"></div>
-        <input 
-          ref="imageInput" 
-          type="file" 
-          accept="image/*,.pdf" 
-          @change="handleFileUpload" 
-          style="display: none" 
-          multiple
-        />
-      </div>
-      <div 
-        class="input-state-button-18" 
-        @click="isStreaming ? onStop() : onSend()"
-        :class="{ 'disabled': isLoading && !isStreaming, 'stop-button': isStreaming }"
-        :title="isStreaming ? '답변 중지' : '메시지 전송'"
-      >
-        <div v-if="isStreaming" class="stop-icon">⏹</div>
-        <div v-else class="vector-19"></div>
+        <div class="button-container">
+          <div class="input-state-button" @click="triggerImageUpload" title="이미지 업로드">
+            <img :src="InputStateButtonImport" alt="파일 업로드" class="button-icon" />
+            <input 
+              ref="imageInput" 
+              type="file" 
+              accept="image/*,.pdf" 
+              @change="handleFileUpload" 
+              style="display: none" 
+              multiple
+            />
+          </div>
+          <div 
+            class="input-state-button-send" 
+            @click="isStreaming ? onStop() : onSend()"
+            :class="{ 'disabled': isLoading && !isStreaming, 'stop-button': isStreaming, 'can-send': canSend }"
+            :title="isStreaming ? '답변 중지' : '메시지 전송'"
+          >
+            <div v-if="isStreaming" class="stop-icon">⏹</div>
+            <img 
+              v-else 
+              :src="canSend ? InputStateButtonCanSend : InputStateButtonSend" 
+              alt="메시지 전송" 
+              class="button-icon" 
+            />
+          </div>
+        </div>
       </div>
     </div>
     <div class="disclaimer-text">
@@ -57,7 +66,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, nextTick } from 'vue';
+import { ref, watch, onMounted, nextTick, computed } from 'vue';
+import InputStateButtonImport from '../../assets/chat/InputStateButton_import.svg';
+import InputStateButtonSend from '../../assets/chat/InputStateButton_send.svg';
+import InputStateButtonCanSend from '../../assets/chat/InputStateButton_cansend.svg';
 
 const props = defineProps<{
   isLoading: boolean;
@@ -74,6 +86,11 @@ const inputValue = ref('');
 const selectedImages = ref<Array<{ file: File; preview: string; type: 'image' | 'pdf' }>>([]);
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
 const imageInput = ref<HTMLInputElement | null>(null);
+
+// 전송 가능 상태 계산
+const canSend = computed(() => {
+  return (inputValue.value.trim().length > 0 || selectedImages.value.length > 0) && !props.isLoading && !props.isStreaming;
+});
 
 const autoGrow = () => {
   if (textareaRef.value) {
@@ -178,18 +195,25 @@ const removeImage = (index: number) => {
   position: relative;
 }
 
+.input-content {
+  display: flex;
+  justify-content: space-between;
+  flex-direction: row;
+  align-items: center;
+  align-self: stretch;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
 .text-container {
   display: flex;
   justify-content: center;
   flex-direction: row;
   align-items: center;
-  flex: none;
+  flex: 1;
   gap: 4px;
   box-sizing: border-box;
   padding: 0px 4px;
-  z-index: 1;
-  position: relative;
-  margin: 0 50px;
 }
 
 .textarea-wrapper {
@@ -202,7 +226,7 @@ textarea {
   border: none;
   outline: none;
   background: transparent;
-  color: black;
+  color: rgb(156, 163, 175);
   text-overflow: ellipsis;
   font-size: 16px;
   font-family: Pretendard, sans-serif;
@@ -213,7 +237,10 @@ textarea {
   overflow-y: auto;
   max-height: 150px;
   box-sizing: border-box;
-  flex: 1;
+}
+
+textarea:focus {
+  color: black;
 }
 
 textarea:disabled {
@@ -221,58 +248,76 @@ textarea:disabled {
   cursor: not-allowed;
 }
 
+.button-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
 
 .input-state-button {
   width: 34px;
   height: 34px;
-  object-fit: cover;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  background-color: #f8fbff;
-  border-radius: 8px;
-  position: absolute;
-  bottom: 16px;
-  left: 10px;
-  z-index: 2;
+  background-color: white;
+  border: 1px solid rgb(229, 231, 235);
+  border-radius: 100px;
+  padding: 6px;
+  box-sizing: border-box;
 }
 
-.input-state-button-18 {
+.input-state-button-send {
   width: 34px;
   height: 34px;
-  object-fit: cover;
   display: flex;
-  padding: 6px;
   justify-content: center;
   align-items: center;
   gap: 4px;
   border-radius: 100px;
-  border: 1px solid var(--Gray-200, #E5E7EB);
-  background: var(--Gray-600, #1F2937);
+  border: 1px solid rgb(229, 231, 235);
+  background: rgb(229, 231, 235);
   cursor: pointer;
-  position: absolute;
-  bottom: 16px;
-  right: 10px;
-  z-index: 2;
+  padding: 6px;
+  box-sizing: border-box;
 }
 
-.input-state-button-18:hover {
-  background: var(--Gray-700, #374151);
+.button-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: cover;
 }
 
-.input-state-button-18.disabled {
+.input-state-button:hover {
+  background-color: rgb(243, 244, 246);
+}
+
+.input-state-button-send:hover {
+  background: rgb(209, 213, 219);
+}
+
+.input-state-button-send.can-send {
+  border: 1px solid rgb(2, 71, 138);
+  background: rgb(2, 71, 138);
+}
+
+.input-state-button-send.can-send:hover {
+  background: rgb(1, 60, 116);
+}
+
+.input-state-button-send.disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.input-state-button-18.stop-button {
-  border-radius: 100px;
+.input-state-button-send.stop-button {
   border: 1px solid var(--Black, #000);
   background: var(--Black, #000);
 }
 
-.input-state-button-18.stop-button:hover {
+.input-state-button-send.stop-button:hover {
   background: #374151;
 }
 
@@ -282,12 +327,6 @@ textarea:disabled {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.vector-17, .vector-19 {
-  width: 20px;
-  height: 20px;
-  filter: brightness(0) invert(1); /* 흰색으로 변경 */
 }
 
 .disclaimer-text {
@@ -381,14 +420,6 @@ textarea:disabled {
   background: rgba(0, 0, 0, 0.7);
 }
 
-.input-state-button {
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.input-state-button:hover {
-  background-color: #e5e7eb;
-}
 
 /* 반응형 설정 */
 @media (max-width: 1024px) {
@@ -435,14 +466,14 @@ textarea:disabled {
   }
   
   .input-state-button,
-  .input-state-button-18 {
+  .input-state-button-send {
     width: 30px;
     height: 30px;
   }
   
-  .vector-17, .vector-19 {
-    width: 16px;
-    height: 16px;
+  .button-icon {
+    width: 18px;
+    height: 18px;
   }
   
   textarea {
@@ -473,14 +504,14 @@ textarea:disabled {
   }
   
   .input-state-button,
-  .input-state-button-18 {
+  .input-state-button-send {
     width: 28px;
     height: 28px;
   }
   
-  .vector-17, .vector-19 {
-    width: 14px;
-    height: 14px;
+  .button-icon {
+    width: 16px;
+    height: 16px;
   }
 }
 

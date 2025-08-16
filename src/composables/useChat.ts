@@ -149,37 +149,14 @@ export function useChat() {
 
   async function callFastAPICotChat(message: string, messageIndex: number) {
     const apiUrl = getAPIUrl('cot');
-    console.log("🧠 CoT FastAPI 호출 시작:", apiUrl);
+    console.log("🧠 CoT FastAPI 스트리밍 호출 시작:", apiUrl);
     console.log("📤 CoT 전송 메시지:", message);
-    console.log("🔄 CoT 요청 본문:", JSON.stringify({ question: message, context: null }));
     
     // 새로운 AbortController 생성
     currentController = new AbortController();
     
     const currentChat = chatHistory.value.find(c => c.id === currentChatId.value);
     if (!currentChat) return;
-
-    // CoT 단계들 정의
-    const cotSteps = [
-      "문제 분석 중...",
-      "관련 정보 수집 중...",
-      "논리적 추론 중...",
-      "해답 검증 중...",
-      "최종 답변 생성 중..."
-    ];
-
-    let currentStepIndex = 0;
-    const updateStep = () => {
-      if (currentStepIndex < cotSteps.length && currentChat.messages[messageIndex]) {
-        currentChat.messages[messageIndex].currentStep = cotSteps[currentStepIndex];
-        currentChat.messages[messageIndex].cotSteps = cotSteps;
-        currentStepIndex++;
-      }
-    };
-
-    // 단계별 업데이트를 위한 인터벌
-    const stepInterval = setInterval(updateStep, 1500);
-    updateStep(); // 즉시 첫 단계 시작
 
     try {
       const response = await fetch(apiUrl, {
@@ -191,84 +168,100 @@ export function useChat() {
         body: JSON.stringify({ question: message, context: null })
       });
 
-      clearInterval(stepInterval);
-
-      console.log("📥 CoT 응답 상태:", response.status, response.statusText);
+      console.log("📥 CoT 스트리밍 응답 상태:", response.status, response.statusText);
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("❌ CoT HTTP 오류 응답 상세:");
-        console.error("Status:", response.status);
-        console.error("StatusText:", response.statusText);
-        console.error("Headers:", Object.fromEntries(response.headers.entries()));
-        console.error("Body:", errorText);
+        console.error("❌ CoT HTTP 오류 응답:", errorText);
         throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
       }
 
-      const data = await response.json();
-      console.log("✅ CoT FastAPI 응답 데이터:", data);
-      
       if (currentChat.messages[messageIndex]) {
         currentChat.messages[messageIndex] = {
           ...currentChat.messages[messageIndex],
           text: '',
           isLoading: false,
           isStreaming: true,
-          currentStep: "답변 출력 중...",
-          cotSteps: cotSteps
+          currentStep: "CoT 추론 시작...",
+          cotSteps: []
         };
       }
       
       isStreaming.value = true;
 
-      // CoT 응답을 타이핑 효과로 표시
-      if (data.success && (data.response || data.final_answer)) {
-        const responseText = data.response || data.final_answer;
-        let currentIndex = 0;
-        
-        console.log("🧠 CoT 최종 답변:", responseText);
-        console.log("🔍 CoT 분석 결과:", data.analysis);
-        console.log("📊 CoT 추론 과정:", data.reasoning);
-        
-        const typeWriter = () => {
-          // 중지된 경우 타이핑 중단
-          if (!isStreaming.value) {
-            if (currentChat.messages[messageIndex]) {
-              currentChat.messages[messageIndex].isStreaming = false;
-              currentChat.messages[messageIndex].currentStep = undefined;
-              currentChat.messages[messageIndex].cotSteps = undefined;
-              saveChatHistory();
+      // 스트리밍 응답 처리
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let accumulatedText = '';
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const jsonStr = line.slice(6); // 'data: ' 제거
+                if (jsonStr.trim()) {
+                  const data = JSON.parse(jsonStr);
+                  
+                  if (data.type === 'status' && currentChat.messages[messageIndex]) {
+                    currentChat.messages[messageIndex].currentStep = data.step;
+                  }
+                  else if (data.type === 'sub_questions' && currentChat.messages[messageIndex]) {
+                    currentChat.messages[messageIndex].cotSteps = data.sub_questions;
+                  }
+                  else if (data.type === 'step_answer' && currentChat.messages[messageIndex]) {
+                    // 단계별 답변을 누적해서 표시
+                    accumulatedText += `\n\n**${data.step_answer.question}**\n${data.step_answer.answer}`;
+                    currentChat.messages[messageIndex].text = accumulatedText;
+                  }
+                  else if (data.type === 'final_answer' && currentChat.messages[messageIndex]) {
+                    // 최종 답변을 타이핑 효과로 표시
+                    currentChat.messages[messageIndex].currentStep = "최종 답변 출력 중...";
+                    
+                    const finalAnswer = data.final_answer;
+                    let currentIndex = 0;
+                    
+                    const typeWriter = () => {
+                      if (!isStreaming.value) return;
+                      
+                      if (currentIndex < finalAnswer.length && currentChat.messages[messageIndex]) {
+                        currentChat.messages[messageIndex].text = finalAnswer.substring(0, currentIndex + 1);
+                        currentIndex++;
+                        setTimeout(typeWriter, 15); // 15ms 간격으로 타이핑
+                      } else if (currentChat.messages[messageIndex]) {
+                        currentChat.messages[messageIndex].isStreaming = false;
+                        currentChat.messages[messageIndex].currentStep = undefined;
+                        currentChat.messages[messageIndex].cotSteps = undefined;
+                        isStreaming.value = false;
+                        saveChatHistory();
+                      }
+                    };
+                    
+                    typeWriter();
+                  }
+                  else if (data.type === 'error') {
+                    throw new Error(data.error);
+                  }
+                  else if (data.type === 'done') {
+                    console.log("✅ CoT 스트리밍 완료");
+                    break;
+                  }
+                }
+              } catch (parseError) {
+                console.warn("JSON 파싱 오류:", parseError, "라인:", line);
+              }
             }
-            return;
           }
-          
-          if (currentIndex < responseText.length && currentChat.messages[messageIndex]) {
-            currentChat.messages[messageIndex].text = responseText.substring(0, currentIndex + 1);
-            currentIndex++;
-            setTimeout(typeWriter, 20); // 20ms 간격으로 한 글자씩 표시
-          } else if (currentChat.messages[messageIndex]) {
-            currentChat.messages[messageIndex].isStreaming = false;
-            currentChat.messages[messageIndex].currentStep = undefined;
-            currentChat.messages[messageIndex].cotSteps = undefined;
-            isStreaming.value = false; // 스트리밍 완료
-            saveChatHistory();
-          }
-        };
-        
-        typeWriter();
-      } else {
-        if (currentChat.messages[messageIndex]) {
-          currentChat.messages[messageIndex].text = data.error || 'CoT 응답을 받지 못했습니다.';
-          currentChat.messages[messageIndex].isStreaming = false;
-          currentChat.messages[messageIndex].currentStep = undefined;
-          currentChat.messages[messageIndex].cotSteps = undefined;
-          isStreaming.value = false;
-          saveChatHistory();
         }
       }
+
     } catch (error: any) {
-      clearInterval(stepInterval);
-      
       let errorMessage = '죄송합니다. CoT 추론 중 오류가 발생했습니다.';
       
       if (error.name === 'AbortError') {
@@ -276,49 +269,27 @@ export function useChat() {
         console.log('⏹️ CoT 요청이 취소되었습니다');
       } else if (error instanceof TypeError && error.message.includes('fetch')) {
         errorMessage = 'CoT 서버와 연결할 수 없습니다. 잠시 후 다시 시도해주세요.';
-        console.error('🔌 CoT 서버 연결 실패: FastAPI CoT 엔드포인트가 실행되지 않았을 수 있습니다.');
-      } else if (error instanceof Error) {
-        if (error.message.includes('500')) {
-          if (error.message.includes('질문 분석 실패')) {
-            errorMessage = '🔍 CoT 질문 분석 중 오류가 발생했습니다.\n\n' +
-                          '• Gemini 모델의 응답 형식에 문제가 있습니다\n' +
-                          '• 질문을 더 명확하고 구체적으로 작성해보세요\n' +
-                          '• 일반 모드를 사용하시면 정상적으로 답변받을 수 있습니다\n\n' +
-                          '💡 일반 모드로 자동 전환하시겠습니까?';
-          } else {
-            errorMessage = '⚠️ CoT 엔진에서 오류가 발생했습니다.\n\n' + 
-                          '• 모델 로딩 중이거나 메모리 부족일 수 있습니다\n' +
-                          '• 잠시 후 다시 시도하거나 일반 모드를 사용해보세요\n' +
-                          '• 문제가 지속되면 관리자에게 문의해주세요';
-          }
-        } else if (error.message.includes('404')) {
-          errorMessage = '🔍 CoT 엔드포인트를 찾을 수 없습니다.\n\n' +
-                        '• FastAPI 서버에서 /cot 경로가 구현되지 않았을 수 있습니다\n' +
-                        '• 일반 모드를 사용해주세요';
-        } else if (error.message.includes('timeout')) {
-          errorMessage = '⏰ CoT 처리 시간이 초과되었습니다.\n\n' +
-                        '• 복잡한 추론으로 인해 시간이 오래 걸릴 수 있습니다\n' +
-                        '• 더 간단한 질문으로 다시 시도해보세요';
-        } else {
-          errorMessage = '🔌 CoT 연결에 문제가 발생했습니다.\n\n' +
-                        '• 네트워크 연결을 확인해주세요\n' +
-                        '• 잠시 후 다시 시도해주세요';
-        }
-        console.error('❌ CoT FastAPI 상세 오류:', error.message);
-      }
-      
-      // CoT 질문 분석 실패 시 일반 모드로 폴백
-      if (error.message.includes('질문 분석 실패')) {
+        console.error('🔌 CoT 서버 연결 실패');
+      } else {
+        console.error('❌ CoT 스트리밍 오류:', error.message);
+        
+        // 오류 발생시 일반 모드로 폴백
         console.log('🔄 CoT 실패로 인한 일반 모드 폴백 시작...');
+        
+        if (currentChat.messages[messageIndex]) {
+          currentChat.messages[messageIndex].text = '🔄 CoT 모드에서 오류가 발생했습니다. 일반 모드로 자동 전환합니다...';
+          currentChat.messages[messageIndex].currentStep = '일반 모드로 전환 중...';
+        }
+        
         try {
-          // 일반 모드로 같은 질문 재요청
+          const originalMode = chatMode.value;
+          chatMode.value = 'general';
           await callFastAPIChat(message, messageIndex);
-          return; // 일반 모드로 성공하면 종료
+          chatMode.value = originalMode;
+          return;
         } catch (fallbackError) {
           console.error('❌ 일반 모드 폴백도 실패:', fallbackError);
-          errorMessage = '🚫 CoT와 일반 모드 모두 실패했습니다.\n\n' +
-                        '• 서버에 일시적인 문제가 있을 수 있습니다\n' +
-                        '• 잠시 후 다시 시도해주세요';
+          errorMessage = '🚫 CoT와 일반 모드 모두 실패했습니다. 잠시 후 다시 시도해주세요.';
         }
       }
 
@@ -335,6 +306,8 @@ export function useChat() {
       }
       
       isStreaming.value = false;
+    } finally {
+      currentController = null;
     }
   }
 
@@ -381,6 +354,13 @@ export function useChat() {
 
       const data = await response.json();
       console.log("✅ FastAPI 응답 데이터:", data);
+      console.log("📊 응답 데이터 구조:", {
+        success: data.success,
+        hasResponse: !!data.response,
+        responseLength: data.response ? data.response.length : 0,
+        responseType: typeof data.response,
+        error: data.error
+      });
       
       if (currentChat.messages[messageIndex]) {
         currentChat.messages[messageIndex] = {
@@ -395,7 +375,7 @@ export function useChat() {
       isStreaming.value = true; // 스트리밍 상태 시작
 
       // 응답을 타이핑 효과로 표시
-      if (data.success && data.response) {
+      if (data.success && data.response && data.response.trim()) {
         const responseText = data.response;
         let currentIndex = 0;
         
@@ -425,7 +405,18 @@ export function useChat() {
         typeWriter();
       } else {
         if (currentChat.messages[messageIndex]) {
-          currentChat.messages[messageIndex].text = data.error || '응답을 받지 못했습니다.';
+          let errorMessage = '응답을 받지 못했습니다.';
+          if (data.error) {
+            errorMessage = data.error;
+          } else if (!data.success) {
+            errorMessage = 'API 호출이 실패했습니다.';
+          } else if (!data.response) {
+            errorMessage = '빈 응답을 받았습니다. 다시 시도해주세요.';
+          } else if (!data.response.trim()) {
+            errorMessage = '공백 응답을 받았습니다. 다시 시도해주세요.';
+          }
+          
+          currentChat.messages[messageIndex].text = errorMessage;
           currentChat.messages[messageIndex].isStreaming = false;
           currentChat.messages[messageIndex].currentStep = undefined;
           isStreaming.value = false;
@@ -519,9 +510,9 @@ export function useChat() {
       
       isStreaming.value = true;
 
-      // 응답을 타이핑 효과로 표시
-      if (data.success && data.response) {
-        const responseText = data.response;
+      // 응답을 타이핑 효과로 표시 (이미지 채팅)
+      if (data.success && data.response && data.response.trim()) {
+        const responseText = data.response.trim();
         let currentIndex = 0;
         
         const typeWriter = () => {
@@ -547,7 +538,7 @@ export function useChat() {
         typeWriter();
       } else {
         if (currentChat.messages[messageIndex]) {
-          currentChat.messages[messageIndex].text = data.error || '응답을 받지 못했습니다.';
+          currentChat.messages[messageIndex].text = data.error || '이미지 분석 응답을 받지 못했습니다.';
           currentChat.messages[messageIndex].isStreaming = false;
           isStreaming.value = false;
           saveChatHistory();

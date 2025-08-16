@@ -88,11 +88,9 @@ watch(() => props.messages, () => {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 16px;
+  padding: 8px 16px;
   margin-left: 20px;
-  background: rgba(240, 246, 255, 0.5);
-  border-radius: 12px;
-  border: 1px solid rgba(2, 71, 138, 0.1);
+  margin-top: -8px;
 }
 
 .loading-content {

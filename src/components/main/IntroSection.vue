@@ -56,25 +56,37 @@
 .intro-header {
   color: var(--Primary-400, #02478A);
   font-family: 'Pretendard', sans-serif;
-  font-size: 1.67vw; /* 24/1440 * 100 */
+  font-size: clamp(18px, 1.67vw, 24px); /* 동적 크기 조정 */
   font-style: normal;
   font-weight: 600;
-  line-height: 140%; /* 33.6px */
+  line-height: 140%;
   margin: 0;
-  width: 46.94vw; /* 676/1440 * 100 */
+  width: 46.94vw;
   max-width: 676px;
+  height: calc(1.4em * 1); /* 1줄 고정 높이 */
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .intro-description {
   color: var(--Black, #000);
   font-family: 'Pretendard', sans-serif;
-  font-size: 2.5vw; /* 36/1440 * 100 */
+  font-size: clamp(24px, 2.5vw, 36px); /* 동적 크기 조정 */
   font-style: normal;
   font-weight: 700;
-  line-height: 150%; /* 54px */
+  line-height: 150%;
   margin: 0;
-  width: 46.94vw; /* 676/1440 * 100 */
+  width: 46.94vw;
   max-width: 676px;
+  height: calc(1.5em * 3); /* 3줄 고정 높이 */
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  word-break: keep-all;
+  hyphens: auto;
 }
 
 .intro-image {
@@ -106,13 +118,16 @@
   }
   
   .intro-header {
-    font-size: 2.2vw;
+    font-size: clamp(16px, 2.2vw, 22px);
     width: 90vw;
+    height: calc(1.4em * 1); /* 1줄 고정 높이 */
   }
   
   .intro-description {
-    font-size: 3.2vw;
+    font-size: clamp(20px, 3.2vw, 32px);
     width: 90vw;
+    height: calc(1.4em * 3); /* 3줄 고정 높이 */
+    line-height: 140%;
   }
   
   .intro-image {
@@ -136,14 +151,16 @@
   }
   
   .intro-header {
-    font-size: 18px;
+    font-size: clamp(14px, 4vw, 18px);
     width: 100%;
+    height: calc(1.4em * 1); /* 1줄 고정 높이 */
   }
   
   .intro-description {
-    font-size: 24px;
+    font-size: clamp(18px, 5vw, 24px);
     width: 100%;
     line-height: 140%;
+    height: calc(1.4em * 3); /* 3줄 고정 높이 */
   }
   
   .intro-image {
@@ -158,11 +175,14 @@
 /* 소형 모바일 크기 조정 */
 @media (max-width: 480px) {
   .intro-header {
-    font-size: 16px;
+    font-size: clamp(12px, 3.5vw, 16px);
+    height: calc(1.4em * 1); /* 1줄 고정 높이 */
   }
   
   .intro-description {
-    font-size: 20px;
+    font-size: clamp(14px, 4vw, 20px);
+    height: calc(1.4em * 3); /* 3줄 고정 높이 */
+    line-height: 140%;
   }
   
   .intro-image {

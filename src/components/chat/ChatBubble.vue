@@ -2,24 +2,24 @@
   <div :class="['chat-bubble', align, { 'streaming': isStreaming }]">
     <div class="message-content">
       <!-- 파일 미리보기 (사용자 메시지에서만) -->
-      <div v-if="images && images.length > 0 && align === 'right'" class="message-files">
+      <div v-if="images && Array.isArray(images) && images.length > 0 && align === 'right'" class="message-files">
         <div 
           v-for="(file, index) in images" 
           :key="index" 
           class="message-file"
         >
-          <img v-if="file.type.startsWith('image/')" :src="getFilePreview(file)" :alt="file.name" class="message-image" />
+          <img v-if="file.type && file.type.startsWith('image/')" :src="getFilePreview(file)" :alt="file.name || '이미지'" class="message-image" />
           <div v-else class="message-pdf">
             <span class="pdf-icon">📄</span>
-            <span class="pdf-name">{{ file.name }}</span>
+            <span class="pdf-name">{{ file.name || '파일' }}</span>
           </div>
         </div>
       </div>
-      <div v-if="content">
+      <div v-if="content && content.trim()">
         <div v-if="useMarkdown" v-html="renderedContent" class="markdown-content"></div>
         <div v-else v-text="content"></div>
       </div>
-      <div v-else>
+      <div v-else-if="!content || !content.trim()">
         <slot />
       </div>
       <span v-if="isStreaming" class="streaming-cursor">|</span>
@@ -66,7 +66,15 @@ const slots = useSlots();
 
 // 파일 미리보기를 위한 함수
 const getFilePreview = (file) => {
-  return URL.createObjectURL(file);
+  try {
+    if (file && file instanceof File) {
+      return URL.createObjectURL(file);
+    }
+    return '';
+  } catch (error) {
+    console.error('파일 미리보기 생성 실패:', error);
+    return '';
+  }
 };
 
 // 마크다운 렌더링
@@ -110,7 +118,7 @@ const renderedContent = computed(() => {
 .left {
   /* 챗봇 메시지 - 좌측 정렬 */
   background: #fff;
-  border: 1px solid #e5e7eb;
+  border: none;
 }
 
 /* 스트리밍 커서 애니메이션 */

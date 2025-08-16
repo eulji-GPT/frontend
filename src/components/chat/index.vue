@@ -6,11 +6,8 @@
       <div class="frame">
         <div class="chatbot-logo-header">
           <div class="frame-1">
-            <div class="common-icon"></div>
-            <div class="group">
-              <span class="eulgpt">EULGPT </span>
-              <div class="union"></div>
-            </div>
+            <div class="logo-icon"></div>
+            <img :src="eulLogo" alt="EULGPT 로고" class="eulgpt-logo-svg" />
           </div>
           <div class="edit-icon" @click="startNewChat"></div>
         </div>
@@ -72,15 +69,17 @@
         </div>
       </div>
       <div class="chat-main-area">
-        <div class="chat-header">
-          <div class="mode-selector-container">
-            <ChatModeSelector 
-              :currentMode="chatMode" 
-              @modeChange="handleModeChange"
-            />
+        <div class="chat-messages-container">
+          <div class="mode-selector-header">
+            <div class="mode-selector-container">
+              <ChatModeSelector 
+                :currentMode="chatMode" 
+                @modeChange="handleModeChange"
+              />
+            </div>
           </div>
+          <ChatMessageArea :messages="messages" />
         </div>
-        <ChatMessageArea :messages="messages" />
         <div class="chat-input-area">
           <ChatInput 
             :isLoading="isLoading" 
@@ -104,6 +103,7 @@ import NotificationDropdown from '../common/NotificationDropdown.vue';
 import InfoPanel from '../common/InfoPanel.vue';
 import { useChat } from '../../composables/useChat';
 import type { ChatMode } from '../../composables/useChat';
+import eulLogo from '../../assets/eul_logo.svg';
 import "./index.css";
 
 const { 
@@ -291,59 +291,31 @@ onUnmounted(() => {
 }
 .frame-1 {
   display: flex;
+  justify-content: center;
+  flex-direction: row;
   align-items: center;
-  justify-content: flex-start;
-  flex-wrap: nowrap;
-  flex-shrink: 1;
+  flex: none;
   gap: 15px;
+  box-sizing: border-box;
+  flex-shrink: 1;
   position: relative;
   min-width: 0;
   z-index: 11;
 }
-.common-icon {
-  flex-shrink: 0;
-  position: relative;
+
+.logo-icon {
   width: 24px;
   height: 24px;
+  flex-shrink: 0;
   background: url('./icon/-three.svg') no-repeat center;
   background-size: cover;
-  z-index: 12;
-  overflow: hidden;
+  object-fit: cover;
 }
-.group {
-  flex-shrink: 1;
-  position: relative;
-  min-width: 0;
-  height: 36.3px;
-  z-index: 13;
-}
-.eulgpt {
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  position: relative;
-  height: 36.3px;
-  color: #02478a;
-  font-family: Poppins, var(--default-font-family);
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 36px;
-  text-align: left;
-  white-space: nowrap;
-  letter-spacing: 0.48px;
-  z-index: 14;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.union {
-  position: absolute;
-  width: 10.39px;
-  height: 10.391px;
-  top: 1.603px;
-  right: 0;
-  background: url('./icon/Union.svg') no-repeat center;
-  background-size: cover;
-  z-index: 15;
+
+.eulgpt-logo-svg {
+  height: 36px;
+  width: auto;
+  object-fit: contain;
 }
 .edit-icon {
   flex-shrink: 0;
@@ -413,27 +385,29 @@ onUnmounted(() => {
 .frame-6 {
   position: relative;
   width: 25px;
-  height: 22.003px;
+  height: 25px;
   margin: -4.751px 0 0 0;
   background: rgba(2, 71, 138, 0.1);
   z-index: 22;
-  overflow: hidden;
+  overflow: visible;
   border-radius: 6.251px;
 }
 .day {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   position: absolute;
-  height: 54px;
-  top: -16.5px;
-  left: 3.75px;
+  height: 25px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   color: #02478a;
   font-family: Pretendard, var(--default-font-family);
-  font-size: 36px;
+  font-size: 10px;
   font-weight: 700;
-  line-height: 54px;
-  text-align: left;
+  line-height: 25px;
+  text-align: center;
   white-space: nowrap;
   z-index: 23;
 }
@@ -754,20 +728,13 @@ onUnmounted(() => {
     min-height: 36px;
   }
   
-  .frame-1 {
-    gap: 8px;
+  .eulgpt-logo-svg {
+    height: 30px;
   }
   
-  .eulgpt {
-    font-size: 18px;
-    line-height: 28px;
-    height: auto;
-  }
-  
-  .union {
-    width: 8px;
-    height: 8px;
-    top: 2px;
+  .logo-icon {
+    width: 20px;
+    height: 20px;
   }
   
   .edit-icon {
@@ -800,18 +767,13 @@ onUnmounted(() => {
     padding: 0 8px;
   }
   
-  .frame-1 {
-    gap: 6px;
+  .eulgpt-logo-svg {
+    height: 26px;
   }
   
-  .eulgpt {
-    font-size: 16px;
-    line-height: 24px;
-  }
-  
-  .common-icon {
-    width: 20px;
-    height: 20px;
+  .logo-icon {
+    width: 18px;
+    height: 18px;
   }
   
   .edit-icon {
@@ -830,9 +792,13 @@ onUnmounted(() => {
     padding: 0 16px;
   }
   
-  .eulgpt {
-    font-size: 20px;
-    line-height: 32px;
+  .eulgpt-logo-svg {
+    height: 32px;
+  }
+  
+  .logo-icon {
+    width: 22px;
+    height: 22px;
   }
   
   .chat-content-col {
