@@ -49,6 +49,16 @@ export function useChat() {
     };
     return `${FASTAPI_BASE_URL}${endpoints[mode]}`;
   };
+
+  // 자동 스크롤 함수
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      const chatMainArea = document.querySelector('.chat-main-area');
+      if (chatMainArea) {
+        chatMainArea.scrollTop = chatMainArea.scrollHeight;
+      }
+    }, 100);
+  };
   const FASTAPI_HEALTH_URL = `${FASTAPI_BASE_URL}/health`;
 
   onMounted(async () => {
@@ -245,7 +255,9 @@ export function useChat() {
                     chunk_index: data.chunk_index,
                     chunk_length: data.final_answer_chunk?.length,
                     chunk_preview: data.final_answer_chunk?.substring(0, 20),
-                    is_last: data.is_last_chunk
+                    is_last: data.is_last_chunk,
+                    current_streaming_state: isStreaming.value,
+                    message_streaming_state: currentChat.messages[messageIndex]?.isStreaming
                   });
                   
                   if (data.type === 'start' && currentChat.messages[messageIndex]) {
@@ -279,6 +291,9 @@ export function useChat() {
                     currentChat.messages[messageIndex].progressPercent = data.progress_percent;
                     currentChat.messages[messageIndex].currentPhase = data.phase;
                     console.log(`🔄 단계 ${data.step_number} 완료, 누적 텍스트 길이: ${accumulatedText.length}`);
+                    
+                    // 단계 완료 시 자동 스크롤
+                    scrollToBottom();
                   }
                   else if (data.type === 'warning' && currentChat.messages[messageIndex]) {
                     currentChat.messages[messageIndex].currentStep = data.step;
@@ -295,9 +310,11 @@ export function useChat() {
                     currentChat.messages[messageIndex].currentStep = "최종 답변 출력 중...";
                     currentChat.messages[messageIndex].currentPhase = data.phase;
                     currentChat.messages[messageIndex].progressPercent = 100;
+                    currentChat.messages[messageIndex].isStreaming = true; // 스트리밍 상태 활성화
+                    isStreaming.value = true; // 전역 스트리밍 상태 활성화
                   }
                   else if (data.type === 'final_answer_chunk' && currentChat.messages[messageIndex]) {
-                    // 스트리밍 청크를 실시간으로 누적
+                    // 스트리밍 청크를 실시간으로 누적 (디바운싱 적용)
                     const chunk = data.final_answer_chunk;
                     console.log(`📝 [STREAMING] 최종 답변 청크 수신:`, {
                       chunk_index: data.chunk_index,
@@ -307,21 +324,29 @@ export function useChat() {
                       current_text_length: currentChat.messages[messageIndex].text.length
                     });
                     
-                    // 청크를 누적하여 텍스트 업데이트
-                    if (chunk && chunk.trim()) {  // 빈 청크가 아닌 경우만
+                    // 청크를 누적하여 텍스트 업데이트 (직접 속성 변경으로 깜빡임 방지)
+                    if (chunk) {
                       const beforeLength = currentChat.messages[messageIndex].text.length;
+                      
+                      // 직접 속성 업데이트 (splice 대신 사용하여 깜빡임 방지)
                       currentChat.messages[messageIndex].text += chunk;
+                      currentChat.messages[messageIndex].isStreaming = true;
+                      currentChat.messages[messageIndex].currentStep = "최종 답변 출력 중...";
+                      
                       const afterLength = currentChat.messages[messageIndex].text.length;
                       
-                      console.log(`📄 [STREAMING] 텍스트 누적:`, {
+                      console.log(`📄 [STREAMING] 텍스트 누적 성공:`, {
                         before: beforeLength,
                         added: chunk.length,
                         after: afterLength,
-                        preview: currentChat.messages[messageIndex].text.substring(Math.max(0, afterLength - 50))
+                        preview: currentChat.messages[messageIndex].text.substring(Math.max(0, afterLength - 50)),
+                        full_text_length: currentChat.messages[messageIndex].text.length
                       });
                       
-                      // UI 업데이트를 위해 강제 리렌더링
-                      currentChat.messages[messageIndex] = { ...currentChat.messages[messageIndex] };
+                      // 디바운싱된 스크롤 (100ms마다 한 번만)
+                      setTimeout(() => {
+                        scrollToBottom();
+                      }, 50);
                     }
                     
                     // 마지막 청크인 경우
@@ -330,7 +355,7 @@ export function useChat() {
                     }
                   }
                   else if (data.type === 'final_answer_complete' && currentChat.messages[messageIndex]) {
-                    // 최종 답변 스트리밍 완료
+                    // 최종 답변 스트리밍 완료 - 직접 속성 변경
                     currentChat.messages[messageIndex].isStreaming = false;
                     currentChat.messages[messageIndex].currentStep = undefined;
                     currentChat.messages[messageIndex].cotSteps = undefined;
@@ -339,7 +364,17 @@ export function useChat() {
                     currentChat.messages[messageIndex].totalSteps = undefined;
                     currentChat.messages[messageIndex].currentStepNumber = undefined;
                     isStreaming.value = false;
-                    saveChatHistory();
+                    
+                    console.log(`🏁 [STREAMING] CoT 스트리밍 완료:`, {
+                      final_text_length: currentChat.messages[messageIndex].text.length,
+                      is_streaming: currentChat.messages[messageIndex].isStreaming
+                    });
+                    
+                    // 최종 스크롤
+                    setTimeout(() => {
+                      scrollToBottom();
+                      saveChatHistory();
+                    }, 100);
                   }
                   else if (data.type === 'error') {
                     // 오류 발생 시 즉시 스트리밍 중단하고 오류 메시지 표시
@@ -495,26 +530,47 @@ export function useChat() {
       
       if (currentChat.messages[messageIndex]) {
         const existingMessage = currentChat.messages[messageIndex];
-        currentChat.messages[messageIndex] = {
-          ...existingMessage,
-          text: '',
-          isLoading: false,
-          isStreaming: true,
-          currentStep: undefined,
-          hasError: false
-        };
+        // 객체 속성만 변경하여 불필요한 리렌더링 방지
+        existingMessage.text = '';
+        existingMessage.isLoading = false;
+        existingMessage.isStreaming = true;
+        existingMessage.currentStep = undefined;
+        existingMessage.hasError = false;
       }
       
       isStreaming.value = true; // 스트리밍 상태 시작
 
-      // 응답을 타이핑 효과로 표시
+      // 응답을 타이핑 효과로 표시 (최적화된 버전)
       if (data.success && data.response && data.response.trim()) {
         const responseText = data.response;
         let currentIndex = 0;
+        let lastUpdateTime = 0;
+        const UPDATE_INTERVAL = 150; // 150ms마다 업데이트로 부드럽게
+        
+        // 한글과 영어를 자연스럽게 처리하기 위한 청크 단위 계산
+        const getNextChunkIndex = (text: string, currentIndex: number) => {
+          if (currentIndex >= text.length) return text.length;
+          
+          const char = text[currentIndex];
+          
+          // 한글의 경우 음절 단위로, 영어의 경우 문자 단위로
+          if (char.match(/[가-힣]/)) {
+            return Math.min(currentIndex + 2, text.length); // 한글은 2글자씩
+          } else if (char.match(/[a-zA-Z]/)) {
+            // 영어 단어는 공백이나 구두점까지 함께
+            let nextIndex = currentIndex + 1;
+            while (nextIndex < text.length && text[nextIndex].match(/[a-zA-Z]/)) {
+              nextIndex++;
+            }
+            return Math.min(nextIndex, currentIndex + 4); // 최대 4글자씩
+          } else {
+            return currentIndex + 1; // 숫자, 기호 등은 1글자씩
+          }
+        };
         
         const typeWriter = () => {
           // 중지된 경우 타이핑 중단
-          if (!isStreaming.value) {
+          if (!isStreaming.value || !currentChat.messages[messageIndex]) {
             if (currentChat.messages[messageIndex]) {
               currentChat.messages[messageIndex].isStreaming = false;
               currentChat.messages[messageIndex].currentStep = undefined;
@@ -523,14 +579,31 @@ export function useChat() {
             return;
           }
           
-          if (currentIndex < responseText.length && currentChat.messages[messageIndex]) {
-            currentChat.messages[messageIndex].text = responseText.substring(0, currentIndex + 1);
-            currentIndex++;
-            setTimeout(typeWriter, 20); // 20ms 간격으로 한 글자씩 표시
-          } else if (currentChat.messages[messageIndex]) {
+          const now = Date.now();
+          
+          if (currentIndex < responseText.length) {
+            // 다음 청크 인덱스 계산
+            const nextIndex = getNextChunkIndex(responseText, currentIndex);
+            
+            // 텍스트 직접 업데이트 (객체 재생성 없이)
+            currentChat.messages[messageIndex].text = responseText.substring(0, nextIndex);
+            
+            currentIndex = nextIndex;
+            
+            // 디바운싱된 스크롤
+            if (now - lastUpdateTime > UPDATE_INTERVAL) {
+              setTimeout(() => {
+                scrollToBottom();
+              }, 20);
+              lastUpdateTime = now;
+            }
+            
+            setTimeout(typeWriter, 80); // 80ms 간격으로 부드럽게
+          } else {
+            // 타이핑 완료
             currentChat.messages[messageIndex].isStreaming = false;
             currentChat.messages[messageIndex].currentStep = undefined;
-            isStreaming.value = false; // 스트리밍 완료
+            isStreaming.value = false;
             saveChatHistory();
           }
         };
@@ -549,9 +622,11 @@ export function useChat() {
             errorMessage = '공백 응답을 받았습니다. 다시 시도해주세요.';
           }
           
+          // 직접 속성 업데이트
           currentChat.messages[messageIndex].text = errorMessage;
           currentChat.messages[messageIndex].isStreaming = false;
           currentChat.messages[messageIndex].currentStep = undefined;
+          currentChat.messages[messageIndex].hasError = true;
           isStreaming.value = false;
           saveChatHistory();
         }
@@ -580,10 +655,12 @@ export function useChat() {
       }
       
       if (currentChat.messages[messageIndex]) {
+        // 직접 속성 업데이트로 불필요한 리렌더링 방지
         currentChat.messages[messageIndex].text = errorMessage;
         currentChat.messages[messageIndex].isLoading = false;
         currentChat.messages[messageIndex].isStreaming = false;
         currentChat.messages[messageIndex].currentStep = undefined;
+        currentChat.messages[messageIndex].hasError = true;
       }
       
       isStreaming.value = false;

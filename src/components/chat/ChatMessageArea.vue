@@ -89,6 +89,7 @@
       </div>
       <ChatBubble 
         v-else 
+        :key="`bubble-${idx}`"
         :align="msg.isUser ? 'right' : 'left'" 
         :is-loading="false" 
         :is-streaming="msg.isStreaming || false"
@@ -119,24 +120,22 @@ const props = defineProps<{
 
 const emit = defineEmits(['feedback', 'regenerate', 'modeChange']);
 
+// 메시지 컨테이너 ref
 const messagesContainer = ref<HTMLElement | null>(null);
 
+// 스크롤을 맨 아래로 이동하는 함수
 const scrollToBottom = () => {
   nextTick(() => {
-    // 상위 컨테이너(.chat-main-area)를 찾아서 스크롤
-    const chatMainArea = document.querySelector('.chat-main-area');
-    if (chatMainArea) {
-      chatMainArea.scrollTop = chatMainArea.scrollHeight;
-    } else if (messagesContainer.value) {
-      // 폴백: 기존 방식
+    if (messagesContainer.value) {
       messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
     }
   });
 };
 
+// 메시지가 변경될 때마다 스크롤을 맨 아래로 이동
 watch(() => props.messages, () => {
   scrollToBottom();
-}, { deep: true });
+}, { deep: true, immediate: true });
 
 const getPhaseDisplayName = (phase: string): string => {
   const phaseNames: Record<string, string> = {

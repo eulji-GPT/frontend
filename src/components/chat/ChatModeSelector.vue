@@ -159,16 +159,16 @@ document.addEventListener('click', (e) => {
 .mode-selector-header.cot-active::after {
   content: '✨ PREMIUM ✨';
   position: absolute;
-  top: -6px;
-  right: -15px;
+  top: -8px;
+  right: -20px;
   background: linear-gradient(135deg, #ffd700, #ffed4e);
   color: #92400e;
-  font-size: 7px;
+  font-size: 9px;
   font-weight: 700;
-  padding: 2px 4px;
-  border-radius: 6px;
+  padding: 3px 6px;
+  border-radius: 8px;
   animation: headerSparkle 2s ease-in-out infinite;
-  box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
+  box-shadow: 0 2px 6px rgba(255, 215, 0, 0.4);
   z-index: 10;
   text-shadow: 0 1px 1px rgba(255, 255, 255, 0.3);
   white-space: nowrap;

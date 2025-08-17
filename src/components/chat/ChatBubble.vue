@@ -16,11 +16,11 @@
             </div>
           </div>
         </div>
-        <div v-if="content && content.trim()">
-          <div v-if="useMarkdown" v-html="renderedContent" class="markdown-content"></div>
-          <div v-else v-text="content"></div>
+        <div v-if="displayContent && displayContent.trim()">
+          <div v-if="useMarkdown" v-html="streamingRenderedContent" class="markdown-content"></div>
+          <div v-else v-text="displayContent"></div>
         </div>
-        <div v-else-if="!content || !content.trim()">
+        <div v-else-if="!displayContent || !displayContent.trim()">
           <slot />
         </div>
         <span v-if="isStreaming" class="streaming-cursor">|</span>
@@ -109,6 +109,21 @@ const renderedContent = computed(() => {
   const textContent = slotContent.toString();
   const result = props.useMarkdown ? marked(textContent) : textContent;
   return typeof result === 'string' ? result.trim() : result;
+});
+
+// 스트리밍 상태에서 실시간 업데이트를 위한 computed
+const displayContent = computed(() => {
+  return props.content || '';
+});
+
+// 렌더링된 마크다운 콘텐츠 (스트리밍 실시간 반영)
+const streamingRenderedContent = computed(() => {
+  const content = displayContent.value;
+  if (content && props.useMarkdown) {
+    const result = marked(content);
+    return typeof result === 'string' ? result.trim() : result;
+  }
+  return content;
 });
 
 // 피드백 처리 함수
@@ -233,18 +248,39 @@ const handleRegenerate = (messageId) => {
   display: none;
 }
 
-/* 스트리밍 커서 애니메이션 */
+/* 스트리밍 커서 애니메이션 - 개선된 버전 */
 .streaming-cursor {
   display: inline-block;
   margin-left: 2px;
-  color: #9ca3af;
+  color: #2563eb; /* 더 눈에 띄는 파란색 */
   font-weight: bold;
+  font-size: 1.1em;
   animation: blink 1s steps(1) infinite;
 }
 
 @keyframes blink {
   0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0; }
+  51%, 100% { opacity: 0.3; }
+}
+
+/* 스트리밍 상태 스타일링 */
+.streaming-text {
+  position: relative;
+}
+
+.streaming-content {
+  transition: all 0.1s ease;
+}
+
+/* 디버그 스트리밍 정보 스타일링 */
+.debug-streaming {
+  background: rgba(37, 99, 235, 0.1);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  border-radius: 8px;
+  padding: 8px;
+  margin-top: 8px;
+  font-family: monospace;
+  line-height: 1.4;
 }
 
 /* 마크다운 스타일링 */
