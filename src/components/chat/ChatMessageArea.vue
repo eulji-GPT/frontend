@@ -1,7 +1,7 @@
 <template>
   <div class="chat-messages-area" ref="messagesContainer">
     <div v-for="(msg, idx) in messages" :key="idx" class="message-wrapper">
-      <div v-if="msg.isLoading || msg.currentStep || msg.hasError" class="loading-indicator" :class="{ 'error-state': msg.hasError }">
+      <div v-if="msg.isLoading || msg.currentStep" class="loading-indicator" :class="{ 'error-state': msg.hasError }">
         <div v-if="!msg.hasError" class="loader-container">
           <LottieLoader />
         </div>
@@ -91,6 +91,8 @@
         @feedback="handleFeedback"
         @regenerate="handleRegenerate"
       />
+      <!-- 디버깅용 로그 -->
+      <!-- {{ console.log('메시지 렌더링:', idx, msg.isUser ? 'user' : 'bot', msg.text?.substring(0, 20), 'hasError:', msg.hasError, 'isLoading:', msg.isLoading, 'currentStep:', msg.currentStep) }} -->
     </div>
   </div>
 </template>

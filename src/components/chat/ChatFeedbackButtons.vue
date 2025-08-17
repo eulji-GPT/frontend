@@ -51,7 +51,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 
 const props = defineProps<{
   content: string;
@@ -64,6 +64,19 @@ const emit = defineEmits(['feedback', 'regenerate']);
 const feedback = ref<'good' | 'bad' | null>(null);
 const copySuccess = ref(false);
 
+// 컴포넌트 로드 시 기존 피드백 불러오기
+onMounted(() => {
+  try {
+    const feedbackData = JSON.parse(localStorage.getItem('messageFeedback') || '{}');
+    const existingFeedback = feedbackData[props.messageId || ''];
+    if (existingFeedback) {
+      feedback.value = existingFeedback.type;
+    }
+  } catch (error) {
+    console.error('피드백 불러오기 실패:', error);
+  }
+});
+
 const showButtons = computed(() => {
   return props.isBot && props.content.trim().length > 0;
 });
@@ -72,6 +85,7 @@ const copyToClipboard = async () => {
   try {
     await navigator.clipboard.writeText(props.content);
     copySuccess.value = true;
+    console.log('📋 텍스트가 클립보드에 복사되었습니다!');
     setTimeout(() => {
       copySuccess.value = false;
     }, 2000);
@@ -97,6 +111,7 @@ const fallbackCopyTextToClipboard = (text: string) => {
     const successful = document.execCommand('copy');
     if (successful) {
       copySuccess.value = true;
+      console.log('📋 텍스트가 클립보드에 복사되었습니다! (폴백 방식)');
       setTimeout(() => {
         copySuccess.value = false;
       }, 2000);
@@ -110,8 +125,29 @@ const fallbackCopyTextToClipboard = (text: string) => {
 
 const sendFeedback = (type: 'good' | 'bad') => {
   feedback.value = type;
+  
+  // 피드백 데이터를 localStorage에 저장
+  try {
+    const feedbackData = JSON.parse(localStorage.getItem('messageFeedback') || '{}');
+    feedbackData[props.messageId || 'unknown'] = {
+      type: type,
+      timestamp: new Date().toISOString(),
+      content: props.content.substring(0, 100) // 메시지 일부만 저장
+    };
+    localStorage.setItem('messageFeedback', JSON.stringify(feedbackData));
+    console.log(`✅ 피드백 저장됨: ${type}`, props.messageId);
+  } catch (error) {
+    console.error('피드백 저장 실패:', error);
+  }
+  
   emit('feedback', type, props.messageId);
-  console.log(`피드백 전송: ${type}`, props.messageId);
+  
+  // 사용자에게 피드백 감사 메시지 표시
+  if (type === 'good') {
+    console.log('👍 좋은 피드백을 주셔서 감사합니다!');
+  } else {
+    console.log('👎 피드백을 주셔서 감사합니다. 더 나은 답변을 위해 노력하겠습니다.');
+  }
 };
 
 const regenerateAnswer = () => {

@@ -28,7 +28,7 @@
     </div>
     
     <!-- 피드백 버튼 (챗봇 메시지에만 표시) -->
-    <div v-if="align === 'left' && content && content.trim() && !isStreaming && false" class="feedback-container">
+    <div v-if="align === 'left' && content && content.trim() && !isStreaming" class="feedback-container">
       <ChatFeedbackButtons
         :content="content"
         :messageId="messageId"

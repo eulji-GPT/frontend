@@ -144,7 +144,59 @@ const handleMessageFeedback = (type: 'good' | 'bad', messageId: string) => {
 // 답변 재생성 처리
 const handleMessageRegenerate = (messageId: string) => {
   console.log('답변 재생성 처리:', messageId);
-  // TODO: 해당 메시지를 다시 생성하는 로직 구현
+  
+  try {
+    // messageId에서 인덱스 추출 (예: "1-1234567890" -> 1)
+    const messageIndex = parseInt(messageId.split('-')[0]);
+    const currentChat = chatHistory.value.find(c => c.id === currentChatId.value);
+    
+    if (!currentChat || !currentChat.messages[messageIndex]) {
+      console.error('재생성할 메시지를 찾을 수 없습니다.');
+      return;
+    }
+    
+    // 해당 메시지가 봇 메시지인지 확인
+    if (currentChat.messages[messageIndex].isUser) {
+      console.error('사용자 메시지는 재생성할 수 없습니다.');
+      return;
+    }
+    
+    // 이전 사용자 메시지 찾기 (재생성할 답변의 바로 전 메시지)
+    let userMessage = '';
+    for (let i = messageIndex - 1; i >= 0; i--) {
+      if (currentChat.messages[i].isUser) {
+        userMessage = currentChat.messages[i].text;
+        break;
+      }
+    }
+    
+    if (!userMessage) {
+      console.error('재생성을 위한 사용자 메시지를 찾을 수 없습니다.');
+      return;
+    }
+    
+    console.log('🔄 답변 재생성 시작:', userMessage.substring(0, 50) + '...');
+    
+    // 기존 봇 메시지를 로딩 상태로 변경
+    currentChat.messages[messageIndex] = {
+      ...currentChat.messages[messageIndex],
+      text: '답변을 다시 생성하고 있습니다...',
+      isLoading: true,
+      isStreaming: false,
+      currentStep: '답변 재생성 중...',
+      hasError: false
+    };
+    
+    // 기존 메시지 제거 (마지막 봇 응답만)
+    currentChat.messages.splice(messageIndex, 1);
+    
+    // handleSend를 사용하여 재생성
+    const inputValue = { value: userMessage };
+    handleSend(inputValue);
+    
+  } catch (error) {
+    console.error('답변 재생성 오류:', error);
+  }
 };
 
 // 디버깅을 위한 messages 로그

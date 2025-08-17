@@ -73,7 +73,10 @@ export function useChat() {
         ...chat,
         messages: chat.messages.map((msg: ChatMessage) => ({
           ...msg,
-          timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date()
+          timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
+          hasError: msg.hasError || false,
+          isLoading: msg.isLoading || false,
+          isStreaming: msg.isStreaming || false
         }))
       }));
     }
