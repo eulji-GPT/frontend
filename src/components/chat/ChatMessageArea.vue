@@ -1,5 +1,13 @@
 <template>
   <div class="chat-messages-area" ref="messagesContainer">
+    <!-- 떠있는 모드 셀렉터 -->
+    <div class="floating-mode-selector">
+      <ChatModeSelector 
+        :currentMode="currentMode" 
+        @modeChange="handleModeChange"
+      />
+    </div>
+    
     <div v-for="(msg, idx) in messages" :key="idx" class="message-wrapper">
       <div v-if="msg.isLoading || msg.currentStep" class="loading-indicator" :class="{ 'error-state': msg.hasError }">
         <div v-if="!msg.hasError" class="loader-container">
@@ -101,19 +109,26 @@
 import { ref, watch, nextTick } from 'vue';
 import ChatBubble from './ChatBubble.vue';
 import LottieLoader from './LottieLoader.vue';
-import type { ChatMessage } from '../../composables/useChat';
+import ChatModeSelector from './ChatModeSelector.vue';
+import type { ChatMessage, ChatMode } from '../../composables/useChat';
 
 const props = defineProps<{
   messages: ChatMessage[];
+  currentMode: ChatMode;
 }>();
 
-const emit = defineEmits(['feedback', 'regenerate']);
+const emit = defineEmits(['feedback', 'regenerate', 'modeChange']);
 
 const messagesContainer = ref<HTMLElement | null>(null);
 
 const scrollToBottom = () => {
   nextTick(() => {
-    if (messagesContainer.value) {
+    // 상위 컨테이너(.chat-main-area)를 찾아서 스크롤
+    const chatMainArea = document.querySelector('.chat-main-area');
+    if (chatMainArea) {
+      chatMainArea.scrollTop = chatMainArea.scrollHeight;
+    } else if (messagesContainer.value) {
+      // 폴백: 기존 방식
       messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
     }
   });
@@ -156,6 +171,11 @@ const handleRegenerate = (messageId: string) => {
   emit('regenerate', messageId);
 };
 
+// 모드 변경 처리
+const handleModeChange = (mode: ChatMode) => {
+  emit('modeChange', mode);
+};
+
 </script>
 
 <style scoped>
@@ -163,10 +183,12 @@ const handleRegenerate = (messageId: string) => {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 1000px; /* 770px에서 1000px로 확장 */
+  max-width: 100%; /* 부모 컨테이너에 맞춤 */
   flex: 1 1 auto; /* Let it grow and shrink */
-  overflow-y: auto; /* It must scroll its own content */
+  overflow-x: hidden; /* 가로 스크롤 방지 */
+  overflow-y: auto; /* 세로 스크롤만 이 컨테이너에서 처리 */
   min-height: 0; /* Important for shrinking below its content size */
+  position: relative; /* 떠있는 요소의 기준점 */
 }
 
 .message-wrapper {
@@ -175,6 +197,7 @@ const handleRegenerate = (messageId: string) => {
   flex-direction: column;
   align-items: flex-start;
   margin-bottom: 12px;
+  overflow: visible; /* 스크롤을 상위 컨테이너에 위임 */
 }
 
 .loading-indicator {
@@ -468,39 +491,45 @@ const handleRegenerate = (messageId: string) => {
   align-self: flex-start;
 }
 
-
-.chat-messages-area::-webkit-scrollbar {
-  width: 6px;
+/* 떠있는 모드 셀렉터 스타일 */
+.floating-mode-selector {
+  position: sticky;
+  top: 16px; /* 스크롤 시 상단에서 16px 위치에 고정 */
+  left: 20px; /* chat-bubble.left와 동일한 좌측 패딩 */
+  z-index: 1000;
+  max-width: 200px;
+  min-width: 150px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(229, 231, 235, 0.8);
+  margin-bottom: 16px; /* 다른 메시지와의 간격 */
 }
 
-.chat-messages-area::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.chat-messages-area::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 3px;
-}
-
-.chat-messages-area::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
-}
+/* 스크롤바 스타일링은 상위 컨테이너에서 처리 */
 
 @media (max-width: 1200px) {
   .chat-messages-area {
-    max-width: 90vw;
+    width: 100%;
   }
 }
 
 @media (max-width: 1024px) {
   .chat-messages-area {
-    max-width: 95vw;
+    width: 100%;
   }
 }
 
 @media (max-width: 768px) {
   .chat-messages-area {
-    max-width: 98vw;
+    width: 100%;
+  }
+  
+  .floating-mode-selector {
+    top: 12px; /* 모바일에서 약간 줄인 상단 여백 */
+    max-width: 180px;
+    min-width: 140px;
   }
 }
 </style>

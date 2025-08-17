@@ -128,7 +128,9 @@ const handleRegenerate = (messageId) => {
 .chat-bubble-wrapper {
   display: flex;
   flex-direction: column;
-  width: 100%;
+  width: fit-content;
+  max-width: 100%;
+  overflow: visible; /* 스크롤을 상위 컨테이너에 위임 */
 }
 
 .chat-bubble-wrapper.right {
@@ -145,6 +147,40 @@ const handleRegenerate = (messageId) => {
 }
 
 .chat-bubble {
+  display: inline-block;
+  max-width: 70%; /* 화면 너비의 70%로 제한 */
+  padding: 12px 20px;
+  border-radius: 25px;
+  border: 1px solid var(--Gray-100, #F3F4F6);
+  background: var(--Primary-300, #F0F6FF);
+  font-size: 16px;
+  color: #222;
+  word-break: break-word;
+  font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  margin: 8px 0;
+  line-height: 1.5;
+  position: relative;
+  transition: all 0.3s ease;
+  transform: translateY(0);
+  opacity: 1;
+  animation: bubbleAppear 0.4s ease-out;
+  box-sizing: border-box; /* 패딩을 포함한 크기 계산 */
+  overflow: visible; /* 스크롤을 상위 컨테이너에 위임 */
+}
+
+@keyframes bubbleAppear {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.chat-bubble.right {
+  /* 유저 메시지 - 우측 정렬 */
   display: inline-flex;
   max-width: 550px;
   padding: 10px 20px;
@@ -153,23 +189,48 @@ const handleRegenerate = (messageId) => {
   border-radius: 30px;
   border: 1px solid var(--Gray-100, #F3F4F6);
   background: var(--Primary-300, #F0F6FF);
-  font-size: 16px;
   color: #222;
-  word-break: break-all;
-  font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Helvetica, Arial, sans-serif;
-  margin: 8px 0;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  position: relative;
+  font-weight: 500;
 }
 
-.right {
-  /* 유저 메시지 - 우측 정렬 */
-  background: var(--Primary-300, #F0F6FF);
-  border: 1px solid var(--Gray-100, #F3F4F6);
+.chat-bubble.right:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(240, 246, 255, 0.4);
 }
 
-.left {
+/* 유저 메시지 말풍선 꼬리 */
+.chat-bubble.right::after {
+  content: '';
+  position: absolute;
+  top: 15px;
+  right: -8px;
+  width: 0;
+  height: 0;
+  border: 8px solid transparent;
+  border-left-color: var(--Primary-300, #F0F6FF);
+  border-right: 0;
+  border-top: 0;
+  margin-top: -4px;
+  margin-right: -8px;
+}
+
+.chat-bubble.left {
   /* 챗봇 메시지 - 좌측 정렬 */
-  background: #fff;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  padding: 16px 20px;
+  background: transparent;
   border: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+/* 챗봇 메시지 말풍선 꼬리 - 제거됨 */
+.chat-bubble.left::after {
+  display: none;
 }
 
 /* 스트리밍 커서 애니메이션 */
@@ -320,6 +381,7 @@ const handleRegenerate = (messageId) => {
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   line-height: 1.2;
 }

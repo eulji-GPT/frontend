@@ -70,18 +70,12 @@
       </div>
       <div class="chat-main-area">
         <div class="chat-messages-container">
-          <div class="mode-selector-header">
-            <div class="mode-selector-container">
-              <ChatModeSelector 
-                :currentMode="chatMode" 
-                @modeChange="handleModeChange"
-              />
-            </div>
-          </div>
           <ChatMessageArea 
             :messages="messages" 
+            :currentMode="chatMode"
             @feedback="handleMessageFeedback"
             @regenerate="handleMessageRegenerate"
+            @modeChange="handleModeChange"
           />
         </div>
         <div class="chat-input-area">
@@ -635,6 +629,13 @@ onUnmounted(() => {
   z-index: 47;
 }
 
+/* 사이드바 모드 셀렉터 스타일 */
+.sidebar-mode-selector {
+  width: 100%;
+  padding: 0 20px;
+  margin-bottom: 16px;
+}
+
 /* Mobile overlay */
 .mobile-overlay {
   position: fixed;
@@ -814,6 +815,10 @@ onUnmounted(() => {
   }
   
   .chatbot-menu-item {
+    padding: 0 12px;
+  }
+  
+  .sidebar-mode-selector {
     padding: 0 12px;
   }
   

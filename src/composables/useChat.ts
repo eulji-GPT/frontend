@@ -216,8 +216,9 @@ export function useChat() {
 
       // 스트리밍 응답 처리
       const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
+      const decoder = new TextDecoder('utf-8');
       let accumulatedText = '';
+      let buffer = '';
 
       if (reader) {
         while (true) {
@@ -225,14 +226,27 @@ export function useChat() {
           if (done) break;
 
           const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('\n');
+          buffer += chunk;
+          
+          // 완전한 라인들을 찾기 위해 버퍼 처리
+          let lines = buffer.split('\n');
+          buffer = lines.pop() || ''; // 마지막 불완전한 라인은 버퍼에 보관
 
           for (const line of lines) {
             if (line.startsWith('data: ')) {
               try {
-                const jsonStr = line.slice(6); // 'data: ' 제거
-                if (jsonStr.trim()) {
+                const jsonStr = line.slice(6).trim(); // 'data: ' 제거 및 공백 제거
+                if (jsonStr) {
                   const data = JSON.parse(jsonStr);
+                  console.log('🔄 [DEBUG] 스트리밍 데이터 수신:', {
+                    type: data.type,
+                    phase: data.phase,
+                    step: data.step,
+                    chunk_index: data.chunk_index,
+                    chunk_length: data.final_answer_chunk?.length,
+                    chunk_preview: data.final_answer_chunk?.substring(0, 20),
+                    is_last: data.is_last_chunk
+                  });
                   
                   if (data.type === 'start' && currentChat.messages[messageIndex]) {
                     currentChat.messages[messageIndex].currentStep = data.step;
@@ -274,28 +288,45 @@ export function useChat() {
                       console.warn('CoT 단계 경고:', data.warning_details);
                     }
                   }
-                  else if (data.type === 'final_answer_chunk' && currentChat.messages[messageIndex]) {
-                    // 스트리밍 청크를 실시간으로 누적
-                    console.log(`📝 최종 답변 청크 ${data.chunk_index + 1} 수신:`, data.final_answer_chunk);
-                    
+                  else if (data.type === 'final_streaming_start' && currentChat.messages[messageIndex]) {
+                    // 최종 답변 스트리밍 시작 - 기존 텍스트 초기화
+                    console.log(`🔄 최종 답변 스트리밍 시작 - 기존 단계별 답변 텍스트 초기화`);
+                    currentChat.messages[messageIndex].text = '';
                     currentChat.messages[messageIndex].currentStep = "최종 답변 출력 중...";
                     currentChat.messages[messageIndex].currentPhase = data.phase;
                     currentChat.messages[messageIndex].progressPercent = 100;
+                  }
+                  else if (data.type === 'final_answer_chunk' && currentChat.messages[messageIndex]) {
+                    // 스트리밍 청크를 실시간으로 누적
+                    const chunk = data.final_answer_chunk;
+                    console.log(`📝 [STREAMING] 최종 답변 청크 수신:`, {
+                      chunk_index: data.chunk_index,
+                      chunk_length: chunk?.length || 0,
+                      chunk_preview: chunk?.substring(0, 30) || '(empty)',
+                      is_last: data.is_last_chunk,
+                      current_text_length: currentChat.messages[messageIndex].text.length
+                    });
                     
-                    // 첫 번째 청크인 경우 기존 텍스트 초기화 (단계별 답변 제거)
-                    if (data.chunk_index === 0) {
-                      console.log(`🔄 최종 답변 시작 - 기존 단계별 답변 텍스트 초기화`);
-                      currentChat.messages[messageIndex].text = data.final_answer_chunk;
-                    } else {
-                      // 후속 청크들은 누적
-                      currentChat.messages[messageIndex].text += data.final_answer_chunk;
+                    // 청크를 누적하여 텍스트 업데이트
+                    if (chunk && chunk.trim()) {  // 빈 청크가 아닌 경우만
+                      const beforeLength = currentChat.messages[messageIndex].text.length;
+                      currentChat.messages[messageIndex].text += chunk;
+                      const afterLength = currentChat.messages[messageIndex].text.length;
+                      
+                      console.log(`📄 [STREAMING] 텍스트 누적:`, {
+                        before: beforeLength,
+                        added: chunk.length,
+                        after: afterLength,
+                        preview: currentChat.messages[messageIndex].text.substring(Math.max(0, afterLength - 50))
+                      });
+                      
+                      // UI 업데이트를 위해 강제 리렌더링
+                      currentChat.messages[messageIndex] = { ...currentChat.messages[messageIndex] };
                     }
                     
-                    console.log(`📄 현재 누적된 텍스트: "${currentChat.messages[messageIndex].text}"`);
-                    
-                    // 마지막 청크인 경우 로그 출력
+                    // 마지막 청크인 경우
                     if (data.is_last_chunk) {
-                      console.log(`✅ 마지막 청크 처리 완료, complete 신호 대기 중`);
+                      console.log(`✅ [STREAMING] 마지막 청크 처리 완료, 스트리밍 종료 준비`);
                     }
                   }
                   else if (data.type === 'final_answer_complete' && currentChat.messages[messageIndex]) {

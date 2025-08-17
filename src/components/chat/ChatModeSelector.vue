@@ -1,6 +1,6 @@
 <template>
   <div class="mode-selector">
-    <div class="mode-selector-header">
+    <div class="mode-selector-header" :class="{ 'cot-active': currentMode === 'cot' }">
       <span class="current-mode">{{ getCurrentModeInfo().name }}</span>
       <button class="mode-toggle-btn" @click="toggleSelector" :class="{ active: isOpen }">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -101,21 +101,25 @@ document.addEventListener('click', (e) => {
 <style scoped>
 .mode-selector {
   position: relative;
-  width: 100%;
-  max-width: 500px;
+  width: 220px;
+  max-width: 220px;
+  overflow: visible;
 }
 
 .mode-selector-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  padding: 8px 12px;
   background: white;
   border: 1px solid #e5e7eb;
-  border-radius: 12px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  min-height: 32px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .mode-selector-header:hover {
@@ -123,8 +127,116 @@ document.addEventListener('click', (e) => {
   box-shadow: 0 2px 8px rgba(2, 71, 138, 0.1);
 }
 
+/* CoT 모드 활성화 시 헤더 스타일 */
+.mode-selector-header.cot-active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+  background-size: 400% 400%;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  animation: premiumHeaderGradient 3s ease infinite, premiumHeaderPulse 2s ease-in-out infinite alternate;
+  position: relative;
+  color: white;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4), 
+              0 0 20px rgba(118, 75, 162, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  overflow: visible;
+}
+
+.mode-selector-header.cot-active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+  background-size: 400% 400%;
+  animation: premiumHeaderGradient 3s ease infinite;
+  z-index: -1;
+  border-radius: 6px;
+}
+
+.mode-selector-header.cot-active::after {
+  content: '✨ PREMIUM ✨';
+  position: absolute;
+  top: -6px;
+  right: -15px;
+  background: linear-gradient(135deg, #ffd700, #ffed4e);
+  color: #92400e;
+  font-size: 7px;
+  font-weight: 700;
+  padding: 2px 4px;
+  border-radius: 6px;
+  animation: headerSparkle 2s ease-in-out infinite;
+  box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
+  z-index: 10;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.3);
+  white-space: nowrap;
+  transform: rotate(-12deg);
+}
+
+.mode-selector-header.cot-active .current-mode {
+  color: white;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 2;
+}
+
+.mode-selector-header.cot-active .mode-toggle-btn {
+  color: white;
+  position: relative;
+  z-index: 2;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+.mode-selector-header.cot-active:hover {
+  border-color: transparent;
+  box-shadow: 0 12px 40px rgba(102, 126, 234, 0.6), 
+              0 0 30px rgba(118, 75, 162, 0.5),
+              inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+@keyframes premiumHeaderGradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes premiumHeaderPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4), 
+                0 0 20px rgba(118, 75, 162, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  100% {
+    transform: scale(1.01);
+    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.6), 
+                0 0 30px rgba(118, 75, 162, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+}
+
+@keyframes headerSparkle {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(0.9) rotate(-5deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1) rotate(5deg);
+  }
+}
+
 .current-mode {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: #1f2937;
   font-family: Pretendard, sans-serif;
@@ -151,6 +263,7 @@ document.addEventListener('click', (e) => {
   top: 100%;
   left: 0;
   right: 0;
+  width: 100%;
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
@@ -158,6 +271,7 @@ document.addEventListener('click', (e) => {
   z-index: 1000;
   margin-top: 8px;
   animation: fadeIn 0.2s ease;
+  box-sizing: border-box;
 }
 
 @keyframes fadeIn {
@@ -173,6 +287,8 @@ document.addEventListener('click', (e) => {
 
 .mode-list {
   padding: 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .mode-item {
@@ -197,11 +313,106 @@ document.addEventListener('click', (e) => {
 
 .mode-item.cot-mode {
   border-left: 3px solid #10b981;
+  position: relative;
+  overflow: hidden;
 }
 
 .mode-item.cot-mode.active {
-  background: linear-gradient(135deg, #f0f6ff 0%, #f0fdf4 100%);
-  border: 1px solid #10b981;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+  background-size: 400% 400%;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  animation: premiumGradient 3s ease infinite, premiumPulse 2s ease-in-out infinite alternate;
+  position: relative;
+  color: white;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4), 
+              0 0 20px rgba(118, 75, 162, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.mode-item.cot-mode.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+  background-size: 400% 400%;
+  animation: premiumGradient 3s ease infinite;
+  z-index: -1;
+  border-radius: 8px;
+}
+
+.mode-item.cot-mode.active::after {
+  content: '✨';
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  font-size: 16px;
+  animation: sparkle 1.5s ease-in-out infinite;
+  z-index: 2;
+}
+
+.mode-item.cot-mode.active .mode-name {
+  color: white;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 2;
+}
+
+.mode-item.cot-mode.active .mode-description {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 2;
+}
+
+.mode-item.cot-mode.active .mode-icon {
+  position: relative;
+  z-index: 2;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+@keyframes premiumGradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes premiumPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4), 
+                0 0 20px rgba(118, 75, 162, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  100% {
+    transform: scale(1.02);
+    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.6), 
+                0 0 30px rgba(118, 75, 162, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 0.6;
+    transform: translateY(-50%) scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-50%) scale(1.2);
+  }
 }
 
 .mode-icon {
@@ -243,6 +454,33 @@ document.addEventListener('click', (e) => {
   border-radius: 12px;
   font-family: Pretendard, sans-serif;
   box-shadow: 0 1px 3px rgba(16, 185, 129, 0.3);
+  position: relative;
+  z-index: 2;
+}
+
+.mode-item.cot-mode.active .cot-badge {
+  background: linear-gradient(135deg, #ffd700, #ffed4e, #fbbf24);
+  background-size: 200% 200%;
+  animation: goldShimmer 2s ease-in-out infinite;
+  color: #92400e;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4),
+              0 0 12px rgba(255, 237, 78, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 215, 0, 0.6);
+}
+
+@keyframes goldShimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 /* 반응형 디자인 */
