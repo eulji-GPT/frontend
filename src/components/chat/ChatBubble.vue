@@ -1,28 +1,41 @@
 <template>
-  <div :class="['chat-bubble', align, { 'streaming': isStreaming }]">
-    <div class="message-content">
-      <!-- 파일 미리보기 (사용자 메시지에서만) -->
-      <div v-if="images && Array.isArray(images) && images.length > 0 && align === 'right'" class="message-files">
-        <div 
-          v-for="(file, index) in images" 
-          :key="index" 
-          class="message-file"
-        >
-          <img v-if="file.type && file.type.startsWith('image/')" :src="getFilePreview(file)" :alt="file.name || '이미지'" class="message-image" />
-          <div v-else class="message-pdf">
-            <span class="pdf-icon">📄</span>
-            <span class="pdf-name">{{ file.name || '파일' }}</span>
+  <div :class="['chat-bubble-wrapper', align]">
+    <div :class="['chat-bubble', align, { 'streaming': isStreaming }]">
+      <div class="message-content">
+        <!-- 파일 미리보기 (사용자 메시지에서만) -->
+        <div v-if="images && Array.isArray(images) && images.length > 0 && align === 'right'" class="message-files">
+          <div 
+            v-for="(file, index) in images" 
+            :key="index" 
+            class="message-file"
+          >
+            <img v-if="file.type && file.type.startsWith('image/')" :src="getFilePreview(file)" :alt="file.name || '이미지'" class="message-image" />
+            <div v-else class="message-pdf">
+              <span class="pdf-icon">📄</span>
+              <span class="pdf-name">{{ file.name || '파일' }}</span>
+            </div>
           </div>
         </div>
+        <div v-if="content && content.trim()">
+          <div v-if="useMarkdown" v-html="renderedContent" class="markdown-content"></div>
+          <div v-else v-text="content"></div>
+        </div>
+        <div v-else-if="!content || !content.trim()">
+          <slot />
+        </div>
+        <span v-if="isStreaming" class="streaming-cursor">|</span>
       </div>
-      <div v-if="content && content.trim()">
-        <div v-if="useMarkdown" v-html="renderedContent" class="markdown-content"></div>
-        <div v-else v-text="content"></div>
-      </div>
-      <div v-else-if="!content || !content.trim()">
-        <slot />
-      </div>
-      <span v-if="isStreaming" class="streaming-cursor">|</span>
+    </div>
+    
+    <!-- 피드백 버튼 (챗봇 메시지에만 표시) -->
+    <div v-if="align === 'left' && content && content.trim() && !isStreaming && false" class="feedback-container">
+      <ChatFeedbackButtons
+        :content="content"
+        :messageId="messageId"
+        :isBot="true"
+        @feedback="handleFeedback"
+        @regenerate="handleRegenerate"
+      />
     </div>
   </div>
 </template>
@@ -30,6 +43,7 @@
 <script setup>
 import { computed, useSlots } from 'vue';
 import { marked } from 'marked';
+import ChatFeedbackButtons from './ChatFeedbackButtons.vue';
 
 // marked 옵션 설정
 marked.setOptions({
@@ -59,8 +73,14 @@ const props = defineProps({
   images: {
     type: Array,
     default: () => []
+  },
+  messageId: {
+    type: String,
+    default: ''
   }
 });
+
+const emit = defineEmits(['feedback', 'regenerate']);
 
 const slots = useSlots();
 
@@ -90,9 +110,40 @@ const renderedContent = computed(() => {
   const result = props.useMarkdown ? marked(textContent) : textContent;
   return typeof result === 'string' ? result.trim() : result;
 });
+
+// 피드백 처리 함수
+const handleFeedback = (type, messageId) => {
+  console.log(`피드백 수신: ${type}`, messageId);
+  emit('feedback', type, messageId);
+};
+
+// 답변 재생성 처리 함수
+const handleRegenerate = (messageId) => {
+  console.log('답변 재생성 요청:', messageId);
+  emit('regenerate', messageId);
+};
 </script>
 
 <style scoped>
+.chat-bubble-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.chat-bubble-wrapper.right {
+  align-items: flex-end;
+}
+
+.chat-bubble-wrapper.left {
+  align-items: flex-start;
+}
+
+.feedback-container {
+  width: 100%;
+  margin-top: 4px;
+}
+
 .chat-bubble {
   display: inline-flex;
   max-width: 550px;

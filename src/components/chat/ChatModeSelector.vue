@@ -102,7 +102,7 @@ document.addEventListener('click', (e) => {
 .mode-selector {
   position: relative;
   width: 100%;
-  max-width: 300px;
+  max-width: 500px;
 }
 
 .mode-selector-header {

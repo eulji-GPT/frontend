@@ -78,7 +78,11 @@
               />
             </div>
           </div>
-          <ChatMessageArea :messages="messages" />
+          <ChatMessageArea 
+            :messages="messages" 
+            @feedback="handleMessageFeedback"
+            @regenerate="handleMessageRegenerate"
+          />
         </div>
         <div class="chat-input-area">
           <ChatInput 
@@ -130,6 +134,21 @@ const handleSendMessage = (message: string, images?: File[]) => {
 const handleModeChange = (mode: ChatMode) => {
   setChatMode(mode);
 };
+
+// 피드백 처리
+const handleMessageFeedback = (type: 'good' | 'bad', messageId: string) => {
+  console.log(`메시지 피드백 처리: ${type}`, messageId);
+  // TODO: 피드백 데이터를 서버에 전송하거나 로컬 저장소에 저장
+};
+
+// 답변 재생성 처리
+const handleMessageRegenerate = (messageId: string) => {
+  console.log('답변 재생성 처리:', messageId);
+  // TODO: 해당 메시지를 다시 생성하는 로직 구현
+};
+
+// 디버깅을 위한 messages 로그
+console.log('현재 메시지들:', messages.value);
 
 const isMobile = ref(false);
 const sidebarVisible = ref(true);

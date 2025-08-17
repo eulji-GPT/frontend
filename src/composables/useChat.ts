@@ -9,6 +9,16 @@ export interface ChatMessage {
   images?: File[];
   currentStep?: string;
   cotSteps?: string[];
+  currentPhase?: string;
+  progressPercent?: number;
+  totalSteps?: number;
+  currentStepNumber?: number;
+  hasError?: boolean;
+  errorDetails?: {
+    step?: string;
+    reason?: string;
+    phase?: string;
+  };
 }
 
 export interface ChatSession {
@@ -57,7 +67,15 @@ export function useChat() {
   function loadChatHistory() {
     const history = localStorage.getItem('chatHistory');
     if (history) {
-      chatHistory.value = JSON.parse(history);
+      const parsedHistory = JSON.parse(history);
+      // timestamp를 Date 객체로 복원
+      chatHistory.value = parsedHistory.map((chat: ChatSession) => ({
+        ...chat,
+        messages: chat.messages.map((msg: ChatMessage) => ({
+          ...msg,
+          timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date()
+        }))
+      }));
     }
   }
 
@@ -183,7 +201,11 @@ export function useChat() {
           isLoading: false,
           isStreaming: true,
           currentStep: "CoT 추론 시작...",
-          cotSteps: []
+          cotSteps: [],
+          currentPhase: 'initialization',
+          progressPercent: 0,
+          totalSteps: 0,
+          currentStepNumber: 0
         };
       }
       
@@ -209,44 +231,119 @@ export function useChat() {
                 if (jsonStr.trim()) {
                   const data = JSON.parse(jsonStr);
                   
-                  if (data.type === 'status' && currentChat.messages[messageIndex]) {
+                  if (data.type === 'start' && currentChat.messages[messageIndex]) {
                     currentChat.messages[messageIndex].currentStep = data.step;
+                    currentChat.messages[messageIndex].currentPhase = data.phase;
+                    currentChat.messages[messageIndex].progressPercent = 0;
+                  }
+                  else if (data.type === 'status' && currentChat.messages[messageIndex]) {
+                    currentChat.messages[messageIndex].currentStep = data.step;
+                    currentChat.messages[messageIndex].currentPhase = data.phase;
+                    if (data.progress_percent !== undefined) {
+                      currentChat.messages[messageIndex].progressPercent = data.progress_percent;
+                    }
+                    if (data.current_step !== undefined) {
+                      currentChat.messages[messageIndex].currentStepNumber = data.current_step;
+                    }
+                    if (data.total_steps !== undefined) {
+                      currentChat.messages[messageIndex].totalSteps = data.total_steps;
+                    }
                   }
                   else if (data.type === 'sub_questions' && currentChat.messages[messageIndex]) {
                     currentChat.messages[messageIndex].cotSteps = data.sub_questions;
+                    currentChat.messages[messageIndex].totalSteps = data.total_steps;
+                    currentChat.messages[messageIndex].currentPhase = data.phase;
                   }
-                  else if (data.type === 'step_answer' && currentChat.messages[messageIndex]) {
+                  else if (data.type === 'step_completed' && currentChat.messages[messageIndex]) {
                     // 단계별 답변을 누적해서 표시
                     accumulatedText += `\n\n**${data.step_answer.question}**\n${data.step_answer.answer}`;
                     currentChat.messages[messageIndex].text = accumulatedText;
+                    currentChat.messages[messageIndex].currentStepNumber = data.step_number;
+                    currentChat.messages[messageIndex].progressPercent = data.progress_percent;
+                    currentChat.messages[messageIndex].currentPhase = data.phase;
+                    console.log(`🔄 단계 ${data.step_number} 완료, 누적 텍스트 길이: ${accumulatedText.length}`);
                   }
-                  else if (data.type === 'final_answer' && currentChat.messages[messageIndex]) {
-                    // 최종 답변을 타이핑 효과로 표시
+                  else if (data.type === 'warning' && currentChat.messages[messageIndex]) {
+                    currentChat.messages[messageIndex].currentStep = data.step;
+                    currentChat.messages[messageIndex].currentPhase = data.phase;
+                    // 경고 정보 저장 (오류는 아니지만 알림 목적)
+                    if (data.warning_details) {
+                      console.warn('CoT 단계 경고:', data.warning_details);
+                    }
+                  }
+                  else if (data.type === 'final_answer_chunk' && currentChat.messages[messageIndex]) {
+                    // 스트리밍 청크를 실시간으로 누적
+                    console.log(`📝 최종 답변 청크 ${data.chunk_index + 1} 수신:`, data.final_answer_chunk);
+                    
                     currentChat.messages[messageIndex].currentStep = "최종 답변 출력 중...";
+                    currentChat.messages[messageIndex].currentPhase = data.phase;
+                    currentChat.messages[messageIndex].progressPercent = 100;
                     
-                    const finalAnswer = data.final_answer;
-                    let currentIndex = 0;
+                    // 첫 번째 청크인 경우 기존 텍스트 초기화 (단계별 답변 제거)
+                    if (data.chunk_index === 0) {
+                      console.log(`🔄 최종 답변 시작 - 기존 단계별 답변 텍스트 초기화`);
+                      currentChat.messages[messageIndex].text = data.final_answer_chunk;
+                    } else {
+                      // 후속 청크들은 누적
+                      currentChat.messages[messageIndex].text += data.final_answer_chunk;
+                    }
                     
-                    const typeWriter = () => {
-                      if (!isStreaming.value) return;
-                      
-                      if (currentIndex < finalAnswer.length && currentChat.messages[messageIndex]) {
-                        currentChat.messages[messageIndex].text = finalAnswer.substring(0, currentIndex + 1);
-                        currentIndex++;
-                        setTimeout(typeWriter, 15); // 15ms 간격으로 타이핑
-                      } else if (currentChat.messages[messageIndex]) {
-                        currentChat.messages[messageIndex].isStreaming = false;
-                        currentChat.messages[messageIndex].currentStep = undefined;
-                        currentChat.messages[messageIndex].cotSteps = undefined;
-                        isStreaming.value = false;
-                        saveChatHistory();
-                      }
-                    };
+                    console.log(`📄 현재 누적된 텍스트: "${currentChat.messages[messageIndex].text}"`);
                     
-                    typeWriter();
+                    // 마지막 청크인 경우 로그 출력
+                    if (data.is_last_chunk) {
+                      console.log(`✅ 마지막 청크 처리 완료, complete 신호 대기 중`);
+                    }
+                  }
+                  else if (data.type === 'final_answer_complete' && currentChat.messages[messageIndex]) {
+                    // 최종 답변 스트리밍 완료
+                    currentChat.messages[messageIndex].isStreaming = false;
+                    currentChat.messages[messageIndex].currentStep = undefined;
+                    currentChat.messages[messageIndex].cotSteps = undefined;
+                    currentChat.messages[messageIndex].currentPhase = undefined;
+                    currentChat.messages[messageIndex].progressPercent = undefined;
+                    currentChat.messages[messageIndex].totalSteps = undefined;
+                    currentChat.messages[messageIndex].currentStepNumber = undefined;
+                    isStreaming.value = false;
+                    saveChatHistory();
                   }
                   else if (data.type === 'error') {
-                    throw new Error(data.error);
+                    // 오류 발생 시 즉시 스트리밍 중단하고 오류 메시지 표시
+                    console.error('CoT 처리 오류:', data.error_details || data.error);
+                    
+                    if (currentChat.messages[messageIndex]) {
+                      currentChat.messages[messageIndex].isStreaming = false;
+                      currentChat.messages[messageIndex].hasError = true;
+                      currentChat.messages[messageIndex].currentStep = undefined;
+                      currentChat.messages[messageIndex].cotSteps = undefined;
+                      currentChat.messages[messageIndex].currentPhase = data.phase || 'error';
+                      currentChat.messages[messageIndex].progressPercent = undefined;
+                      currentChat.messages[messageIndex].totalSteps = undefined;
+                      currentChat.messages[messageIndex].currentStepNumber = undefined;
+                      currentChat.messages[messageIndex].errorDetails = data.error_details;
+                      
+                      // 사용자 친화적인 오류 메시지 설정
+                      let friendlyErrorMessage = '';
+                      if (data.phase === 'sub_questions_error') {
+                        friendlyErrorMessage = '🚫 질문을 분석하는 중 오류가 발생했습니다.\n잠시 후 다시 시도해주세요.';
+                      } else if (data.phase === 'step_critical_error') {
+                        friendlyErrorMessage = '🚫 단계별 처리 중 치명적인 오류가 발생했습니다.\n질문을 다시 입력해주세요.';
+                      } else if (data.phase === 'synthesis_error') {
+                        friendlyErrorMessage = '🚫 최종 답변을 생성하는 중 오류가 발생했습니다.\n다시 시도해주세요.';
+                      } else {
+                        friendlyErrorMessage = '🚫 처리 중 오류가 발생했습니다.\n잠시 후 다시 시도해주세요.';
+                      }
+                      
+                      if (data.error_details?.reason) {
+                        friendlyErrorMessage += `\n\n세부 정보: ${data.error_details.reason}`;
+                      }
+                      
+                      currentChat.messages[messageIndex].text = friendlyErrorMessage;
+                    }
+                    
+                    isStreaming.value = false;
+                    saveChatHistory();
+                    return; // 오류 발생 시 더 이상 처리하지 않음
                   }
                   else if (data.type === 'done') {
                     console.log("✅ CoT 스트리밍 완료");
@@ -363,12 +460,14 @@ export function useChat() {
       });
       
       if (currentChat.messages[messageIndex]) {
+        const existingMessage = currentChat.messages[messageIndex];
         currentChat.messages[messageIndex] = {
-          ...currentChat.messages[messageIndex],
+          ...existingMessage,
           text: '',
           isLoading: false,
           isStreaming: true,
-          currentStep: undefined // 로딩 단계 제거
+          currentStep: undefined,
+          hasError: false
         };
       }
       
@@ -593,6 +692,9 @@ export function useChat() {
       isUser: true,
       timestamp: new Date(),
       images: images,
+      isLoading: false,
+      isStreaming: false,
+      hasError: false
     });
 
     inputValue.value = '';
@@ -614,6 +716,8 @@ export function useChat() {
       isUser: false,
       timestamp: new Date(),
       isLoading: true,
+      isStreaming: false,
+      hasError: false,
       currentStep: modeMessages[chatMode.value] || "답변을 생성하고 있습니다...",
     });
 
@@ -644,6 +748,9 @@ export function useChat() {
           text: "죄송합니다. 오류가 발생했습니다. 다시 시도해주세요.",
           isUser: false,
           timestamp: new Date(),
+          isLoading: false,
+          isStreaming: false,
+          hasError: true
         };
       }
     } finally {

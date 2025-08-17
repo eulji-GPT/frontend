@@ -1,28 +1,81 @@
 <template>
   <div class="chat-messages-area" ref="messagesContainer">
     <div v-for="(msg, idx) in messages" :key="idx" class="message-wrapper">
-      <div v-if="msg.isLoading || msg.currentStep" class="loading-indicator">
-        <LottieLoader />
+      <div v-if="msg.isLoading || msg.currentStep || msg.hasError" class="loading-indicator" :class="{ 'error-state': msg.hasError }">
+        <div v-if="!msg.hasError" class="loader-container">
+          <LottieLoader />
+        </div>
+        <div v-else class="error-icon">
+          ⚠️
+        </div>
         <div class="loading-content">
-          <span class="loading-text">{{ msg.currentStep || 'Searching...' }}</span>
-          <div v-if="msg.cotSteps && msg.cotSteps.length > 0" class="cot-steps">
+          <div class="status-header">
+            <span class="loading-text" :class="{ 'error-text': msg.hasError }">
+              {{ msg.hasError ? '오류 발생' : (msg.currentStep || 'Searching...') }}
+            </span>
+            <div v-if="msg.progressPercent !== undefined && !msg.hasError" class="progress-info">
+              <span class="progress-text">{{ msg.progressPercent }}%</span>
+              <div v-if="msg.currentStepNumber && msg.totalSteps" class="step-counter">
+                ({{ msg.currentStepNumber }}/{{ msg.totalSteps }})
+              </div>
+            </div>
+          </div>
+          
+          <!-- 프로그레스 바 -->
+          <div v-if="msg.progressPercent !== undefined && !msg.hasError" class="progress-bar">
+            <div 
+              class="progress-fill" 
+              :style="{ width: msg.progressPercent + '%' }"
+              :class="{
+                'progress-analyzing': msg.currentPhase === 'analysis',
+                'progress-generating': msg.currentPhase === 'sub_questions_generation',
+                'progress-processing': msg.currentPhase === 'processing_step',
+                'progress-synthesis': msg.currentPhase === 'synthesis',
+                'progress-streaming': msg.currentPhase === 'final_streaming' || msg.currentPhase === 'streaming_answer',
+                'progress-completed': msg.currentPhase === 'completed'
+              }"
+            ></div>
+          </div>
+          
+          <!-- 오류 상태 표시 -->
+          <div v-if="msg.hasError" class="error-details">
+            <div v-if="msg.errorDetails?.step" class="error-step">
+              <span class="error-label">오류 발생 단계:</span>
+              <span class="error-value">{{ msg.errorDetails.step }}</span>
+            </div>
+            <div v-if="msg.errorDetails?.reason" class="error-reason">
+              <span class="error-label">상세 정보:</span>
+              <span class="error-value">{{ msg.errorDetails.reason }}</span>
+            </div>
+          </div>
+          
+          <!-- CoT 단계들 -->
+          <div v-if="msg.cotSteps && msg.cotSteps.length > 0 && !msg.hasError" class="cot-steps">
             <div 
               v-for="(step, index) in msg.cotSteps" 
               :key="index"
               class="cot-step"
               :class="{ 
-                'completed': msg.currentStep && msg.cotSteps.indexOf(msg.currentStep) > index,
-                'active': msg.currentStep === step,
-                'pending': msg.cotSteps.indexOf(msg.currentStep) < index
+                'completed': msg.currentStepNumber > index + 1,
+                'active': msg.currentStepNumber === index + 1,
+                'pending': msg.currentStepNumber < index + 1 || !msg.currentStepNumber
               }"
             >
               <div class="step-indicator">
-                <span v-if="msg.currentStep && msg.cotSteps.indexOf(msg.currentStep) > index">✓</span>
-                <span v-else-if="msg.currentStep === step">●</span>
-                <span v-else>○</span>
+                <span v-if="msg.currentStepNumber > index + 1">✓</span>
+                <span v-else-if="msg.currentStepNumber === index + 1">●</span>
+                <span v-else>{{ index + 1 }}</span>
               </div>
               <span class="step-text">{{ step }}</span>
             </div>
+          </div>
+          
+          <!-- 현재 단계 상세 정보 -->
+          <div v-if="msg.currentPhase && !msg.hasError" class="phase-info">
+            <span class="phase-label">현재 단계:</span>
+            <span class="phase-name">
+              {{ getPhaseDisplayName(msg.currentPhase) }}
+            </span>
           </div>
         </div>
       </div>
@@ -34,6 +87,9 @@
         :content="msg.text || ''"
         :use-markdown="!msg.isUser"
         :images="msg.images"
+        :messageId="`${idx}-${msg.timestamp instanceof Date ? msg.timestamp.getTime() : Date.now()}`"
+        @feedback="handleFeedback"
+        @regenerate="handleRegenerate"
       />
     </div>
   </div>
@@ -49,6 +105,8 @@ const props = defineProps<{
   messages: ChatMessage[];
 }>();
 
+const emit = defineEmits(['feedback', 'regenerate']);
+
 const messagesContainer = ref<HTMLElement | null>(null);
 
 const scrollToBottom = () => {
@@ -62,6 +120,39 @@ const scrollToBottom = () => {
 watch(() => props.messages, () => {
   scrollToBottom();
 }, { deep: true });
+
+const getPhaseDisplayName = (phase: string): string => {
+  const phaseNames: Record<string, string> = {
+    'initialization': '초기화',
+    'analysis': '질문 분석',
+    'sub_questions_generation': '하위 질문 생성',
+    'sub_questions_ready': '하위 질문 준비 완료',
+    'processing_step': '단계별 처리',
+    'step_completed': '단계 완료',
+    'step_warning': '단계 경고',
+    'synthesis': '최종 답변 생성',
+    'final_ready': '최종 답변 준비',
+    'final_streaming': '최종 답변 출력',
+    'streaming_answer': '답변 스트리밍',
+    'completed': '완료',
+    'finished': '작업 완료',
+    'system_error': '시스템 오류',
+    'synthesis_error': '답변 생성 오류'
+  };
+  return phaseNames[phase] || phase;
+};
+
+// 피드백 처리
+const handleFeedback = (type: 'good' | 'bad', messageId: string) => {
+  console.log(`메시지 피드백: ${type}`, messageId);
+  emit('feedback', type, messageId);
+};
+
+// 답변 재생성 처리
+const handleRegenerate = (messageId: string) => {
+  console.log('답변 재생성:', messageId);
+  emit('regenerate', messageId);
+};
 
 </script>
 
@@ -98,6 +189,162 @@ watch(() => props.messages, () => {
   flex-direction: column;
   gap: 12px;
   flex: 1;
+}
+
+.status-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.progress-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.progress-text {
+  font-weight: 600;
+  color: #02478a;
+}
+
+.step-counter {
+  color: #9ca3af;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 4px;
+  background: #e5e7eb;
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 4px 0;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.progress-analyzing {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.progress-generating {
+  background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+}
+
+.progress-processing {
+  background: linear-gradient(90deg, #02478a, #1e40af);
+}
+
+.progress-synthesis {
+  background: linear-gradient(90deg, #7c3aed, #5b21b6);
+}
+
+.progress-streaming {
+  background: linear-gradient(90deg, #10b981, #059669);
+  animation: stream-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes stream-pulse {
+  0%, 100% { 
+    opacity: 1;
+    transform: scaleY(1);
+  }
+  50% { 
+    opacity: 0.8;
+    transform: scaleY(1.1);
+  }
+}
+
+.progress-completed {
+  background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.phase-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.phase-label {
+  font-weight: 500;
+}
+
+.phase-name {
+  color: #02478a;
+  font-weight: 600;
+}
+
+/* 오류 상태 스타일 */
+.loading-indicator.error-state {
+  border-left: 4px solid #dc2626;
+  background: rgba(220, 38, 38, 0.05);
+}
+
+.loader-container {
+  display: flex;
+  align-items: center;
+}
+
+.error-icon {
+  font-size: 24px;
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+.error-text {
+  color: #dc2626 !important;
+  font-weight: 600;
+}
+
+.error-details {
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 8px;
+}
+
+.error-step,
+.error-reason {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.error-step:last-child,
+.error-reason:last-child {
+  margin-bottom: 0;
+}
+
+.error-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.error-value {
+  font-size: 13px;
+  color: #7f1d1d;
+  background: rgba(220, 38, 38, 0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(220, 38, 38, 0.2);
 }
 
 .loading-text {
@@ -197,11 +444,25 @@ watch(() => props.messages, () => {
   color: #9ca3af;
 }
 
+.message-wrapper :deep(.chat-bubble-wrapper) {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 .message-wrapper :deep(.chat-bubble.right) {
   align-self: flex-end;
 }
 
 .message-wrapper :deep(.chat-bubble.left) {
+  align-self: flex-start;
+}
+
+.message-wrapper :deep(.chat-bubble-wrapper .chat-bubble.right) {
+  align-self: flex-end;
+}
+
+.message-wrapper :deep(.chat-bubble-wrapper .chat-bubble.left) {
   align-self: flex-start;
 }
 
