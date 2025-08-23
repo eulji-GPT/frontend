@@ -45,13 +45,14 @@ import { computed, useSlots } from 'vue';
 import { marked } from 'marked';
 import ChatFeedbackButtons from './ChatFeedbackButtons.vue';
 
-// marked 옵션 설정
-marked.setOptions({
-  breaks: true,        // 개행을 <br>로 변환
-  gfm: true,          // GitHub Flavored Markdown 사용
-  headerIds: false,   // 헤더 ID 생성 안함
-  mangle: false       // 헤더 텍스트 변형 안함
+// marked 설정 (최신 버전에 맞게)
+marked.use({
+  breaks: true,
+  gfm: true,
+  headerIds: false,
+  mangle: false
 });
+
 
 const props = defineProps({
   align: {
@@ -120,8 +121,13 @@ const displayContent = computed(() => {
 const streamingRenderedContent = computed(() => {
   const content = displayContent.value;
   if (content && props.useMarkdown) {
-    const result = marked(content);
-    return typeof result === 'string' ? result.trim() : result;
+    try {
+      const result = marked(content);
+      return typeof result === 'string' ? result.trim() : result;
+    } catch (error) {
+      console.error('마크다운 변환 오류:', error);
+      return content;
+    }
   }
   return content;
 });
@@ -284,59 +290,187 @@ const handleRegenerate = (messageId) => {
 }
 
 /* 마크다운 스타일링 */
-.markdown-content {
-  line-height: 1.6;
+:deep(.markdown-content) {
+  line-height: 1.4;
   white-space: pre-line; /* 개행 문자를 실제 개행으로 처리 */
 }
 
-.markdown-content h1,
-.markdown-content h2,
-.markdown-content h3,
-.markdown-content h4,
-.markdown-content h5,
-.markdown-content h6 {
-  margin: 0.8em 0 0.4em 0;
-  font-weight: 600;
-  line-height: 1.4;
-}
-
-.markdown-content h1 { font-size: 1.5em; }
-.markdown-content h2 { font-size: 1.3em; }
-.markdown-content h3 { font-size: 1.1em; }
-
-.markdown-content p {
-  margin: 0.5em 0;
-}
-
-.markdown-content strong {
+:deep(.markdown-content h1),
+:deep(.markdown-content h2),
+:deep(.markdown-content h3),
+:deep(.markdown-content h4),
+:deep(.markdown-content h5),
+:deep(.markdown-content h6) {
+  margin: 0.2em 0 0.1em 0;
   font-weight: 700;
-  color: #1f2937;
+  line-height: 1.1;
+  color: #02478a;
 }
 
-.markdown-content em {
+/* 대제목 - 가장 크고 눈에 띄게 */
+:deep(.markdown-content h1) { 
+  font-size: 1.8em !important;
+  font-weight: 800 !important;
+  color: #02478a !important;
+  border-bottom: 2px solid #02478a !important;
+  padding-bottom: 0.1em !important;
+  margin: 0.3em 0 0.15em 0 !important;
+  display: block !important;
+}
+
+/* 중제목 - 뚜렷하게 구분 */
+:deep(.markdown-content h2) { 
+  font-size: 1.5em !important;
+  font-weight: 700 !important;
+  color: #1e40af !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  padding-bottom: 0.05em !important;
+  margin: 0.25em 0 0.1em 0 !important;
+  display: block !important;
+}
+
+/* 소제목 - 적당한 크기로 */
+:deep(.markdown-content h3) { 
+  font-size: 1.25em !important;
+  font-weight: 600 !important;
+  color: #1f2937 !important;
+  margin: 0.2em 0 0.05em 0 !important;
+  display: block !important;
+}
+
+/* 세부 제목들 */
+:deep(.markdown-content h4) { 
+  font-size: 1.1em !important;
+  font-weight: 600 !important;
+  color: #374151 !important;
+  margin: 0.15em 0 0.05em 0 !important;
+  display: block !important;
+}
+
+:deep(.markdown-content h5) { 
+  font-size: 1.05em !important;
+  font-weight: 600 !important;
+  color: #4b5563 !important;
+  margin: 0.1em 0 0.03em 0 !important;
+  display: block !important;
+}
+
+:deep(.markdown-content h6) { 
+  font-size: 1em !important;
+  font-weight: 600 !important;
+  color: #6b7280 !important;
+  margin: 0.08em 0 0.02em 0 !important;
+  display: block !important;
+}
+
+:deep(.markdown-content p) {
+  margin: 0.1em 0;
+}
+
+:deep(.markdown-content strong) {
+  font-weight: 700;
+  color: #02478a;
+  background: linear-gradient(135deg, #f0f6ff, #e0f2fe);
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  border: 1px solid rgba(2, 71, 138, 0.2);
+}
+
+:deep(.markdown-content em) {
   font-style: italic;
-  color: #4b5563;
+  color: #1e40af;
+  background: rgba(30, 64, 175, 0.05);
+  padding: 0.1em 0.2em;
+  border-radius: 2px;
 }
 
-.markdown-content ul,
-.markdown-content ol {
-  margin: 0.5em 0;
-  padding-left: 1.2em;
+:deep(.markdown-content ul),
+:deep(.markdown-content ol) {
+  margin: 0.1em 0;
+  padding-left: 1em;
 }
 
-.markdown-content li {
-  margin: 0.2em 0;
+:deep(.markdown-content ul) {
+  list-style-type: none;
 }
 
-.markdown-content blockquote {
+:deep(.markdown-content ul li) {
+  position: relative;
+  margin: 0.05em 0;
+  padding-left: 1em;
+}
+
+:deep(.markdown-content ul li::before) {
+  content: '▶';
+  position: absolute;
+  left: 0;
+  color: #02478a;
+  font-weight: bold;
+}
+
+:deep(.markdown-content ol li) {
+  margin: 0.05em 0;
+  padding-left: 0.2em;
+}
+
+:deep(.markdown-content ol) {
+  counter-reset: item;
+}
+
+:deep(.markdown-content ol li) {
+  display: block;
+  position: relative;
+}
+
+:deep(.markdown-content ol li::before) {
+  content: counter(item) ".";
+  counter-increment: item;
+  position: absolute;
+  left: -1.5em;
+  color: #02478a;
+  font-weight: bold;
+  background: #f0f6ff;
+  padding: 2px 6px;
+  border-radius: 50%;
+  font-size: 0.9em;
+  min-width: 1.2em;
+  text-align: center;
+}
+
+:deep(.markdown-content blockquote) {
   border-left: 4px solid #02478a;
-  background: #f8fafc;
-  margin: 0.5em 0;
-  padding: 0.5em 1em;
-  font-style: italic;
+  background: linear-gradient(135deg, #f0f6ff 0%, #f8fafc 100%);
+  margin: 0.2em 0;
+  padding: 0.3em 0.8em;
+  font-style: normal;
+  border-radius: 0 6px 6px 0;
+  box-shadow: 0 1px 3px rgba(2, 71, 138, 0.1);
+  position: relative;
 }
 
-.markdown-content code {
+:deep(.markdown-content blockquote::before) {
+  content: '💡';
+  position: absolute;
+  left: -2px;
+  top: -2px;
+  background: #02478a;
+  color: white;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+}
+
+:deep(.markdown-content blockquote p) {
+  margin: 0;
+  font-weight: 500;
+  color: #1e40af;
+}
+
+:deep(.markdown-content code) {
   background: #f1f5f9;
   color: #0f172a;
   padding: 0.1em 0.3em;
@@ -345,26 +479,28 @@ const handleRegenerate = (messageId) => {
   font-family: 'Courier New', monospace;
 }
 
-.markdown-content pre {
+:deep(.markdown-content pre) {
   background: #1e293b;
   color: #e2e8f0;
-  padding: 1em;
-  border-radius: 8px;
+  padding: 0.5em;
+  border-radius: 4px;
   overflow-x: auto;
-  margin: 0.8em 0;
+  margin: 0.2em 0;
 }
 
-.markdown-content pre code {
+:deep(.markdown-content pre code) {
   background: none;
   color: inherit;
   padding: 0;
   font-size: 0.85em;
 }
 
-.markdown-content hr {
+:deep(.markdown-content hr) {
   border: none;
   border-top: 1px solid #e5e7eb;
-  margin: 1.5em 0;
+  margin: 0.3em 0;
+  background: linear-gradient(to right, #02478a, #e5e7eb, #02478a);
+  height: 1px;
 }
 
 /* 파일 미리보기 스타일 */

@@ -38,6 +38,26 @@ export function useChat() {
   const chatMode = ref<ChatMode>('general');
   let currentController: AbortController | null = null;
 
+  // 메시지 업데이트를 위한 헬퍼 함수 (Vue 반응성 보장)
+  const updateMessage = (chatId: string, messageIndex: number, updates: Partial<ChatMessage>) => {
+    const chat = chatHistory.value.find(c => c.id === chatId);
+    if (!chat || !chat.messages[messageIndex]) return;
+    
+    const updatedMessage = {
+      ...chat.messages[messageIndex],
+      ...updates
+    };
+    
+    const newMessages = [...chat.messages];
+    newMessages[messageIndex] = updatedMessage;
+    chat.messages = newMessages;
+    
+    // 현재 활성 채팅인 경우 messages ref도 업데이트
+    if (currentChatId.value === chatId) {
+      messages.value = newMessages;
+    }
+  };
+
   const FASTAPI_BASE_URL = import.meta.env.VITE_FASTAPI_URL || 'http://localhost:8000';
   const getAPIUrl = (mode: ChatMode): string => {
     const endpoints = {
@@ -208,8 +228,7 @@ export function useChat() {
       }
 
       if (currentChat.messages[messageIndex]) {
-        currentChat.messages[messageIndex] = {
-          ...currentChat.messages[messageIndex],
+        updateMessage(currentChat.id, messageIndex, {
           text: '',
           isLoading: false,
           isStreaming: true,
@@ -219,7 +238,7 @@ export function useChat() {
           progressPercent: 0,
           totalSteps: 0,
           currentStepNumber: 0
-        };
+        });
       }
       
       isStreaming.value = true;
@@ -261,43 +280,54 @@ export function useChat() {
                   });
                   
                   if (data.type === 'start' && currentChat.messages[messageIndex]) {
-                    currentChat.messages[messageIndex].currentStep = data.step;
-                    currentChat.messages[messageIndex].currentPhase = data.phase;
-                    currentChat.messages[messageIndex].progressPercent = 0;
+                    updateMessage(currentChat.id, messageIndex, {
+                      currentStep: data.step,
+                      currentPhase: data.phase,
+                      progressPercent: 0
+                    });
                   }
                   else if (data.type === 'status' && currentChat.messages[messageIndex]) {
-                    currentChat.messages[messageIndex].currentStep = data.step;
-                    currentChat.messages[messageIndex].currentPhase = data.phase;
+                    const updates: Partial<ChatMessage> = {
+                      currentStep: data.step,
+                      currentPhase: data.phase
+                    };
                     if (data.progress_percent !== undefined) {
-                      currentChat.messages[messageIndex].progressPercent = data.progress_percent;
+                      updates.progressPercent = data.progress_percent;
                     }
                     if (data.current_step !== undefined) {
-                      currentChat.messages[messageIndex].currentStepNumber = data.current_step;
+                      updates.currentStepNumber = data.current_step;
                     }
                     if (data.total_steps !== undefined) {
-                      currentChat.messages[messageIndex].totalSteps = data.total_steps;
+                      updates.totalSteps = data.total_steps;
                     }
+                    updateMessage(currentChat.id, messageIndex, updates);
                   }
                   else if (data.type === 'sub_questions' && currentChat.messages[messageIndex]) {
-                    currentChat.messages[messageIndex].cotSteps = data.sub_questions;
-                    currentChat.messages[messageIndex].totalSteps = data.total_steps;
-                    currentChat.messages[messageIndex].currentPhase = data.phase;
+                    updateMessage(currentChat.id, messageIndex, {
+                      cotSteps: data.sub_questions,
+                      totalSteps: data.total_steps,
+                      currentPhase: data.phase
+                    });
                   }
                   else if (data.type === 'step_completed' && currentChat.messages[messageIndex]) {
                     // 단계별 답변을 누적해서 표시
                     accumulatedText += `\n\n**${data.step_answer.question}**\n${data.step_answer.answer}`;
-                    currentChat.messages[messageIndex].text = accumulatedText;
-                    currentChat.messages[messageIndex].currentStepNumber = data.step_number;
-                    currentChat.messages[messageIndex].progressPercent = data.progress_percent;
-                    currentChat.messages[messageIndex].currentPhase = data.phase;
+                    updateMessage(currentChat.id, messageIndex, {
+                      text: accumulatedText,
+                      currentStepNumber: data.step_number,
+                      progressPercent: data.progress_percent,
+                      currentPhase: data.phase
+                    });
                     console.log(`🔄 단계 ${data.step_number} 완료, 누적 텍스트 길이: ${accumulatedText.length}`);
                     
                     // 단계 완료 시 자동 스크롤
                     scrollToBottom();
                   }
                   else if (data.type === 'warning' && currentChat.messages[messageIndex]) {
-                    currentChat.messages[messageIndex].currentStep = data.step;
-                    currentChat.messages[messageIndex].currentPhase = data.phase;
+                    updateMessage(currentChat.id, messageIndex, {
+                      currentStep: data.step,
+                      currentPhase: data.phase
+                    });
                     // 경고 정보 저장 (오류는 아니지만 알림 목적)
                     if (data.warning_details) {
                       console.warn('CoT 단계 경고:', data.warning_details);
@@ -306,11 +336,13 @@ export function useChat() {
                   else if (data.type === 'final_streaming_start' && currentChat.messages[messageIndex]) {
                     // 최종 답변 스트리밍 시작 - 기존 텍스트 초기화
                     console.log(`🔄 최종 답변 스트리밍 시작 - 기존 단계별 답변 텍스트 초기화`);
-                    currentChat.messages[messageIndex].text = '';
-                    currentChat.messages[messageIndex].currentStep = "최종 답변 출력 중...";
-                    currentChat.messages[messageIndex].currentPhase = data.phase;
-                    currentChat.messages[messageIndex].progressPercent = 100;
-                    currentChat.messages[messageIndex].isStreaming = true; // 스트리밍 상태 활성화
+                    updateMessage(currentChat.id, messageIndex, {
+                      text: '',
+                      currentStep: "최종 답변 출력 중...",
+                      currentPhase: data.phase,
+                      progressPercent: 100,
+                      isStreaming: true
+                    });
                     isStreaming.value = true; // 전역 스트리밍 상태 활성화
                   }
                   else if (data.type === 'final_answer_chunk' && currentChat.messages[messageIndex]) {
@@ -324,26 +356,29 @@ export function useChat() {
                       current_text_length: currentChat.messages[messageIndex].text.length
                     });
                     
-                    // 청크를 누적하여 텍스트 업데이트 (직접 속성 변경으로 깜빡임 방지)
+                    // 청크를 누적하여 텍스트 업데이트 (Vue 반응성 보장)
                     if (chunk) {
                       const beforeLength = currentChat.messages[messageIndex].text.length;
                       
-                      // 직접 속성 업데이트 (splice 대신 사용하여 깜빡임 방지)
-                      currentChat.messages[messageIndex].text += chunk;
-                      currentChat.messages[messageIndex].isStreaming = true;
-                      currentChat.messages[messageIndex].currentStep = "최종 답변 출력 중...";
+                      // Vue 반응성을 보장하는 방식으로 청크 업데이트
+                      const currentText = currentChat.messages[messageIndex].text;
+                      updateMessage(currentChat.id, messageIndex, {
+                        text: currentText + chunk,
+                        isStreaming: true,
+                        currentStep: "최종 답변 출력 중..."
+                      });
                       
-                      const afterLength = currentChat.messages[messageIndex].text.length;
+                      const afterLength = currentText.length + chunk.length;
                       
                       console.log(`📄 [STREAMING] 텍스트 누적 성공:`, {
                         before: beforeLength,
                         added: chunk.length,
                         after: afterLength,
-                        preview: currentChat.messages[messageIndex].text.substring(Math.max(0, afterLength - 50)),
-                        full_text_length: currentChat.messages[messageIndex].text.length
+                        preview: (currentText + chunk).substring(Math.max(0, afterLength - 50)),
+                        full_text_length: afterLength
                       });
                       
-                      // 디바운싱된 스크롤 (100ms마다 한 번만)
+                      // 디바운싱된 스크롤 (50ms마다 한 번만)
                       setTimeout(() => {
                         scrollToBottom();
                       }, 50);
@@ -355,14 +390,17 @@ export function useChat() {
                     }
                   }
                   else if (data.type === 'final_answer_complete' && currentChat.messages[messageIndex]) {
-                    // 최종 답변 스트리밍 완료 - 직접 속성 변경
-                    currentChat.messages[messageIndex].isStreaming = false;
-                    currentChat.messages[messageIndex].currentStep = undefined;
-                    currentChat.messages[messageIndex].cotSteps = undefined;
-                    currentChat.messages[messageIndex].currentPhase = undefined;
-                    currentChat.messages[messageIndex].progressPercent = undefined;
-                    currentChat.messages[messageIndex].totalSteps = undefined;
-                    currentChat.messages[messageIndex].currentStepNumber = undefined;
+                    // 최종 답변 스트리밍 완료
+                    updateMessage(currentChat.id, messageIndex, {
+                      isStreaming: false,
+                      currentStep: undefined,
+                      cotSteps: undefined,
+                      currentPhase: undefined,
+                      progressPercent: undefined,
+                      totalSteps: undefined,
+                      currentStepNumber: undefined
+                    });
+                    
                     isStreaming.value = false;
                     
                     console.log(`🏁 [STREAMING] CoT 스트리밍 완료:`, {

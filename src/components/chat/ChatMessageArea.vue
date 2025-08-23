@@ -8,7 +8,7 @@
       />
     </div>
     
-    <div v-for="(msg, idx) in messages" :key="idx" class="message-wrapper">
+    <div v-for="(msg, idx) in messages" :key="`msg-${idx}-${msg.timestamp}`" class="message-wrapper">
       <div v-if="msg.isLoading || msg.currentStep" class="loading-indicator" :class="{ 'error-state': msg.hasError }">
         <div v-if="!msg.hasError" class="loader-container">
           <LottieLoader />
@@ -206,6 +206,8 @@ const handleModeChange = (mode: ChatMode) => {
   padding: 8px 16px;
   margin-left: 20px;
   margin-top: -8px;
+  max-width: calc(100% - 40px);
+  overflow: visible;
 }
 
 .loading-content {
@@ -217,9 +219,22 @@ const handleModeChange = (mode: ChatMode) => {
 
 .status-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
+  min-height: 24px;
+}
+
+.loading-text {
+  color: #02478a;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  flex: 1;
+  min-width: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .progress-info {
@@ -228,6 +243,8 @@ const handleModeChange = (mode: ChatMode) => {
   gap: 8px;
   font-size: 12px;
   color: #6b7280;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .progress-text {
@@ -371,12 +388,6 @@ const handleModeChange = (mode: ChatMode) => {
   border: 1px solid rgba(220, 38, 38, 0.2);
 }
 
-.loading-text {
-  color: #02478a;
-  font-size: 14px;
-  font-weight: 600;
-  font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Helvetica, Arial, sans-serif;
-}
 
 .cot-steps {
   display: flex;
