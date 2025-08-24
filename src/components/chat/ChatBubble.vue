@@ -370,10 +370,6 @@ const handleRegenerate = (messageId) => {
 :deep(.markdown-content strong) {
   font-weight: 700;
   color: #02478a;
-  background: linear-gradient(135deg, #f0f6ff, #e0f2fe);
-  padding: 0.1em 0.3em;
-  border-radius: 3px;
-  border: 1px solid rgba(2, 71, 138, 0.2);
 }
 
 :deep(.markdown-content em) {

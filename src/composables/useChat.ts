@@ -25,6 +25,7 @@ export interface ChatSession {
   id: string;
   title: string;
   messages: ChatMessage[];
+  sessionId?: string; // 백엔드 세션 ID
 }
 
 export type ChatMode = 'general' | 'university' | 'study' | 'career' | 'cot';
@@ -116,15 +117,45 @@ export function useChat() {
     localStorage.setItem('chatHistory', JSON.stringify(chatHistory.value));
   }
 
-  function startNewChat() {
+  // 백엔드에서 새 세션 생성
+  async function createBackendSession(): Promise<string | null> {
+    try {
+      const response = await fetch(`${FASTAPI_BASE_URL}/session/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({})
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.session_id;
+      }
+    } catch (error) {
+      console.error('백엔드 세션 생성 실패:', error);
+    }
+    return null;
+  }
+
+  async function startNewChat() {
     currentChatId.value = `chat-${Date.now()}`;
+    
+    // 백엔드 세션 생성
+    const backendSessionId = await createBackendSession();
+    
     const newChat: ChatSession = {
       id: currentChatId.value,
       title: '새 대화',
       messages: [],
+      sessionId: backendSessionId || undefined
     };
     chatHistory.value.unshift(newChat);
     messages.value = newChat.messages;
+    
+    if (backendSessionId) {
+      console.log('새 백엔드 세션 생성됨:', backendSessionId);
+    }
   }
 
   function selectChat(id: string) {
@@ -216,7 +247,11 @@ export function useChat() {
           'Content-Type': 'application/json',
         },
         signal: currentController.signal,
-        body: JSON.stringify({ question: message, context: null })
+        body: JSON.stringify({ 
+          question: message, 
+          context: null,
+          session_id: currentChat.sessionId
+        })
       });
 
       console.log("📥 CoT 스트리밍 응답 상태:", response.status, response.statusText);
@@ -539,12 +574,12 @@ export function useChat() {
         signal: currentController.signal, // AbortController 신호 추가
         body: JSON.stringify(
           chatMode.value === 'cot' 
-            ? { question: message, context: null }
+            ? { question: message, context: null, session_id: currentChat.sessionId }
             : chatMode.value === 'study'
-            ? { question: message, subject: null }
+            ? { question: message, subject: null, session_id: currentChat.sessionId }
             : chatMode.value === 'career'
-            ? { question: message, major: null }
-            : { message: message, context: null }
+            ? { question: message, major: null, session_id: currentChat.sessionId }
+            : { message: message, context: null, session_id: currentChat.sessionId }
         )
       });
 
@@ -579,6 +614,12 @@ export function useChat() {
       isStreaming.value = true; // 스트리밍 상태 시작
 
       // 응답을 타이핑 효과로 표시 (최적화된 버전)
+      // 백엔드에서 받은 세션 ID 저장
+      if (data.session_id && !currentChat.sessionId) {
+        currentChat.sessionId = data.session_id;
+        console.log("새 세션 ID 저장됨:", data.session_id);
+      }
+
       if (data.success && data.response && data.response.trim()) {
         const responseText = data.response;
         let currentIndex = 0;
