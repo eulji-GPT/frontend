@@ -22,16 +22,17 @@ const routes = [
     component: () => import('../components/chat/index.vue')
   },
   {
+    path: '/ready/:service',
+    component: () => import('../components/common/ReadyBar.vue'),
+    props: true
+  },
+  {
     path: '/lotte-preview',
     component: () => import('../views/LottiePreview.vue')
   },
   {
     path: '/crew',
-    component: () => import('../components/crew/Desktop20.vue')
-  },
-  {
-    path: '/crew-main',
-    component: () => import('../components/crew/CrewMain.vue')
+    component: () => import('../components/crew/index.vue')
   }
 ]
 
