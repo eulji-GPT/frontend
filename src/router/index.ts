@@ -7,15 +7,31 @@ const routes = [
   },
   {
     path: '/login',
-    component: () => import('../views/LoginView.vue')
+    component: () => import('../components/login/LoginPageComponent.vue')
   },
   {
     path: '/signup',
-    component: () => import('../views/SignupView.vue')
+    component: () => import('../components/login/LoginComponent.vue')
+  },
+  {
+    path: '/signup-email',
+    component: () => import('../components/login/SignupComponent.vue')
   },
   {
     path: '/signup-agreement',
     component: () => import('../components/login/SignupAgreementComponent.vue')
+  },
+  {
+    path: '/signup-password',
+    component: () => import('../components/login/SignupPasswordComponent.vue')
+  },
+  {
+    path: '/signup-form',
+    component: () => import('../components/login/SignupPersonalInfoFormComponent.vue')
+  },
+  {
+    path: '/signup-complete',
+    component: () => import('../components/login/SignupCompleteComponent.vue')
   },
   {
     path: '/chat',
