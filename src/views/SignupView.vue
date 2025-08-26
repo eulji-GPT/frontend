@@ -1,7 +1,7 @@
 <template>
-  <SignupComponent />
+  <SignupPersonalInfoFormComponent />
 </template>
 
 <script setup lang="ts">
-import { SignupComponent } from '../components/login';
+import { SignupPersonalInfoFormComponent } from '../components/login';
 </script>
