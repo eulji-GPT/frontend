@@ -28,7 +28,7 @@
               <div class="group-a"></div>
               <span class="status">학식당 현황</span>
             </div>
-            <div class="frame-9-1" @click="goToDevelopmentStatus">
+            <div class="frame-9-1" @click="goToFortuneMain">
               <div class="group-b"></div>
               <span class="status-fortune">사주 ∙ 운세 챗봇</span>
             </div>
@@ -72,28 +72,51 @@
           <span class="eulgpt-mobile">EULGPT</span>
         </div>
       </div>
-      <div class="chat-main-area">
-        <div class="mode-selector-container">
-          <ChatModeSelector 
-            :currentMode="chatMode"
-            @modeChange="handleModeChange"
-          />
+      <div class="chat-content-col">
+        <!-- 일반 채팅 화면 -->
+        <div v-if="currentView === 'chat'" class="chat-main-area">
+          <div class="mode-selector-container">
+            <ChatModeSelector 
+              :currentMode="chatMode"
+              @modeChange="handleModeChange"
+            />
+          </div>
+          <div class="chat-messages-container">
+            <ChatMessageArea 
+              :messages="messages"
+              @feedback="handleMessageFeedback"
+              @regenerate="handleMessageRegenerate"
+            />
+          </div>
+          <div class="chat-input-area">
+            <ChatInput 
+              :isLoading="isLoading" 
+              :isStreaming="isStreaming"
+              @sendMessage="handleSendMessage" 
+              @stopResponse="stopResponse"
+            />
+          </div>
         </div>
-        <div class="chat-messages-container">
-          <ChatMessageArea 
-            :messages="messages"
-            @feedback="handleMessageFeedback"
-            @regenerate="handleMessageRegenerate"
-          />
-        </div>
-        <div class="chat-input-area">
-          <ChatInput 
-            :isLoading="isLoading" 
-            :isStreaming="isStreaming"
-            @sendMessage="handleSendMessage" 
-            @stopResponse="stopResponse"
-          />
-        </div>
+
+        <!-- 운세 메인 화면 -->
+        <FortuneMain 
+          v-else-if="currentView === 'fortune-main'"
+          @showFortuneResult="showFortuneResult"
+        />
+
+        <!-- 운세 채팅 화면 -->
+        <FortuneChat 
+          v-else-if="currentView === 'fortune-chat'"
+          @goBack="goBackToChat"
+        />
+
+        <!-- 운세 결과 화면 -->
+        <FortuneResult 
+          v-else-if="currentView === 'fortune-result' && fortuneResultData"
+          :fortuneData="fortuneResultData"
+          @goBack="goBackToFortuneMain"
+          @retry="retryFortune"
+        />
       </div>
     </div>
   </div>
@@ -108,6 +131,9 @@ import ChatInput from './ChatInput.vue';
 import ChatModeSelector from './ChatModeSelector.vue';
 import NotificationDropdown from '../common/NotificationDropdown.vue';
 import InfoPanel from '../common/InfoPanel.vue';
+import FortuneMain from '../fortune/FortuneMain.vue';
+import FortuneChat from '../fortune/FortuneChat.vue';
+import FortuneResult from '../fortune/FortuneResult.vue';
 import { useChat } from '../../composables/useChat';
 import type { ChatMode } from '../../composables/useChat';
 import eulLogo from '../../assets/eul_logo.svg';
@@ -139,6 +165,10 @@ const handleSendMessage = (message: string, images?: File[]) => {
 const handleModeChange = (mode: ChatMode) => {
   setChatMode(mode);
 };
+
+// 운세 화면 상태 관리
+const currentView = ref<'chat' | 'fortune-main' | 'fortune-chat' | 'fortune-result'>('chat');
+const fortuneResultData = ref(null);
 
 // 피드백 처리
 const handleMessageFeedback = (type: 'good' | 'bad', messageId: string) => {
@@ -307,6 +337,31 @@ onUnmounted(() => {
 
 const goToDevelopmentStatus = () => {
   router.push('/development-status');
+};
+
+const goToFortuneMain = () => {
+  currentView.value = 'fortune-main';
+};
+
+const startFortuneChat = () => {
+  currentView.value = 'fortune-chat';
+};
+
+const showFortuneResult = (data: any) => {
+  fortuneResultData.value = data;
+  currentView.value = 'fortune-result';
+};
+
+const goBackToChat = () => {
+  currentView.value = 'chat';
+};
+
+const goBackToFortuneMain = () => {
+  currentView.value = 'fortune-main';
+};
+
+const retryFortune = () => {
+  currentView.value = 'fortune-main';
 };
 
 </script>
