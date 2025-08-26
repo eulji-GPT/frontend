@@ -67,7 +67,7 @@ const router = useRouter();
 const email = ref('');
 const verificationCode = ref('');
 const isVerificationSent = ref(false);
-const timeLeft = ref(1200); // 20분 = 1200초
+const timeLeft = ref(300); // 5분 = 300초
 let timer: ReturnType<typeof setInterval> | null = null;
 
 const formattedTime = computed(() => {
@@ -90,24 +90,65 @@ const startTimer = () => {
   }, 1000);
 };
 
-const handleSendVerification = () => {
+const handleSendVerification = async () => {
   if (!email.value) {
     alert('이메일 주소를 입력해주세요.');
     return;
   }
   
-  // 기존 타이머가 있으면 정리
-  if (timer) {
-    clearInterval(timer);
+  // 이메일 형식 확인
+  if (!email.value.endsWith('@g.eulji.ac.kr')) {
+    alert('을지대학교 이메일(@g.eulji.ac.kr)만 사용할 수 있습니다.');
+    return;
   }
   
-  console.log('인증번호 발송:', email.value);
-  isVerificationSent.value = true;
-  timeLeft.value = 1200; // 20분 리셋
-  startTimer();
+  try {
+    // 기존 타이머가 있으면 정리
+    if (timer) {
+      clearInterval(timer);
+    }
+    
+    console.log('인증번호 발송 요청:', email.value);
+    
+    // 로딩 상태 표시 (선택사항)
+    const sendingAlert = '인증번호를 전송하고 있습니다. 잠시만 기다려주세요...';
+    console.log(sendingAlert);
+    
+    // 백엔드 API 호출
+    const response = await fetch('http://localhost:8000/member/send-verification', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email: email.value }),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || '인증번호 전송에 실패했습니다.');
+    }
+    
+    const result = await response.json();
+    console.log('인증번호 전송 성공:', result);
+    
+    // 이메일 전송이 성공한 후에만 타이머 시작
+    if (result.email_sent) {
+      isVerificationSent.value = true;
+      timeLeft.value = 300; // 5분 = 300초로 수정
+      startTimer();
+      
+      alert('인증번호가 이메일로 전송되었습니다. 5분 내에 입력해주세요.');
+    } else {
+      throw new Error('이메일 전송 상태를 확인할 수 없습니다.');
+    }
+    
+  } catch (error) {
+    console.error('인증번호 전송 오류:', error);
+    alert(error.message || '인증번호 전송에 실패했습니다. 다시 시도해주세요.');
+  }
 };
 
-const handleNext = () => {
+const handleNext = async () => {
   if (!isVerificationSent.value) {
     alert('먼저 인증번호를 요청해주세요.');
     return;
@@ -117,11 +158,39 @@ const handleNext = () => {
     return;
   }
   
-  // 실제 구현에서는 백엔드 API로 인증번호 확인
-  console.log('인증번호 확인 중:', { email: email.value, code: verificationCode.value });
-  
-  // 인증이 성공하면 동의 페이지로 이동
-  router.push('/signup-agreement');
+  try {
+    console.log('인증번호 확인 중:', { email: email.value, code: verificationCode.value });
+    
+    // 백엔드 API 호출
+    const response = await fetch('http://localhost:8000/member/verify-code', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        email: email.value, 
+        code: parseInt(verificationCode.value) 
+      }),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || '인증번호가 올바르지 않습니다.');
+    }
+    
+    const result = await response.json();
+    console.log('인증번호 확인 성공:', result);
+    
+    // 이메일을 localStorage에 저장
+    localStorage.setItem('signup_email', email.value);
+    
+    // 인증이 성공하면 동의 페이지로 이동
+    router.push('/signup-agreement');
+    
+  } catch (error) {
+    console.error('인증번호 확인 오류:', error);
+    alert(error.message || '인증번호 확인에 실패했습니다. 다시 시도해주세요.');
+  }
 };
 
 const handleGoToLogin = () => {
