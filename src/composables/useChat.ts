@@ -59,7 +59,7 @@ export function useChat() {
     }
   };
 
-  const FASTAPI_BASE_URL = import.meta.env.VITE_FASTAPI_URL || 'http://localhost:8000';
+  const FASTAPI_BASE_URL = '/gemini-api'; // 프록시를 통해 Gemini FastAPI로 라우팅
   const getAPIUrl = (mode: ChatMode): string => {
     const endpoints = {
       general: '/chat',
@@ -182,24 +182,36 @@ export function useChat() {
   }
 
   async function checkServerStatus() {
-    try {
-      console.log('🔍 FastAPI 서버 상태 확인 중...', FASTAPI_HEALTH_URL);
-      const response = await fetch(FASTAPI_HEALTH_URL, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
+    const maxRetries = 3;
+    const retryDelay = 2000; // 2초
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🔍 FastAPI 서버 상태 확인 중... (시도 ${attempt}/${maxRetries})`, FASTAPI_HEALTH_URL);
+        const response = await fetch(FASTAPI_HEALTH_URL, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('✅ FastAPI 서버 연결 성공:', data);
+          return; // 성공하면 함수 종료
+        } else {
+          console.warn(`⚠️ FastAPI 서버 상태 비정상 (시도 ${attempt}/${maxRetries}):`, response.status);
         }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ FastAPI 서버 연결 성공:', data);
-      } else {
-        console.warn('⚠️ FastAPI 서버 상태 비정상:', response.status);
+      } catch (error) {
+        console.error(`❌ FastAPI 서버 연결 실패 (시도 ${attempt}/${maxRetries}):`, error);
+        
+        if (attempt < maxRetries) {
+          console.log(`🔄 ${retryDelay/1000}초 후 재시도...`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+        } else {
+          console.log('🛠️ FastAPI 서버가 아직 시작되지 않았을 수 있습니다. 잠시 후 다시 시도해보세요.');
+        }
       }
-    } catch (error) {
-      console.error('❌ FastAPI 서버 연결 실패:', error);
-      console.log('🛠️ FastAPI 서버를 실행해주세요: cd C:/github/AI-RAG/fastapi_ && python main.py');
     }
   }
 
