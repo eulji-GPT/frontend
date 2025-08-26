@@ -82,15 +82,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 
 interface BirthdateData {
   year: number;
   month: number;
   day: number;
+  hour?: number;
+  minute?: number;
+  gender: 'male' | 'female';
+  isLunar: boolean;
 }
 
-const props = defineProps<{
+defineProps<{
   isVisible: boolean;
 }>();
 
@@ -102,6 +106,8 @@ const emit = defineEmits<{
 const selectedYear = ref<number | null>(null);
 const selectedMonth = ref<number | null>(null);
 const selectedDay = ref<number | null>(null);
+const selectedGender = ref<'male' | 'female'>('male');
+const isLunar = ref<boolean>(false);
 
 const isYearOpen = ref(true);
 const isMonthOpen = ref(true);
@@ -151,7 +157,9 @@ const submitBirthdate = () => {
   const data: BirthdateData = {
     year: selectedYear.value,
     month: selectedMonth.value,
-    day: selectedDay.value
+    day: selectedDay.value,
+    gender: selectedGender.value,
+    isLunar: isLunar.value
   };
   emit('submit', data);
 };

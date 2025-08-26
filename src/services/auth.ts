@@ -124,7 +124,7 @@ export class AuthService {
   async getCurrentUser(): Promise<User> {
     try {
       const response = await memberAPI.getProfile();
-      return response;
+      return response as User;
     } catch (error) {
       console.error('사용자 정보 조회 실패:', error);
       throw error;

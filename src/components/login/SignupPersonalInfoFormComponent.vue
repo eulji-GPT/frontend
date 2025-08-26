@@ -331,7 +331,8 @@ const handleSubmit = async () => {
     
   } catch (error) {
     console.error('회원가입 오류:', error);
-    alert(error.message || '회원가입 중 오류가 발생했습니다. 다시 시도해주세요.');
+    const errorMessage = error instanceof Error ? error.message : '회원가입 중 오류가 발생했습니다. 다시 시도해주세요.';
+    alert(errorMessage);
   }
 }
 

@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import type { ChatMode } from '../../composables/useChat'
 
 const props = defineProps<{

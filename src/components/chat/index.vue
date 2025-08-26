@@ -343,10 +343,6 @@ const goToFortuneMain = () => {
   currentView.value = 'fortune-main';
 };
 
-const startFortuneChat = () => {
-  currentView.value = 'fortune-chat';
-};
-
 const showFortuneResult = (data: any) => {
   fortuneResultData.value = data;
   currentView.value = 'fortune-result';

@@ -57,14 +57,14 @@
               :key="index"
               class="cot-step"
               :class="{ 
-                'completed': msg.currentStepNumber > index + 1,
-                'active': msg.currentStepNumber === index + 1,
-                'pending': msg.currentStepNumber < index + 1 || !msg.currentStepNumber
+                'completed': (msg.currentStepNumber ?? 0) > index + 1,
+                'active': (msg.currentStepNumber ?? 0) === index + 1,
+                'pending': (msg.currentStepNumber ?? 0) < index + 1 || !msg.currentStepNumber
               }"
             >
               <div class="step-indicator">
-                <span v-if="msg.currentStepNumber > index + 1">✓</span>
-                <span v-else-if="msg.currentStepNumber === index + 1">●</span>
+                <span v-if="(msg.currentStepNumber ?? 0) > index + 1">✓</span>
+                <span v-else-if="(msg.currentStepNumber ?? 0) === index + 1">●</span>
                 <span v-else>{{ index + 1 }}</span>
               </div>
               <span class="step-text">{{ step }}</span>

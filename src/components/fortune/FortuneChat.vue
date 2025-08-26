@@ -131,7 +131,6 @@ const sendMessage = async () => {
   };
 
   messages.value.push(userMessage);
-  const currentInput = userInput.value;
   userInput.value = '';
   
   isLoading.value = true;
@@ -139,7 +138,7 @@ const sendMessage = async () => {
 
   // 간단한 응답 시뮬레이션
   setTimeout(() => {
-    const botResponse = generateFortuneResponse(currentInput);
+    const botResponse = generateFortuneResponse();
     messages.value.push({
       text: botResponse,
       isUser: false,
@@ -150,7 +149,7 @@ const sendMessage = async () => {
   }, 2000);
 };
 
-const generateFortuneResponse = (input: string): string => {
+const generateFortuneResponse = (): string => {
   const responses = [
     "입력해주신 정보를 바탕으로 사주를 분석해보겠습니다...\n\n🌟 오늘의 전체운: 길한 날입니다. 새로운 시작에 좋은 기운이 흐르고 있어요.\n\n💕 연애운: 기존 관계에서는 안정적인 흐름을, 새로운 만남에서는 좋은 인연의 가능성이 보입니다.\n\n💰 금전운: 투자보다는 저축에 집중하세요. 의외의 수입이 생길 수 있습니다.\n\n⚖️ 직업운: 협업 프로젝트에서 좋은 결과를 얻을 수 있어요. 상사와의 관계도 원만합니다.",
     
