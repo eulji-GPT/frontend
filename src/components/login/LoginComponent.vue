@@ -46,6 +46,34 @@
               <span class="dot">•</span>
               <span class="text-gray" @click="handleFindAccount">내 계정 찾기</span>
             </div>
+            
+            <!-- 로그인 폼 -->
+            <div v-if="showLoginForm" class="login-form">
+              <div class="form-group">
+                <input 
+                  v-model="loginForm.email" 
+                  type="email" 
+                  placeholder="이메일 주소"
+                  class="form-input"
+                />
+              </div>
+              <div class="form-group">
+                <input 
+                  v-model="loginForm.password" 
+                  type="password" 
+                  placeholder="비밀번호"
+                  class="form-input"
+                  @keyup.enter="submitLogin"
+                />
+              </div>
+              <button 
+                @click="submitLogin" 
+                :disabled="isLoading"
+                class="login-submit-btn"
+              >
+                {{ isLoading ? '로그인 중...' : '로그인' }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -65,23 +93,51 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import HeaderSection from '../main/HeaderSection.vue';
+import { AuthService } from '../../services/auth';
+import { healthAPI } from '../../services/api';
 
 const router = useRouter();
-const KAKAO_REST_API_KEY = 'YOUR_KAKAO_REST_API_KEY';
-const REDIRECT_URI = window.location.origin + '/login';
+const authService = AuthService.getInstance();
+
+// 환경변수에서 카카오 설정 가져오기
+const KAKAO_REST_API_KEY = import.meta.env.VITE_KAKAO_REST_API_KEY || 'YOUR_KAKAO_REST_API_KEY';
+const REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI || (window.location.origin + '/login');
 
 const isLoading = ref(false);
 const errorMessage = ref('');
 
-const handleEulgptSignup = () => {
-  // EULGPT 회원가입 페이지로 이동
-  router.push('/signup');
+// 백엔드 연결 테스트
+const testBackendConnection = async () => {
+  try {
+    const response = await healthAPI.checkHealth();
+    console.log('백엔드 연결 성공:', response);
+    return true;
+  } catch (error) {
+    console.error('백엔드 연결 실패:', error);
+    errorMessage.value = '서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.';
+    return false;
+  }
 };
 
-const handleKakaoLogin = () => {
+const handleEulgptSignup = async () => {
+  // 백엔드 연결 확인 후 이메일 인증 페이지로 이동
+  const isConnected = await testBackendConnection();
+  if (isConnected) {
+    router.push('/signup-email');
+  }
+};
+
+const handleKakaoLogin = async () => {
   try {
     isLoading.value = true;
     errorMessage.value = '';
+    
+    // 백엔드 연결 확인
+    const isConnected = await testBackendConnection();
+    if (!isConnected) {
+      isLoading.value = false;
+      return;
+    }
     
     const kakaoAuthUrl =
       `https://kauth.kakao.com/oauth/authorize?` +
@@ -96,15 +152,55 @@ const handleKakaoLogin = () => {
   }
 };
 
+// 간단한 로그인 폼을 위한 상태
+const showLoginForm = ref(false);
+const loginForm = ref({
+  email: '',
+  password: ''
+});
+
 const handleLogin = () => {
-  // 로그인 페이지로 이동 또는 로그인 모달 표시
-  console.log('로그인');
+  showLoginForm.value = !showLoginForm.value;
+  errorMessage.value = '';
+};
+
+const submitLogin = async () => {
+  if (!loginForm.value.email || !loginForm.value.password) {
+    errorMessage.value = '이메일과 비밀번호를 입력해주세요.';
+    return;
+  }
+
+  try {
+    isLoading.value = true;
+    errorMessage.value = '';
+    
+    const result = await authService.login({
+      email: loginForm.value.email,
+      password: loginForm.value.password
+    });
+    
+    console.log('로그인 성공:', result);
+    
+    // 메인 페이지로 이동 (또는 채팅 페이지)
+    router.push('/');
+    
+  } catch (error: any) {
+    errorMessage.value = error.message || '로그인에 실패했습니다.';
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const handleFindAccount = () => {
-  // 계정 찾기 로직
-  console.log('계정 찾기');
+  // 계정 찾기 기능은 나중에 구현
+  alert('계정 찾기 기능은 준비 중입니다.');
 };
+
+// 컴포넌트 마운트 시 백엔드 연결 테스트
+import { onMounted } from 'vue';
+onMounted(() => {
+  testBackendConnection();
+});
 </script>
 
 <style scoped>
@@ -509,5 +605,66 @@ const handleFindAccount = () => {
     left: 50%;
     transform: translateX(-50%);
   }
+}
+
+/* 로그인 폼 스타일 */
+.login-form {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 20px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-input {
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: Pretendard, sans-serif;
+  background: white;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #02478A;
+  box-shadow: 0 0 0 3px rgba(2, 71, 138, 0.1);
+}
+
+.form-input::placeholder {
+  color: #9ca3af;
+}
+
+.login-submit-btn {
+  padding: 12px 16px;
+  background-color: #02478A;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.login-submit-btn:hover:not(:disabled) {
+  background-color: #1e40af;
+  transform: translateY(-1px);
+}
+
+.login-submit-btn:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
 }
 </style>
