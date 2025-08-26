@@ -88,9 +88,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import HeaderSection from '../main/HeaderSection.vue';
-// import { useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 
-// const router = useRouter();
+const router = useRouter();
 
 // 체크박스 이미지 (실제 이미지 경로로 교체 필요)
 const checkedIcon = '/src/assets/checkbox-checked.svg';
@@ -132,9 +132,9 @@ const handleAgreeAll = () => {
     return;
   }
   
-  console.log('회원가입 완료');
-  // 회원가입 완료 처리 로직
-  // router.push('/signup-complete') 또는 로그인 페이지로 이동
+  console.log('약관 동의 완료');
+  // 비밀번호 설정 페이지로 이동
+  router.push('/signup-password');
 };
 </script>
 
