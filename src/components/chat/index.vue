@@ -13,20 +13,24 @@
         </div>
         <div class="frame-2">
           <div class="chatbot-menu-item">
-            <div class="frame-3">
+            <div class="frame-3" @click="goToDevelopmentStatus">
               <div class="group-4">
                 <div class="group-5"></div>
                 <div class="frame-6"><span class="day">DAY</span></div>
               </div>
               <span class="empty-classroom-check">빈 강의실 확인</span>
             </div>
-            <div class="frame-7">
+            <div class="frame-7" @click="goToDevelopmentStatus">
               <div class="group-8"></div>
               <span class="library-study-room-reservation">도서관 ∙ 열람실 자리 예약</span>
             </div>
-            <div class="frame-9">
+            <div class="frame-9" @click="goToDevelopmentStatus">
               <div class="group-a"></div>
               <span class="status">학식당 현황</span>
+            </div>
+            <div class="frame-9-1" @click="goToDevelopmentStatus">
+              <div class="group-b"></div>
+              <span class="status-fortune">사주 ∙ 운세 챗봇</span>
             </div>
           </div>
           <ChatHistory 
@@ -69,13 +73,17 @@
         </div>
       </div>
       <div class="chat-main-area">
+        <div class="mode-selector-container">
+          <ChatModeSelector 
+            :currentMode="chatMode"
+            @modeChange="handleModeChange"
+          />
+        </div>
         <div class="chat-messages-container">
           <ChatMessageArea 
-            :messages="messages" 
-            :currentMode="chatMode"
+            :messages="messages"
             @feedback="handleMessageFeedback"
             @regenerate="handleMessageRegenerate"
-            @modeChange="handleModeChange"
           />
         </div>
         <div class="chat-input-area">
@@ -93,6 +101,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
 import ChatHistory from './ChatHistory.vue';
 import ChatMessageArea from './ChatMessageArea.vue';
 import ChatInput from './ChatInput.vue';
@@ -102,6 +111,8 @@ import InfoPanel from '../common/InfoPanel.vue';
 import { useChat } from '../../composables/useChat';
 import type { ChatMode } from '../../composables/useChat';
 import eulLogo from '../../assets/eul_logo.svg';
+
+const router = useRouter();
 import "./index.css";
 
 const { 
@@ -294,6 +305,10 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
 });
 
+const goToDevelopmentStatus = () => {
+  router.push('/development-status');
+};
+
 </script>
 
 <style scoped>
@@ -409,24 +424,37 @@ onUnmounted(() => {
 .chatbot-menu-item {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   flex-wrap: nowrap;
   flex-shrink: 0;
-  gap: 16px;
+  gap: 4px;
   position: relative;
   width: 100%;
   padding: 0 20px 0 20px;
   background: #ffffff;
   z-index: 18;
 }
-.frame-3 {
+
+.chatbot-menu-item > div {
   display: flex;
   align-items: center;
   flex-wrap: nowrap;
   flex-shrink: 0;
-  gap: 10px;
+  gap: 8px;
   position: relative;
-  width: 115px;
+  width: 100%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.chatbot-menu-item > div:hover {
+  background-color: #f0f0f0;
+  transform: translateY(-1px);
+}
+.frame-3 {
   z-index: 19;
 }
 .group-4 {
@@ -491,14 +519,6 @@ onUnmounted(() => {
   z-index: 24;
 }
 .frame-7 {
-  display: flex;
-  align-items: center;
-  align-self: stretch;
-  flex-wrap: nowrap;
-  flex-shrink: 0;
-  gap: 10px;
-  position: relative;
-  min-width: 0;
   z-index: 25;
 }
 .group-8 {
@@ -525,14 +545,33 @@ onUnmounted(() => {
   z-index: 27;
 }
 .frame-9 {
-  display: flex;
-  align-items: center;
-  flex-wrap: nowrap;
-  flex-shrink: 0;
-  gap: 10px;
-  position: relative;
-  width: 99px;
   z-index: 28;
+}
+.frame-9-1 {
+  z-index: 30;
+}
+.group-b {
+  flex-shrink: 0;
+  position: relative;
+  width: 25px;
+  height: 25px;
+  background: url('./icon/사주.svg') no-repeat center;
+  background-size: cover;
+  z-index: 31;
+}
+.status-fortune {
+  flex-shrink: 0;
+  flex-basis: auto;
+  position: relative;
+  height: 23px;
+  color: #000000;
+  font-family: Pretendard, var(--default-font-family);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 23px;
+  text-align: left;
+  white-space: nowrap;
+  z-index: 32;
 }
 .group-a {
   flex-shrink: 0;
@@ -629,12 +668,6 @@ onUnmounted(() => {
   z-index: 47;
 }
 
-/* 사이드바 모드 셀렉터 스타일 */
-.sidebar-mode-selector {
-  width: 100%;
-  padding: 0 20px;
-  margin-bottom: 16px;
-}
 
 /* Mobile overlay */
 .mobile-overlay {
@@ -705,6 +738,32 @@ onUnmounted(() => {
   font-size: 20px;
   font-weight: 700;
   letter-spacing: 0.4px;
+}
+
+/* Mode selector container */
+.mode-selector-container {
+  position: absolute;
+  top: 16px;
+  left: 20px;
+  z-index: 100;
+}
+
+.chat-main-area {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.chat-messages-container {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.chat-input-area {
+  flex-shrink: 0;
 }
 
 /* Sidebar resizer */
@@ -818,13 +877,15 @@ onUnmounted(() => {
     padding: 0 12px;
   }
   
-  .sidebar-mode-selector {
-    padding: 0 12px;
+  .mode-selector-container {
+    top: 12px;
+    left: 16px;
   }
   
   .empty-classroom-check,
   .library-study-room-reservation,
-  .status {
+  .status,
+  .status-fortune {
     font-size: 13px;
   }
   

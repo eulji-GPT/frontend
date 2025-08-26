@@ -1,12 +1,12 @@
 <template>
-  <div class="mode-selector">
-    <div class="mode-selector-header" :class="{ 'cot-active': currentMode === 'cot' }">
+  <div class="mode-selector-header" :class="{ 'cot-active': currentMode === 'cot' }" @click="toggleSelector">
+    <div class="header-content">
       <span class="current-mode">{{ getCurrentModeInfo().name }}</span>
-      <button class="mode-toggle-btn" @click="toggleSelector" :class="{ active: isOpen }">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="6,9 12,15 18,9"></polyline>
+      <div class="mode-icon-indicator">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
         </svg>
-      </button>
+      </div>
     </div>
     
     <div v-if="isOpen" class="mode-dropdown">
@@ -18,11 +18,8 @@
           :class="{ active: currentMode === mode.key, 'cot-mode': mode.key === 'cot' }"
           @click="selectMode(mode.key)"
         >
-          <div class="mode-icon">{{ mode.icon }}</div>
-          <div class="mode-info">
-            <div class="mode-name">{{ mode.name }}</div>
-            <div class="mode-description">{{ mode.description }}</div>
-          </div>
+          <div class="mode-name">{{ mode.name }}</div>
+          <div class="mode-description">{{ mode.description }}</div>
           <div v-if="mode.key === 'cot'" class="cot-badge">5단계</div>
         </div>
       </div>
@@ -92,34 +89,30 @@ const selectMode = (mode: ChatMode) => {
 
 // 외부 클릭 시 드롭다운 닫기
 document.addEventListener('click', (e) => {
-  if (!(e.target as Element).closest('.mode-selector')) {
+  if (!(e.target as Element).closest('.mode-selector-header')) {
     isOpen.value = false
   }
 })
 </script>
 
 <style scoped>
-.mode-selector {
-  position: relative;
-  width: 220px;
-  max-width: 220px;
-  overflow: visible;
-}
-
 .mode-selector-header {
   display: flex;
+  justify-content: flex-start;
+  flex-direction: row;
   align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  flex: none;
+  gap: 81px;
+  box-shadow: 1px 1px 4px 0px rgb(217, 217, 217);
+  border: solid 1px rgb(243, 244, 246);
+  border-radius: 15px;
+  background-color: white;
+  box-sizing: border-box;
+  padding: 8px 16px;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  min-height: 32px;
-  width: 100%;
-  box-sizing: border-box;
+  position: relative;
+  overflow: visible;
 }
 
 .mode-selector-header:hover {
@@ -183,7 +176,7 @@ document.addEventListener('click', (e) => {
   z-index: 2;
 }
 
-.mode-selector-header.cot-active .mode-toggle-btn {
+.mode-selector-header.cot-active .mode-icon-indicator {
   color: white;
   position: relative;
   z-index: 2;
@@ -235,39 +228,48 @@ document.addEventListener('click', (e) => {
   }
 }
 
-.current-mode {
-  font-size: 13px;
-  font-weight: 600;
-  color: #1f2937;
-  font-family: Pretendard, sans-serif;
+.header-content {
+  display: flex;
+  justify-content: flex-start;
+  flex-direction: row;
+  align-items: center;
+  flex: none;
+  width: 98px;
+  box-sizing: border-box;
 }
 
-.mode-toggle-btn {
-  background: none;
-  border: none;
-  color: #6b7280;
-  cursor: pointer;
-  padding: 4px;
+.current-mode {
+  color: black;
+  text-overflow: ellipsis;
+  font-size: 14px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 600;
+  line-height: 23px;
+  text-align: left;
+  width: 82px;
+  min-height: 25px;
+}
+
+.mode-icon-indicator {
+  width: 18px;
+  height: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s ease;
+  flex-shrink: 0;
 }
 
-.mode-toggle-btn.active {
-  transform: rotate(180deg);
+.mode-icon-indicator svg {
+  width: 18px;
+  height: 18px;
+  object-fit: cover;
 }
+
 
 .mode-dropdown {
   position: absolute;
   top: 100%;
   left: 0;
-  right: 0;
-  width: 100%;
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
   z-index: 1000;
   margin-top: 8px;
   animation: fadeIn 0.2s ease;
@@ -286,17 +288,33 @@ document.addEventListener('click', (e) => {
 }
 
 .mode-list {
-  padding: 8px;
-  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: none;
+  gap: 15px;
+  box-shadow: 1px 1px 4px 0px rgb(217, 217, 217);
+  border: solid 1px rgb(243, 244, 246);
+  border-radius: 16px;
+  background-color: white;
   box-sizing: border-box;
+  padding: 20px 16px;
+  width: 320px;
+  min-width: 320px;
 }
 
 .mode-item {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  border-radius: 8px;
+  justify-content: flex-start;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  border-radius: 10px;
+  align-self: stretch;
+  box-sizing: border-box;
+  padding: 10px 16px;
+  flex-shrink: 0;
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
@@ -307,8 +325,7 @@ document.addEventListener('click', (e) => {
 }
 
 .mode-item.active {
-  background-color: #f0f6ff;
-  border: 1px solid #02478a;
+  background-color: rgb(248, 251, 255);
 }
 
 .mode-item.cot-mode {
@@ -415,34 +432,24 @@ document.addEventListener('click', (e) => {
   }
 }
 
-.mode-icon {
-  font-size: 20px;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.mode-info {
-  flex: 1;
-  min-width: 0;
-}
 
 .mode-name {
+  color: black;
+  text-overflow: ellipsis;
   font-size: 14px;
-  font-weight: 600;
-  color: #1f2937;
   font-family: Pretendard, sans-serif;
+  font-weight: 600;
+  line-height: 23px;
+  text-align: left;
 }
 
 .mode-description {
-  font-size: 12px;
-  color: #6b7280;
-  margin-top: 2px;
+  color: rgb(75, 85, 99);
+  text-overflow: ellipsis;
+  font-size: 10px;
   font-family: Pretendard, sans-serif;
-  line-height: 1.4;
+  font-weight: 500;
+  text-align: left;
 }
 
 .cot-badge {
@@ -454,7 +461,9 @@ document.addEventListener('click', (e) => {
   border-radius: 12px;
   font-family: Pretendard, sans-serif;
   box-shadow: 0 1px 3px rgba(16, 185, 129, 0.3);
-  position: relative;
+  position: absolute;
+  top: 10px;
+  right: 16px;
   z-index: 2;
 }
 

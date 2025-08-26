@@ -21,7 +21,7 @@
             maxlength="50"
           />
           <span v-else class="chat-title">{{ chat.title }}</span>
-          <button @click.stop="$emit('deleteChat', chat.id)" class="delete-chat-button">x</button>
+          <button @click.stop="showDeleteModalForChat(chat.id)" class="delete-chat-button">x</button>
         </div>
       </div>
     </div>
@@ -29,7 +29,12 @@
       :isVisible="contextMenuVisible" 
       :position="contextMenuPosition"
       @editTitle="handleEditTitle"
-      @deleteChat="handleDeleteChat"
+      @deleteChat="showDeleteModal"
+    />
+    <CommonDeleteModal 
+      :isVisible="deleteModalVisible" 
+      @cancel="hideDeleteModal"
+      @confirm="confirmDelete"
     />
   </div>
 </template>
@@ -38,6 +43,7 @@
 import { ref, nextTick, onMounted, onUnmounted } from 'vue';
 import type { ChatSession } from '../../composables/useChat';
 import ChatContextMenu from './ChatContextMenu.vue';
+import CommonDeleteModal from '../common/CommonDeleteModal.vue';
 
 const props = defineProps<{
   chatHistory: ChatSession[];
@@ -57,6 +63,7 @@ const editInput = ref<HTMLInputElement[]>([]);
 const contextMenuVisible = ref(false);
 const contextMenuPosition = ref({ top: '0px', left: '0px' });
 const contextMenuChatId = ref<string | null>(null);
+const deleteModalVisible = ref(false);
 
 const startEditing = (chatId: string) => {
   const chat = props.chatHistory.find(c => c.id === chatId);
@@ -108,11 +115,26 @@ const handleEditTitle = () => {
   hideContextMenu();
 };
 
-const handleDeleteChat = () => {
+const showDeleteModal = () => {
+  deleteModalVisible.value = true;
+  hideContextMenu();
+};
+
+const hideDeleteModal = () => {
+  deleteModalVisible.value = false;
+};
+
+const showDeleteModalForChat = (chatId: string) => {
+  contextMenuChatId.value = chatId;
+  deleteModalVisible.value = true;
+};
+
+const confirmDelete = () => {
   if (contextMenuChatId.value) {
     emit('deleteChat', contextMenuChatId.value);
   }
-  hideContextMenu();
+  hideDeleteModal();
+  contextMenuChatId.value = null;
 };
 
 onMounted(() => {

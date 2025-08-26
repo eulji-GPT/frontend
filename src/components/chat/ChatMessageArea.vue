@@ -1,12 +1,5 @@
 <template>
   <div class="chat-messages-area" ref="messagesContainer">
-    <!-- 떠있는 모드 셀렉터 -->
-    <div class="floating-mode-selector">
-      <ChatModeSelector 
-        :currentMode="currentMode" 
-        @modeChange="handleModeChange"
-      />
-    </div>
     
     <div v-for="(msg, idx) in messages" :key="`msg-${idx}-${msg.timestamp}`" class="message-wrapper">
       <div v-if="msg.isLoading || msg.currentStep" class="loading-indicator" :class="{ 'error-state': msg.hasError }">
@@ -110,15 +103,13 @@
 import { ref, watch, nextTick } from 'vue';
 import ChatBubble from './ChatBubble.vue';
 import LottieLoader from './LottieLoader.vue';
-import ChatModeSelector from './ChatModeSelector.vue';
-import type { ChatMessage, ChatMode } from '../../composables/useChat';
+import type { ChatMessage } from '../../composables/useChat';
 
 const props = defineProps<{
   messages: ChatMessage[];
-  currentMode: ChatMode;
 }>();
 
-const emit = defineEmits(['feedback', 'regenerate', 'modeChange']);
+const emit = defineEmits(['feedback', 'regenerate']);
 
 // 메시지 컨테이너 ref
 const messagesContainer = ref<HTMLElement | null>(null);
@@ -170,10 +161,6 @@ const handleRegenerate = (messageId: string) => {
   emit('regenerate', messageId);
 };
 
-// 모드 변경 처리
-const handleModeChange = (mode: ChatMode) => {
-  emit('modeChange', mode);
-};
 
 </script>
 
@@ -501,21 +488,6 @@ const handleModeChange = (mode: ChatMode) => {
   align-self: flex-start;
 }
 
-/* 떠있는 모드 셀렉터 스타일 */
-.floating-mode-selector {
-  position: sticky;
-  top: 16px; /* 스크롤 시 상단에서 16px 위치에 고정 */
-  left: 20px; /* chat-bubble.left와 동일한 좌측 패딩 */
-  z-index: 1000;
-  max-width: 200px;
-  min-width: 150px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(229, 231, 235, 0.8);
-  margin-bottom: 16px; /* 다른 메시지와의 간격 */
-}
 
 /* 스크롤바 스타일링은 상위 컨테이너에서 처리 */
 
@@ -534,12 +506,6 @@ const handleModeChange = (mode: ChatMode) => {
 @media (max-width: 768px) {
   .chat-messages-area {
     width: 100%;
-  }
-  
-  .floating-mode-selector {
-    top: 12px; /* 모바일에서 약간 줄인 상단 여백 */
-    max-width: 180px;
-    min-width: 140px;
   }
 }
 </style>
