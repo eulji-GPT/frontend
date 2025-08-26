@@ -5,16 +5,26 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   plugins: [vue()],
   server: {
+    allowedHosts: ['eulgpt-dev.duckdns.org'], // DuckDNS 도메인 허용
+    host: '0.0.0.0', // 외부 접속 허용
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'http://127.0.0.1:8000',
         changeOrigin: true,
         rewrite: (path: string) => path.replace(/^\/api/, ''),
+        timeout: 10000, // 10초 타임아웃
+      },
+      '/gemini-api': {
+        target: 'http://127.0.0.1:8001',
+        changeOrigin: true,
+        rewrite: (path: string) => path.replace(/^\/gemini-api/, ''),
+        timeout: 10000, // 10초 타임아웃
       },
     },
   },
   preview: {
+    host: '0.0.0.0', // 프로덕션 미리보기도 외부 접속 허용
     port: 3000,
   },
 })
