@@ -302,7 +302,7 @@ const handleSubmit = async () => {
     console.log('백엔드로 전송할 데이터:', signupData);
     console.log('API 호출 시작...');
     
-    const response = await fetch('http://localhost:8000/member/signup-init', {
+    const response = await fetch('/api/member/signup-init', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

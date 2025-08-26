@@ -115,7 +115,7 @@ const handleSendVerification = async () => {
     console.log(sendingAlert);
     
     // 백엔드 API 호출
-    const response = await fetch('http://localhost:8000/member/send-verification', {
+    const response = await fetch('/api/member/send-verification', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -162,7 +162,7 @@ const handleNext = async () => {
     console.log('인증번호 확인 중:', { email: email.value, code: verificationCode.value });
     
     // 백엔드 API 호출
-    const response = await fetch('http://localhost:8000/member/verify-code', {
+    const response = await fetch('/api/member/verify-code', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

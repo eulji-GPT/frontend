@@ -119,7 +119,7 @@ const handleLogin = async () => {
   try {
     console.log('로그인 시도:', { email: email.value })
     
-    const response = await fetch('http://localhost:8000/member/signin', {
+    const response = await fetch('/api/member/signin', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
