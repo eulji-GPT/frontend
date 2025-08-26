@@ -11,8 +11,14 @@
         <li><a href="#news" @click.prevent="scrollToSection('news')">새로운 소식</a></li>
       </ul>
       <div class="auth-links">
-        <router-link to="/login">로그인</router-link>
-        <router-link to="/signup">회원가입</router-link>
+        <template v-if="!isLoggedIn">
+          <router-link to="/login">로그인</router-link>
+          <router-link to="/signup">회원가입</router-link>
+        </template>
+        <template v-else>
+          <span class="user-info">안녕하세요!</span>
+          <button @click="handleLogout" class="logout-btn">로그아웃</button>
+        </template>
       </div>
       <button class="mobile-menu-btn" @click="toggleMobileMenu" aria-label="메뉴 열기">
         <span :class="['hamburger-line', { active: isMobileMenuOpen }]"></span>
@@ -38,14 +44,26 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import eulLogo from '../../assets/eul_logo.svg'
+import { isAuthenticated, logout } from '../../utils/auth'
 
 const emit = defineEmits(['scrollToSection'])
 const isMobileMenuOpen = ref(false)
+const isLoggedIn = ref(false)
+
+// 로그인 상태 확인
+onMounted(() => {
+  isLoggedIn.value = isAuthenticated()
+})
 
 function scrollToSection(id: string) {
   emit('scrollToSection', id)
+}
+
+function handleLogout() {
+  logout()
+  isLoggedIn.value = false
 }
 
 function scrollToMobileSection(id: string) {
@@ -135,6 +153,29 @@ header.header {
 }
 
 .auth-links a:hover {
+  background-color: #02478a;
+  color: white;
+}
+
+.user-info {
+  color: #02478a;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.logout-btn {
+  background: none;
+  border: 1px solid #02478a;
+  color: #02478a;
+  font-weight: 600;
+  font-size: 16px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.logout-btn:hover {
   background-color: #02478a;
   color: white;
 }
