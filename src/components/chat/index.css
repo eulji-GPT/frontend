@@ -299,15 +299,25 @@ button {
   flex-shrink: 0;
   gap: 10px;
   position: relative;
-  width: 115px;
+  min-width: 115px;
+  width: auto;
+  overflow: visible;
   z-index: 19;
 }
 .group-4 {
   flex-shrink: 0;
   position: relative;
-  width: 25px;
-  height: 27.004px;
+  width: auto;
+  height: auto;
   z-index: 20;
+}
+
+.group-4 svg {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
 }
 .group-5 {
   position: relative;

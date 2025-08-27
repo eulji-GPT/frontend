@@ -1,7 +1,7 @@
 <template>
   <header class="header">
     <nav class="nav">
-      <div class="logo-text">
+      <div class="logo-text" @click="goToHome" style="cursor: pointer;">
         <img :src="eulLogo" alt="EULGPT 로고" class="logo-img" />
       </div>
       <ul class="nav-list">
@@ -45,10 +45,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import eulLogo from '../../assets/eul_logo.svg'
 import { isAuthenticated, logout } from '../../utils/auth'
 
 const emit = defineEmits(['scrollToSection'])
+const router = useRouter()
 const isMobileMenuOpen = ref(false)
 const isLoggedIn = ref(false)
 
@@ -77,6 +79,10 @@ function toggleMobileMenu() {
 
 function closeMobileMenu() {
   isMobileMenuOpen.value = false
+}
+
+function goToHome() {
+  router.push('/')
 }
 </script>
 
@@ -130,9 +136,17 @@ header.header {
   transition: all 0.3s ease;
 }
 
+.nav-list li a::after {
+  display: none !important;
+}
+
 .nav-list li a:hover {
   background-color: #f3f8ff;
   color: #02478a;
+}
+
+.nav-list li a:hover::after {
+  display: none !important;
 }
 
 .auth-links {

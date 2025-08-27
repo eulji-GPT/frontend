@@ -196,6 +196,7 @@ onMounted(async () => {
               opacity 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   max-height: 0;
   opacity: 0;
+  margin-left: -2px;
 }
 
 .faq-answer-wrapper.open {
@@ -208,9 +209,9 @@ onMounted(async () => {
   border-radius: 16px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 18px;
-  padding: 24px 48px;
+  padding: 24px 0 24px 2px;
   /* margin-bottom: 24px; */
   box-sizing: border-box;
   transform: translateY(0);

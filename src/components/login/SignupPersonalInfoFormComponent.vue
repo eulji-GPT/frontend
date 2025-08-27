@@ -367,9 +367,12 @@ if (typeof document !== 'undefined') {
 .main-content {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   min-height: calc(100vh - 84px - 50px); /* Full height minus header and footer space */
-  padding: 20px;
+  padding-top: 120px; /* 위쪽으로 이동 */
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-bottom: 20px;
 }
 
 .form-container {
