@@ -321,14 +321,12 @@ button {
 }
 .group-5 {
   position: relative;
-  width: 14.078px;
-  height: 9.751px;
+  width: 20px;
+  height: 20px;
   margin: 0 0 0 5.582px;
-  background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-31/CcpStAfx5O.png)
-    no-repeat center;
-  background-size: 100% 100%;
+  background: url('./icon/빈강의실.png') no-repeat center;
+  background-size: contain;
   z-index: 21;
-  border-radius: 6.251px;
 }
 .frame-6 {
   position: relative;
