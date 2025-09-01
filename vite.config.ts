@@ -1,9 +1,15 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [vue()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src')
+    }
+  },
   server: {
     allowedHosts: ['eulgpt-dev.duckdns.org'], // DuckDNS 도메인 허용
     host: '0.0.0.0', // 외부 접속 허용
