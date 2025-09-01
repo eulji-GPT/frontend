@@ -46,6 +46,7 @@ function goToChatApp() {
   max-width: 500px;
   object-fit: contain;
   display: block;
+  margin-left: 120px;
 }
 
 .hero-section {

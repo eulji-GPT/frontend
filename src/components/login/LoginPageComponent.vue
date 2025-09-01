@@ -224,9 +224,9 @@ const handleKakaoLogin = () => {
 .main-content {
   display: flex;
   justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  padding-top: 84px;
+  align-items: flex-start;
+  min-height: calc(100vh - 84px - 50px);
+  padding: 50px 20px 20px 20px; /* 수동으로 패딩 조정 가능: top right bottom left */
 }
 
 .login-container {
@@ -236,8 +236,10 @@ const handleKakaoLogin = () => {
   align-items: flex-start;
   gap: 40px;
   width: 407px;
+  height: 1300px; /* 수동으로 높이 조정 가능 */
   background-color: white;
   box-sizing: border-box;
+  margin: 0 auto; /* 중앙 정렬 추가 */
 }
 
 .title-section {

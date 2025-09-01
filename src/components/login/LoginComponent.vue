@@ -264,14 +264,14 @@ onMounted(() => {
   justify-content: flex-start;
   flex-direction: column;
   align-items: flex-start;
-  gap: 50px;
+  gap: 30px; /* gap 줄임 */
   align-self: stretch;
   width: 407px;
   height: 370px;
   box-sizing: border-box;
   position: absolute;
   left: calc(50% - 203px);
-  top: calc(50vh - 185px); /* 전체 뷰포트 기준으로 중앙 배치 */
+  top: 120px; /* 더 위로 이동 */
   flex-shrink: 0;
 }
 
@@ -559,7 +559,7 @@ onMounted(() => {
   .frame-main-content {
     width: 90%;
     left: 5%;
-    top: calc(50vh - 150px);
+    top: 120px;
     height: auto;
   }
   
@@ -576,7 +576,7 @@ onMounted(() => {
   .frame-main-content {
     width: 95%;
     left: 2.5%;
-    top: calc(50vh - 120px);
+    top: 100px;
     gap: 30px;
   }
   
