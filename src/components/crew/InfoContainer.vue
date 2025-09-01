@@ -1,5 +1,8 @@
 <template>
   <div class="info-container">
+    <div class="left-gradient">
+      <div class="ellipse-left" />
+    </div>
     <span class="info-question">을지피티는 어떤 서비스인가요?</span>
     <span class="info-answer">
       을지대학교 성남캠퍼스에서 학생들의<br/>
@@ -22,6 +25,7 @@
   box-sizing: border-box;
   padding: 80px 40px;
   background: transparent;
+  position: relative;
 }
 
 .info-question {
@@ -42,6 +46,29 @@
   font-weight: 700;
   line-height: 150%;
   text-align: center;
+}
+
+.left-gradient {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ellipse-left {
+  background: radial-gradient(circle, var(--darksub-2, #4789ee) 0%, var(--darksub-2, #4789ee) 70%, transparent 100%);
+  border-radius: 50%;
+  filter: blur(225px);
+  height: 708px;
+  width: 708px;
+  position: absolute;
+  left: -354px;
+  top: -354px;
+  transform: rotate(-148.78deg);
+  opacity: 0.7;
 }
 
 @media (max-width: 768px) {

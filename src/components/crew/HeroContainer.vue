@@ -4,7 +4,7 @@
       <span class="eulgpt-title">EULGPT</span>
       <div class="team-recruit-section">
         <span class="team-recruit-text">팀원 모집</span>
-        <img src="@/components/chat/icon/mulmum.svg" alt="icon" class="team-icon"/>
+        <img src="@/components/crew/img/Group 48097214.svg" alt="icon" class="team-icon"/>
       </div>
     </div>
     <div class="buttons-container">
@@ -32,6 +32,7 @@
   box-sizing: border-box;
   padding: 60px 40px;
   background: transparent;
+  margin-left: 180px;
 }
 
 .hero-main {

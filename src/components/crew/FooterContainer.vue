@@ -2,17 +2,14 @@
   <div class="footer-desktop">
     <div class="overlap-wrapper">
       <div class="overlap">
-        <img class="group" alt="Group" src="@/components/chat/icon/mulmum.svg" />
+        <img class="group" alt="Group" src="@/components/crew/img/orbit_X.png" />
         <div class="hero-frame">
           <div class="hero-content">
             <div class="eulgpt-logo">EULGPT</div>
             <div class="recruitment-section">
               <div class="recruitment-text">팀원 모집</div>
-              <div class="icon-wrapper">
-                <div class="icon-overlap">
-                  <div class="rectangle" />
-                  <div class="rectangle-2" />
-                </div>
+              <div class="icon-container">
+                <img src="@/components/crew/img/Common/랜딩/Union.svg" alt="icon" class="recruitment-icon" />
               </div>
             </div>
           </div>
@@ -24,13 +21,9 @@
         <div class="ellipse-2" />
         <div class="ellipse-3" />
         <div class="common-footer">
-          <div class="footer-content">
-            <div class="footer-logo">EULGPT</div>
-            <div class="footer-info">
-              <p>을지대학교 성남캠퍼스 AI 웹서비스</p>
-              <p>© 2024 EULGPT Team. All rights reserved.</p>
-            </div>
-          </div>
+          <span class="privacy-policy">개인정보처리방침</span>
+          <span class="copyright">Copyright ⓒ EULGPT. All Rights Reserved</span>
+          <span class="email">E-mail: EULGPT@gmail.com</span>
         </div>
       </div>
     </div>
@@ -72,8 +65,8 @@
   position: absolute;
   top: 0;
   width: 947px;
-  opacity: 0.3;
-  filter: brightness(0.7);
+  opacity: 1;
+  filter: none;
 }
 
 .hero-frame {
@@ -107,12 +100,11 @@
 }
 
 .recruitment-section {
-  align-items: flex-start;
   display: flex;
   flex-direction: row;
-  align-items: center;
-  gap: 10px;
-  width: 247px;
+  align-items: flex-start;
+  position: relative;
+  width: auto;
 }
 
 .recruitment-text {
@@ -120,49 +112,36 @@
   font-family: 'Pretendard', sans-serif;
   font-size: 64px;
   font-weight: 700;
-  line-height: 90px;
+  line-height: 1;
   text-align: left;
+  white-space: nowrap;
+  margin-top: 10px;
 }
 
-.icon-wrapper {
-  height: 21px;
-  width: 21px;
-  position: relative;
-}
-
-.icon-overlap {
-  height: 21px;
-  position: relative;
-}
-
-.rectangle {
-  background-color: rgb(71, 137, 238);
-  height: 21px;
-  left: 8px;
+.icon-container {
   position: absolute;
-  top: 0;
-  transform: rotate(30deg);
-  width: 6px;
+  top: -20px;
+  right: -20px;
 }
 
-.rectangle-2 {
-  background-color: rgb(71, 137, 238);
-  height: 21px;
-  left: 7px;
-  position: absolute;
-  top: 0;
+.recruitment-icon {
+  width: 18px;
+  height: 62px;
   transform: rotate(120deg);
-  width: 6px;
+  flex-shrink: 0;
+  filter: brightness(0) saturate(100%) invert(45%) sepia(77%) saturate(2476%) hue-rotate(209deg) brightness(96%) contrast(89%);
 }
+
 
 .apply-button {
   display: flex;
+  width: 220px;
+  padding: 14px 77px;
   justify-content: center;
   align-items: center;
+  gap: 10px;
   border-radius: 68px;
-  width: 220px;
-  background-color: rgba(2, 71, 138, 0.1);
-  padding: 14px 77px;
+  background: var(--ETC-Light-Blue, rgba(2, 71, 138, 0.10));
   cursor: pointer;
   transition: all 0.3s ease;
 }
@@ -173,11 +152,13 @@
 }
 
 .button-text {
-  color: white;
+  color: var(--White, #FFF);
+  font-family: Pretendard;
   font-size: 32px;
-  font-family: 'Pretendard', sans-serif;
+  font-style: normal;
   font-weight: 700;
-  line-height: 140%;
+  line-height: 140%; /* 44.8px */
+  white-space: nowrap;
 }
 
 .ellipse {
@@ -220,47 +201,57 @@
 }
 
 .common-footer {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  flex: none;
+  gap: 5px;
+  box-sizing: border-box;
+  padding: 10px 200px;
   height: 120px;
   left: 453px;
   position: absolute;
   top: 931px;
   width: 1440px;
-  background: linear-gradient(to right, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: transparent;
+  border-top: none;
 }
 
-.footer-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  max-width: 1200px;
-  padding: 0 40px;
-}
-
-.footer-logo {
-  color: white;
-  font-family: 'Poppins', sans-serif;
-  font-size: 36px;
-  font-weight: 700;
-}
-
-.footer-info {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-}
-
-.footer-info p {
-  color: rgba(255, 255, 255, 0.7);
-  font-family: 'Pretendard', sans-serif;
+.privacy-policy {
+  color: rgb(240, 246, 255);
+  text-overflow: ellipsis;
   font-size: 14px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 600;
+  line-height: 23px;
+  text-align: left;
+  align-self: stretch;
+  flex-shrink: 0;
+}
+
+.copyright {
+  color: rgb(240, 246, 255);
+  text-overflow: ellipsis;
+  font-size: 14px;
+  font-family: Pretendard, sans-serif;
   font-weight: 500;
-  margin: 0;
+  line-height: 23px;
+  text-align: left;
+  align-self: stretch;
+  flex-shrink: 0;
+}
+
+.email {
+  color: rgb(243, 248, 255);
+  text-overflow: ellipsis;
+  font-size: 14px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 400;
+  line-height: 120%;
+  text-align: left;
+  align-self: stretch;
+  flex-shrink: 0;
 }
 
 @media (max-width: 768px) {

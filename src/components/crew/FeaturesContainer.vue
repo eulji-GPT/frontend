@@ -2,7 +2,9 @@
   <div class="box">
     <div class="group">
       <div class="overlap">
-        <img class="img" alt="Group" src="@/components/chat/icon/mulmum.svg" />
+        <div class="bg-image-2"></div>
+        <div class="gradient-circle left-top"></div>
+        <div class="gradient-circle-2 right-bottom"></div>
         <div class="overlap-wrapper">
           <div class="overlap-group">
             <div class="div">
@@ -108,13 +110,47 @@
   overflow: visible;
 }
 
-.box .img {
-  height: 623px;
+.bg-image-2 {
+  width: 249.978px;
+  height: 249.978px;
   left: 50%;
   position: absolute;
   top: 0;
-  width: 692px;
-  transform: translateX(-50%);
+  transform: translateX(-50%) rotate(-12.015deg);
+  flex-shrink: 0;
+  aspect-ratio: 1/1;
+  background: url('@/components/crew/img/aa 2.png') transparent 50% / cover no-repeat;
+  z-index: 2;
+}
+
+.gradient-circle.left-top {
+  width: 262.8px;
+  height: 263.574px;
+  left: calc(50% - 100px);
+  position: absolute;
+  top: -50px;
+  transform: rotate(2.53deg);
+  flex-shrink: 0;
+  border-radius: 263.574px;
+  opacity: 0.3;
+  background: var(--dark-sub1, #4789EE);
+  filter: blur(75px);
+  z-index: 1;
+}
+
+.gradient-circle-2.right-bottom {
+  width: 196.971px;
+  height: 196.995px;
+  left: calc(50% + 100px);
+  position: absolute;
+  top: 50px;
+  transform: rotate(-3.464deg);
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--dark-sub2, #665CED);
+  opacity: 0.5;
+  filter: blur(100px);
+  z-index: 1;
 }
 
 .box .overlap-wrapper {
@@ -133,6 +169,7 @@
   margin: 0 auto;
 }
 
+
 .box .div {
   height: 522px;
   position: absolute;
@@ -140,6 +177,7 @@
   width: 100%;
   max-width: 1440px;
   overflow: visible;
+  z-index: 3;
 }
 
 .box .vector {

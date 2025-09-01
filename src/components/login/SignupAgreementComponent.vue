@@ -38,29 +38,13 @@
           
           <!-- 개별 동의 항목들 -->
           <div class="individual-agreements">
+            <!-- 서비스 이용약관 -->
             <div class="agreement-row">
               <div class="agreement-item">
                 <div class="required-tag-wrapper">
-                  <div class="checkbox-wrapper" @click="toggleAgreement('terms')">
+                  <div class="checkbox-wrapper" @click="toggleAgreement('serviceTerms')">
                     <img 
-                      :src="agreements.terms ? checkedIcon : uncheckedIcon" 
-                      alt="checkbox" 
-                      class="checkbox-icon"
-                    />
-                    <span class="required-tag">필수</span>
-                  </div>
-                  <span class="agreement-text">EULGPT 회원 이용약관</span>
-                </div>
-                <span class="view-link" @click="viewTerms('terms')">보기</span>
-              </div>
-            </div>
-            
-            <div class="agreement-row">
-              <div class="agreement-item">
-                <div class="required-tag-wrapper">
-                  <div class="checkbox-wrapper" @click="toggleAgreement('service')">
-                    <img 
-                      :src="agreements.service ? checkedIcon : uncheckedIcon" 
+                      :src="agreements.serviceTerms ? checkedIcon : uncheckedIcon" 
                       alt="checkbox" 
                       class="checkbox-icon"
                     />
@@ -68,7 +52,25 @@
                   </div>
                   <span class="agreement-text">EULGPT 서비스 이용약관</span>
                 </div>
-                <span class="view-link" @click="viewTerms('service')">보기</span>
+                <span class="view-link" @click="viewTerms('serviceTerms')">보기</span>
+              </div>
+            </div>
+            
+            <!-- 개인정보 처리 및 데이터 활용 동의 -->
+            <div class="agreement-row">
+              <div class="agreement-item">
+                <div class="required-tag-wrapper">
+                  <div class="checkbox-wrapper" @click="toggleAgreement('privacyConsent')">
+                    <img 
+                      :src="agreements.privacyConsent ? checkedIcon : uncheckedIcon" 
+                      alt="checkbox" 
+                      class="checkbox-icon"
+                    />
+                    <span class="required-tag">필수</span>
+                  </div>
+                  <span class="agreement-text">개인정보 처리 및 데이터 활용 동의</span>
+                </div>
+                <span class="view-link" @click="viewTerms('privacyConsent')">보기</span>
               </div>
             </div>
           </div>
@@ -82,12 +84,20 @@
         </div>
       </div>
     </div>
+
+    <!-- 약관 모달 -->
+    <TermsModal 
+      :isVisible="isModalVisible"
+      :termsType="currentTermsType"
+      @close="closeModal"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import HeaderSection from '../main/HeaderSection.vue';
+import TermsModal from './TermsModal.vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
@@ -98,31 +108,41 @@ const uncheckedIcon = '/src/assets/checkbox-unchecked.svg';
 
 // 개별 동의 상태
 const agreements = ref({
-  terms: false,
-  service: false
+  serviceTerms: false,
+  privacyConsent: false
 });
 
 // 전체 동의 상태 computed
 const allAgreed = computed(() => {
-  return agreements.value.terms && agreements.value.service;
+  return agreements.value.serviceTerms && agreements.value.privacyConsent;
 });
 
 // 개별 동의 토글
-const toggleAgreement = (type: 'terms' | 'service') => {
+const toggleAgreement = (type: 'serviceTerms' | 'privacyConsent') => {
   agreements.value[type] = !agreements.value[type];
 };
 
 // 전체 동의 토글
 const toggleAllAgreement = () => {
   const newValue = !allAgreed.value;
-  agreements.value.terms = newValue;
-  agreements.value.service = newValue;
+  agreements.value.serviceTerms = newValue;
+  agreements.value.privacyConsent = newValue;
 };
 
+// 모달 관련 상태
+const isModalVisible = ref(false);
+const currentTermsType = ref<'serviceTerms' | 'privacyConsent' | ''>('');
+
 // 약관 보기
-const viewTerms = (type: 'terms' | 'service') => {
-  console.log(`${type} 약관 보기`);
-  // 약관 모달 또는 새 창 열기 로직
+const viewTerms = (type: 'serviceTerms' | 'privacyConsent') => {
+  currentTermsType.value = type;
+  isModalVisible.value = true;
+};
+
+// 모달 닫기
+const closeModal = () => {
+  isModalVisible.value = false;
+  currentTermsType.value = '';
 };
 
 // 모두 동의하기 버튼 클릭
@@ -132,7 +152,11 @@ const handleAgreeAll = () => {
     return;
   }
   
-  console.log('약관 동의 완료');
+  console.log('약관 동의 완료:', {
+    serviceTerms: agreements.value.serviceTerms,
+    privacyConsent: agreements.value.privacyConsent
+  });
+  
   // 비밀번호 설정 페이지로 이동
   router.push('/signup-password');
 };
@@ -449,12 +473,72 @@ const handleAgreeAll = () => {
   }
 }
 
+/* 선택 항목 스타일 */
+.optional-divider {
+  margin: 20px 0;
+  border-color: rgb(229, 231, 235);
+}
+
+.optional-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  align-self: stretch;
+  margin-bottom: 15px;
+  padding: 15px;
+  background-color: rgb(249, 250, 251);
+  border-radius: 8px;
+  border: 1px solid rgb(229, 231, 235);
+}
+
+.optional-title {
+  color: rgb(107, 114, 128);
+  font-size: 14px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 600;
+  text-align: left;
+}
+
+.optional-tag {
+  color: rgb(107, 114, 128);
+  text-overflow: ellipsis;
+  font-size: 14px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 600;
+  line-height: 25px;
+  text-align: left;
+}
+
+.optional-row {
+  background-color: rgb(249, 250, 251);
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.optional-text {
+  color: rgb(107, 114, 128);
+  font-size: 15px;
+}
+
+/* 기존 필수 태그 스타일 수정 */
+.required-tag {
+  color: rgb(220, 53, 69);
+  text-overflow: ellipsis;
+  font-size: 14px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 600;
+  line-height: 25px;
+  text-align: left;
+}
+
 @media (max-width: 480px) {
   .frame-main-content {
     width: 95%;
     left: 2.5%;
     top: calc(50vh - 120px);
     gap: 40px;
+    height: auto;
   }
   
   .agreement-title {
@@ -478,6 +562,20 @@ const handleAgreeAll = () => {
     bottom: 10px;
     left: 50%;
     transform: translateX(-50%);
+  }
+  
+  .optional-header {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  
+  .optional-title {
+    font-size: 13px;
+  }
+  
+  .agreement-text, .optional-text {
+    font-size: 14px;
   }
 }
 </style>

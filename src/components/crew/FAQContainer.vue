@@ -21,7 +21,7 @@
               <span class="question-text">지원할 때 포트폴리오나 경험이 필요한가요?</span>
             </div>
             <img 
-              src="@/components/chat/icon/mulmum.svg" 
+              src="@/assets/FaqSection/icn_under_^.svg" 
               alt="icon" 
               class="expand-icon" 
               :class="{ rotated: expandedItems.includes(0) }"
@@ -42,7 +42,7 @@
               <span class="question-text">시간 투자는 얼마나 해야 하나요?</span>
             </div>
             <img 
-              src="@/components/chat/icon/mulmum.svg" 
+              src="@/assets/FaqSection/icn_under_^.svg" 
               alt="icon" 
               class="expand-icon" 
               :class="{ rotated: expandedItems.includes(1) }"
@@ -63,7 +63,7 @@
               <span class="question-text">협업 툴을 처음 사용하는데 괜찮을까요?</span>
             </div>
             <img 
-              src="@/components/chat/icon/mulmum.svg" 
+              src="@/assets/FaqSection/icn_under_^.svg" 
               alt="icon" 
               class="expand-icon" 
               :class="{ rotated: expandedItems.includes(2) }"
@@ -84,7 +84,7 @@
               <span class="question-text">Support 팀은 구체적으로 어떤 일을 하나요?</span>
             </div>
             <img 
-              src="@/components/chat/icon/mulmum.svg" 
+              src="@/assets/FaqSection/icn_under_^.svg" 
               alt="icon" 
               class="expand-icon" 
               :class="{ rotated: expandedItems.includes(3) }"
@@ -172,6 +172,7 @@ const toggleItem = (index: number) => {
   gap: 60px;
   width: 100%;
   box-sizing: border-box;
+  background: transparent;
 }
 
 .faq-section .section-title {
@@ -197,19 +198,19 @@ const toggleItem = (index: number) => {
   box-sizing: border-box;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.03);
+  background: transparent;
   transition: all 0.3s ease;
   overflow: hidden;
 }
 
 .faq-card:hover {
   border-color: rgba(71, 137, 238, 0.3);
-  background: rgba(71, 137, 238, 0.05);
+  background: transparent;
 }
 
 .faq-card.expanded {
   border-color: rgba(71, 137, 238, 0.5);
-  background: rgba(71, 137, 238, 0.08);
+  background: transparent;
 }
 
 .question-row {
@@ -225,7 +226,7 @@ const toggleItem = (index: number) => {
 }
 
 .question-row:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: transparent;
 }
 
 .question-content {
@@ -279,7 +280,7 @@ const toggleItem = (index: number) => {
   box-sizing: border-box;
   padding: 0 20px 20px 20px;
   animation: slideDown 0.3s ease-out;
-  background: rgba(255, 255, 255, 0.02);
+  background: transparent;
 }
 
 @keyframes slideDown {
