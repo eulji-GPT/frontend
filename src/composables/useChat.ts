@@ -28,7 +28,7 @@ export interface ChatSession {
   sessionId?: string; // 백엔드 세션 ID
 }
 
-export type ChatMode = 'general' | 'university' | 'study' | 'career' | 'cot';
+export type ChatMode = 'general' | 'university' | 'study' | 'career' | 'cot' | 'rag';
 
 export function useChat() {
   const messages = ref<ChatMessage[]>([]);
@@ -38,6 +38,14 @@ export function useChat() {
   const isStreaming = ref(false);
   const chatMode = ref<ChatMode>('general');
   let currentController: AbortController | null = null;
+  
+  // RAG 시스템 상태
+  const ragStatus = ref({
+    initialized: false,
+    isInitializing: false,
+    error: null as string | null,
+    systemInfo: null as any
+  });
 
   // 메시지 업데이트를 위한 헬퍼 함수 (Vue 반응성 보장)
   const updateMessage = (chatId: string, messageIndex: number, updates: Partial<ChatMessage>) => {
@@ -66,7 +74,8 @@ export function useChat() {
       university: '/university',
       study: '/study',
       career: '/career',
-      cot: '/cot'
+      cot: '/cot',
+      rag: '/rag/query'
     };
     return `${FASTAPI_BASE_URL}${endpoints[mode]}`;
   };
@@ -760,6 +769,102 @@ export function useChat() {
     }
   }
 
+  async function callFastAPIRagChat(message: string, messageIndex: number) {
+    const apiUrl = getAPIUrl(chatMode.value);
+    console.log("🚀 RAG FastAPI 호출 시작:", apiUrl);
+    console.log("📤 전송 질문:", message);
+    
+    // 새로운 AbortController 생성
+    currentController = new AbortController();
+    
+    const currentChat = chatHistory.value.find(c => c.id === currentChatId.value);
+    if (!currentChat) {
+      console.error("❌ 현재 채팅을 찾을 수 없습니다.");
+      return;
+    }
+
+    try {
+      console.log("🔄 RAG fetch 요청 시작...");
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: currentController.signal,
+        body: JSON.stringify({
+          question: message,
+          prompt_type: "auto",
+          top_k: 8,
+          show_debug: true
+        })
+      });
+
+      console.log("📥 RAG 응답 상태:", response.status, response.statusText);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("❌ RAG HTTP 오류 응답:", errorText);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log("✅ RAG FastAPI 응답 데이터:", data);
+      
+      if (data.answer) {
+        if (currentChat.messages[messageIndex]) {
+          currentChat.messages[messageIndex].text = data.answer;
+          currentChat.messages[messageIndex].isLoading = false;
+          currentChat.messages[messageIndex].isStreaming = false;
+          currentChat.messages[messageIndex].currentStep = undefined;
+          currentChat.messages[messageIndex].hasError = false;
+          
+          // RAG 디버그 정보 표시 (옵셔널)
+          if (data.debug_info && data.debug_info.length > 0) {
+            console.log("🔍 RAG 디버그 정보:", data.debug_info);
+          }
+          
+          // RAG 메타데이터 표시 (처리시간, 검색된 문서 수 등)
+          console.log(`📊 RAG 성능: ${data.processing_time?.toFixed(2)}초, 검색문서: ${data.search_results_count}개, 프롬프트: ${data.prompt_type_used}`);
+        }
+      } else {
+        throw new Error('RAG 응답에서 답변을 찾을 수 없습니다.');
+      }
+      
+      isStreaming.value = false;
+    } catch (error: any) {
+      console.error("❌ RAG FastAPI 호출 오류:", error);
+      
+      let errorMessage = '을지대 정보검색에 문제가 발생했습니다.';
+      
+      if (error.name === 'AbortError') {
+        console.log("✋ 을지대 정보검색이 중단되었습니다.");
+        return;
+      } else {
+        if (error.message.includes('503')) {
+          errorMessage = '을지대 정보검색 시스템이 초기화되지 않았습니다. 위의 초기화 버튼을 눌러주세요.';
+        } else if (error.message.includes('404')) {
+          errorMessage = '관련 정보를 찾을 수 없습니다. 다른 질문을 해보세요.';
+        } else if (error.message.includes('500')) {
+          errorMessage = '을지대 정보검색 서비스에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.';
+        } else {
+          errorMessage = '을지대 정보검색 연결에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.';
+        }
+      }
+      
+      if (currentChat.messages[messageIndex]) {
+        currentChat.messages[messageIndex].text = errorMessage;
+        currentChat.messages[messageIndex].isLoading = false;
+        currentChat.messages[messageIndex].isStreaming = false;
+        currentChat.messages[messageIndex].currentStep = undefined;
+        currentChat.messages[messageIndex].hasError = true;
+      }
+      
+      isStreaming.value = false;
+    } finally {
+      currentController = null;
+    }
+  }
+
   async function callFastAPIChatWithImages(message: string, images: File[], messageIndex: number) {
     console.log("🚀 이미지 포함 FastAPI 호출 시작:", message, "이미지 수:", images.length);
     
@@ -910,7 +1015,8 @@ export function useChat() {
       university: "대학생 전용 정보 검색 중...",
       study: "학습 도우미 분석 중...",
       career: "진로 상담 정보 수집 중...",
-      cot: "단계별 추론 시작..."
+      cot: "단계별 추론 시작...",
+      rag: "을지대학교 정보 검색 중..."
     };
 
     currentChat.messages.push({
@@ -928,6 +1034,8 @@ export function useChat() {
         await callFastAPIChatWithImages(userMessageText, images, loadingMessageIndex);
       } else if (chatMode.value === 'cot') {
         await callFastAPICotChat(userMessageText, loadingMessageIndex);
+      } else if (chatMode.value === 'rag') {
+        await callFastAPIRagChat(userMessageText, loadingMessageIndex);
       } else {
         await callFastAPIChat(userMessageText, loadingMessageIndex);
       }
@@ -973,7 +1081,8 @@ export function useChat() {
       university: { name: '대학생 챗봇', description: '대학생 전용 어시스턴트' },
       study: { name: '학습 도우미', description: '학습을 도와주는 AI 튜터' },
       career: { name: '진로 상담', description: '진로 상담 전문 AI' },
-      cot: { name: '단계별 추론', description: 'Chain of Thought 방식' }
+      cot: { name: '단계별 추론', description: 'Chain of Thought 방식' },
+      rag: { name: '을지대 정보검색', description: '을지대학교 공식 자료 기반 정보 검색' }
     };
     return modeInfo[chatMode.value];
   }
@@ -995,6 +1104,62 @@ export function useChat() {
     }
   }
 
+  // RAG 시스템 상태 확인
+  async function checkRagStatus() {
+    try {
+      const response = await fetch(`${FASTAPI_BASE_URL}/rag/status`);
+      if (response.ok) {
+        const data = await response.json();
+        ragStatus.value.initialized = data.initialized;
+        ragStatus.value.systemInfo = data;
+        ragStatus.value.error = null;
+        console.log("🔍 RAG 상태 확인:", data);
+        return data;
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+    } catch (error: any) {
+      console.error("❌ RAG 상태 확인 실패:", error);
+      ragStatus.value.error = error.message;
+      ragStatus.value.initialized = false;
+      return null;
+    }
+  }
+
+  // RAG 시스템 초기화
+  async function initializeRag() {
+    ragStatus.value.isInitializing = true;
+    ragStatus.value.error = null;
+    
+    try {
+      const response = await fetch(`${FASTAPI_BASE_URL}/rag/initialize`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log("✅ RAG 초기화 성공:", data);
+        ragStatus.value.initialized = true;
+        ragStatus.value.error = null;
+        await checkRagStatus(); // 상태 업데이트
+        return true;
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+      }
+    } catch (error: any) {
+      console.error("❌ RAG 초기화 실패:", error);
+      ragStatus.value.error = error.message;
+      ragStatus.value.initialized = false;
+      return false;
+    } finally {
+      ragStatus.value.isInitializing = false;
+    }
+  }
+
   return {
     messages,
     chatHistory,
@@ -1012,5 +1177,9 @@ export function useChat() {
     getChatModeInfo,
     stopResponse,
     updateChatTitle,
+    // RAG 시스템 관련
+    ragStatus,
+    checkRagStatus,
+    initializeRag,
   };
 }

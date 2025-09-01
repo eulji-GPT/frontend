@@ -81,6 +81,9 @@
               @modeChange="handleModeChange"
             />
           </div>
+          <div class="rag-initializer-container">
+            <RagInitializer />
+          </div>
           <div class="chat-messages-container">
             <ChatMessageArea 
               :messages="messages"
@@ -129,6 +132,7 @@ import ChatHistory from './ChatHistory.vue';
 import ChatMessageArea from './ChatMessageArea.vue';
 import ChatInput from './ChatInput.vue';
 import ChatModeSelector from './ChatModeSelector.vue';
+import RagInitializer from './RagInitializer.vue';
 import NotificationDropdown from '../common/NotificationDropdown.vue';
 import InfoPanel from '../common/InfoPanel.vue';
 import FortuneMain from '../fortune/FortuneMain.vue';

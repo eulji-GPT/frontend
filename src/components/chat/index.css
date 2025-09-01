@@ -46,6 +46,13 @@
   overflow-x: hidden;
 }
 
+.rag-initializer-container {
+  width: 100%;
+  max-width: 800px;
+  padding: 0 16px;
+  margin: 0 auto;
+}
+
 .chat-messages-container {
   position: relative;
   display: flex;

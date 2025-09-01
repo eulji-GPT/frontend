@@ -53,7 +53,7 @@ const routes = [
   {
     path: '/development-status',
     component: () => import('../views/DevelopmentStatusView.vue')
-  }
+  },
 ]
 
 const router = createRouter({

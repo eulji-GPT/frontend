@@ -71,6 +71,12 @@ const availableModes = [
     name: '단계별 추론',
     description: 'Chain of Thought 방식으로 단계별 사고 과정을 보여줍니다 (베타)',
     icon: '🧠'
+  },
+  {
+    key: 'rag' as ChatMode,
+    name: '을지대 정보검색',
+    description: '을지대학교 공식 자료를 검색하여 정확한 정보 제공',
+    icon: '🔍'
   }
 ]
 
