@@ -21,7 +21,7 @@
               <span class="question-text">지원할 때 포트폴리오나 경험이 필요한가요?</span>
             </div>
             <img 
-              src="/home/ubuntu_euphoria/eulGPT/frontend/src/components/chat/icon/mulmum.svg" 
+              src="@/components/chat/icon/mulmum.svg" 
               alt="icon" 
               class="expand-icon" 
               :class="{ rotated: expandedItems.includes(0) }"
@@ -42,7 +42,7 @@
               <span class="question-text">시간 투자는 얼마나 해야 하나요?</span>
             </div>
             <img 
-              src="/home/ubuntu_euphoria/eulGPT/frontend/src/components/chat/icon/mulmum.svg" 
+              src="@/components/chat/icon/mulmum.svg" 
               alt="icon" 
               class="expand-icon" 
               :class="{ rotated: expandedItems.includes(1) }"
@@ -63,7 +63,7 @@
               <span class="question-text">협업 툴을 처음 사용하는데 괜찮을까요?</span>
             </div>
             <img 
-              src="/home/ubuntu_euphoria/eulGPT/frontend/src/components/chat/icon/mulmum.svg" 
+              src="@/components/chat/icon/mulmum.svg" 
               alt="icon" 
               class="expand-icon" 
               :class="{ rotated: expandedItems.includes(2) }"
@@ -84,7 +84,7 @@
               <span class="question-text">Support 팀은 구체적으로 어떤 일을 하나요?</span>
             </div>
             <img 
-              src="/home/ubuntu_euphoria/eulGPT/frontend/src/components/chat/icon/mulmum.svg" 
+              src="@/components/chat/icon/mulmum.svg" 
               alt="icon" 
               class="expand-icon" 
               :class="{ rotated: expandedItems.includes(3) }"

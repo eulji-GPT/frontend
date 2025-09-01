@@ -2,7 +2,7 @@
   <div class="footer-desktop">
     <div class="overlap-wrapper">
       <div class="overlap">
-        <img class="group" alt="Group" src="/home/ubuntu_euphoria/eulGPT/frontend/src/components/chat/icon/mulmum.svg" />
+        <img class="group" alt="Group" src="@/components/chat/icon/mulmum.svg" />
         <div class="hero-frame">
           <div class="hero-content">
             <div class="eulgpt-logo">EULGPT</div>

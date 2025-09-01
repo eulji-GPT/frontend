@@ -2,7 +2,7 @@
   <div class="box">
     <div class="group">
       <div class="overlap">
-        <img class="img" alt="Group" src="/home/ubuntu_euphoria/eulGPT/frontend/src/components/chat/icon/mulmum.svg" />
+        <img class="img" alt="Group" src="@/components/chat/icon/mulmum.svg" />
         <div class="overlap-wrapper">
           <div class="overlap-group">
             <div class="div">
