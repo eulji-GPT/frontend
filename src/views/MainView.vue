@@ -23,22 +23,26 @@ import CommonFooter from '../components/common/CommonFooter.vue'
 import { nextTick } from 'vue'
 
 const HEADER_HEIGHT = 100
-const smoothScrollTo = (target: number, duration: number = 1000) => {
+const smoothScrollTo = (target: number, duration: number = 800) => {
   const start = window.pageYOffset
   const distance = target - start
   let startTime: number | null = null
+  
+  const easeOutQuart = (t: number): number => 1 - (--t) * t * t * t
+  
   const animation = (currentTime: number) => {
     if (startTime === null) startTime = currentTime
     const timeElapsed = currentTime - startTime
     const progress = Math.min(timeElapsed / duration, 1)
-    const ease = progress < 0.5 
-      ? 4 * progress * progress * progress 
-      : (progress - 1) * (2 * progress - 2) * (2 * progress - 2) + 1
-    window.scrollTo(0, start + distance * ease)
+    const easedProgress = easeOutQuart(progress)
+    
+    window.scrollTo(0, start + distance * easedProgress)
+    
     if (progress < 1) {
       requestAnimationFrame(animation)
     }
   }
+  
   requestAnimationFrame(animation)
 }
 const scrollToSection = async (id: string) => {
@@ -92,10 +96,7 @@ const scrollToSection = async (id: string) => {
   }
 }
 
-/* 스크롤 스무스 처리 */
-html {
-  scroll-behavior: smooth;
-}
+/* 스크롤 스무스 처리 제거 (JavaScript로 처리) */
 
 /* 모바일에서 가로 스크롤 방지 */
 body {
