@@ -53,7 +53,7 @@ const footerRef = ref<HTMLElement>()
 const scrollProgress = ref(0)
 const showFloatingActions = ref(false)
 
-const getParticleStyle = (index: number) => ({
+const getParticleStyle = (_index: number) => ({
   left: `${Math.random() * 100}%`,
   top: `${Math.random() * 100}%`,
   animationDelay: `${Math.random() * 5}s`,
@@ -96,7 +96,7 @@ const updateScrollEffects = () => {
   ticking = false
 }
 
-const animateOnScroll = (element: HTMLElement | undefined, scrolled: number, speed: number) => {
+const animateOnScroll = (element: HTMLElement | undefined, scrolled: number, _speed: number) => {
   if (!element) return
   
   const rect = element.getBoundingClientRect()
