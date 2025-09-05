@@ -43,7 +43,7 @@
           />
         </div>
       </div>
-      <div class="side-footer">
+      <div class="side-footer" @click="toggleMyPageModal">
         <div class="ellipse"></div>
         <div class="frame-12">
           <div class="notification-container" @click="toggleNotificationDropdown">
@@ -122,6 +122,12 @@
         />
       </div>
     </div>
+    
+    <!-- My Page Modal -->
+    <MyPageModal 
+      :isVisible="showMyPageModal" 
+      @close="toggleMyPageModal"
+    />
   </div>
 </template>
 
@@ -135,6 +141,7 @@ import ChatModeSelector from './ChatModeSelector.vue';
 import RagInitializer from './RagInitializer.vue';
 import NotificationDropdown from '../common/NotificationDropdown.vue';
 import InfoPanel from '../common/InfoPanel.vue';
+import MyPageModal from '../common/MyPageModal.vue';
 import FortuneMain from '../fortune/FortuneMain.vue';
 import FortuneChat from '../fortune/FortuneChat.vue';
 import FortuneResult from '../fortune/FortuneResult.vue';
@@ -249,6 +256,7 @@ const minSidebarWidth = 200;
 const maxSidebarWidth = 500;
 const showNotificationDropdown = ref(false);
 const showInfoPanel = ref(false);
+const showMyPageModal = ref(false);
 
 const showMobileOverlay = computed(() => isMobile.value && sidebarVisible.value);
 
@@ -281,6 +289,10 @@ const toggleInfoPanel = (event: Event) => {
   showInfoPanel.value = !showInfoPanel.value;
   showNotificationDropdown.value = false; // 다른 패널 닫기
   console.log('Info panel toggled:', showInfoPanel.value);
+};
+
+const toggleMyPageModal = () => {
+  showMyPageModal.value = !showMyPageModal.value;
 };
 
 const startResize = (e: MouseEvent) => {
@@ -664,6 +676,12 @@ const retryFortune = () => {
   background: #ffffff;
   border-top: 1px solid #e5e7eb;
   z-index: 42;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.side-footer:hover {
+  background: #f9fafb;
 }
 .ellipse {
   flex-shrink: 0;
@@ -798,9 +816,10 @@ const retryFortune = () => {
 /* Mode selector container */
 .mode-selector-container {
   position: absolute;
-  top: 16px;
-  left: 20px;
+  top: 0;
+  left: 0;
   z-index: 100;
+  margin: 16px 0 0 20px;
 }
 
 .chat-main-area {
@@ -933,8 +952,9 @@ const retryFortune = () => {
   }
   
   .mode-selector-container {
-    top: 12px;
-    left: 16px;
+    top: 0;
+    left: 0;
+    margin: 12px 0 0 16px;
   }
   
   .empty-classroom-check,

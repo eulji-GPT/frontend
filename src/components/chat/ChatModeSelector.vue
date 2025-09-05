@@ -18,9 +18,11 @@
           :class="{ active: currentMode === mode.key, 'cot-mode': mode.key === 'cot' }"
           @click="selectMode(mode.key)"
         >
-          <div class="mode-name">{{ mode.name }}</div>
+          <div class="mode-header">
+            <div class="mode-name">{{ mode.name }}</div>
+            <div v-if="mode.key === 'cot'" class="cot-badge">Beta</div>
+          </div>
           <div class="mode-description">{{ mode.description }}</div>
-          <div v-if="mode.key === 'cot'" class="cot-badge">5단계</div>
         </div>
       </div>
     </div>
@@ -45,31 +47,31 @@ const availableModes = [
   {
     key: 'general' as ChatMode,
     name: '일반 대화',
-    description: '범용 AI 대화',
+    description: 'AI와 자유로운 대화가 가능해요',
     icon: '💬'
   },
   {
     key: 'university' as ChatMode,
     name: '대학생 챗봇',
-    description: '대학생 전용 어시스턴트',
+    description: '캠퍼스 생활에 특화된 도움을 드려요',
     icon: '🎓'
   },
   {
     key: 'study' as ChatMode,
     name: '학습 도우미',
-    description: '학습을 도와주는 AI 튜터',
+    description: '공부 과정에서 설명과 보조를 제공해요',
     icon: '📚'
   },
   {
     key: 'career' as ChatMode,
     name: '진로 상담',
-    description: '진로 상담 전문 AI',
+    description: '진로 관련 고민을 해결해 드릴게요',
     icon: '💼'
   },
   {
     key: 'cot' as ChatMode,
     name: '단계별 추론',
-    description: 'Chain of Thought 방식으로 단계별 사고 과정을 보여줍니다 (베타)',
+    description: 'Chain of Thought 방식으로\n심층 분석을 제공 해요',
     icon: '🧠'
   },
   {
@@ -330,113 +332,39 @@ document.addEventListener('click', (e) => {
   background-color: #f3f4f6;
 }
 
-.mode-item.active {
+.mode-item:first-child.active {
+  background-color: rgb(243, 248, 255);
+}
+
+.mode-item:nth-child(3).active {
   background-color: rgb(248, 251, 255);
 }
 
+.mode-item.active {
+  background-color: transparent;
+}
+
 .mode-item.cot-mode {
-  border-left: 3px solid #10b981;
   position: relative;
   overflow: hidden;
 }
 
 .mode-item.cot-mode.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
-  background-size: 400% 400%;
-  border: 2px solid transparent;
-  background-clip: padding-box;
-  animation: premiumGradient 3s ease infinite, premiumPulse 2s ease-in-out infinite alternate;
-  position: relative;
-  color: white;
-  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4), 
-              0 0 20px rgba(118, 75, 162, 0.3),
-              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background-color: rgb(243, 248, 255);
+  color: black;
 }
 
-.mode-item.cot-mode.active::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
-  background-size: 400% 400%;
-  animation: premiumGradient 3s ease infinite;
-  z-index: -1;
-  border-radius: 8px;
-}
-
-.mode-item.cot-mode.active::after {
-  content: '✨';
-  position: absolute;
-  top: 50%;
-  right: 12px;
-  transform: translateY(-50%);
-  font-size: 16px;
-  animation: sparkle 1.5s ease-in-out infinite;
-  z-index: 2;
-}
 
 .mode-item.cot-mode.active .mode-name {
-  color: white;
-  font-weight: 700;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  position: relative;
-  z-index: 2;
+  color: black;
+  font-weight: 600;
 }
 
 .mode-item.cot-mode.active .mode-description {
-  color: rgba(255, 255, 255, 0.9);
+  color: rgb(75, 85, 99);
   font-weight: 500;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  position: relative;
-  z-index: 2;
 }
 
-.mode-item.cot-mode.active .mode-icon {
-  position: relative;
-  z-index: 2;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
-}
-
-@keyframes premiumGradient {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-@keyframes premiumPulse {
-  0% {
-    transform: scale(1);
-    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4), 
-                0 0 20px rgba(118, 75, 162, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  }
-  100% {
-    transform: scale(1.02);
-    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.6), 
-                0 0 30px rgba(118, 75, 162, 0.5),
-                inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  }
-}
-
-@keyframes sparkle {
-  0%, 100% {
-    opacity: 0.6;
-    transform: translateY(-50%) scale(0.8);
-  }
-  50% {
-    opacity: 1;
-    transform: translateY(-50%) scale(1.2);
-  }
-}
 
 
 .mode-name {
@@ -447,6 +375,7 @@ document.addEventListener('click', (e) => {
   font-weight: 600;
   line-height: 23px;
   text-align: left;
+  flex: 1;
 }
 
 .mode-description {
@@ -455,48 +384,38 @@ document.addEventListener('click', (e) => {
   font-size: 10px;
   font-family: Pretendard, sans-serif;
   font-weight: 500;
+  line-height: 14px;
   text-align: left;
+  white-space: pre-line;
+}
+
+.mode-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  gap: 42px;
 }
 
 .cot-badge {
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
+  background-color: rgb(243, 248, 255);
+  color: black;
   font-size: 10px;
-  font-weight: 600;
-  padding: 4px 8px;
-  border-radius: 12px;
+  font-weight: 500;
+  padding: 3px 8px 4px;
+  border-radius: 10px;
   font-family: Pretendard, sans-serif;
-  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.3);
-  position: absolute;
-  top: 10px;
-  right: 16px;
-  z-index: 2;
+  opacity: 0.8;
+  flex-shrink: 0;
 }
 
 .mode-item.cot-mode.active .cot-badge {
-  background: linear-gradient(135deg, #ffd700, #ffed4e, #fbbf24);
-  background-size: 200% 200%;
-  animation: goldShimmer 2s ease-in-out infinite;
-  color: #92400e;
-  font-weight: 700;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
-  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4),
-              0 0 12px rgba(255, 237, 78, 0.3),
-              inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  border: 1px solid rgba(255, 215, 0, 0.6);
+  background-color: rgb(243, 248, 255);
+  color: black;
+  font-weight: 500;
+  opacity: 0.8;
 }
 
-@keyframes goldShimmer {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
 
 /* 반응형 디자인 */
 @media (max-width: 768px) {
