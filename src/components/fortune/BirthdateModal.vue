@@ -131,16 +131,28 @@ const toggleDropdown = (type: 'year' | 'month' | 'day') => {
 const selectYear = (year: number) => {
   selectedYear.value = year;
   isYearOpen.value = false;
+  checkAllSelected();
 };
 
 const selectMonth = (month: number) => {
   selectedMonth.value = month;
   isMonthOpen.value = false;
+  checkAllSelected();
 };
 
 const selectDay = (day: number) => {
   selectedDay.value = day;
   isDayOpen.value = false;
+  checkAllSelected();
+};
+
+const checkAllSelected = () => {
+  if (selectedYear.value && selectedMonth.value && selectedDay.value) {
+    // 모든 값이 선택되면 모든 드롭다운을 닫음
+    isYearOpen.value = false;
+    isMonthOpen.value = false;
+    isDayOpen.value = false;
+  }
 };
 
 const closeModal = () => {
@@ -198,9 +210,9 @@ const submitBirthdate = () => {
   background: #FFF;
   box-shadow: 0 3px 10px 0 rgba(0, 0, 0, 0.25);
   width: 400px;
-  min-height: 450px;
   height: auto;
   box-sizing: border-box;
+  transition: height 0.3s ease;
 }
 
 .content-section {
@@ -411,7 +423,6 @@ const submitBirthdate = () => {
   .modal-content {
     width: 100%;
     height: auto;
-    min-height: 388px;
   }
 
   .dropdowns-section {

@@ -31,14 +31,28 @@
           <!-- 마이페이지 / 내정보 -->
           <div v-if="activeTab === 'mypage'" class="content-section">
             <div class="profile-section">
-              <div class="profile-image">
-                <div class="avatar-placeholder">
+              <div class="profile-image" @click="triggerImageUpload">
+                <div class="avatar-placeholder" v-if="!profileImage">
                   <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
                     <circle cx="20" cy="15" r="6" fill="#9CA3AF"/>
                     <path d="M8 35c0-6.627 5.373-12 12-12s12 5.373 12 12" fill="#9CA3AF"/>
                   </svg>
                 </div>
+                <img v-else :src="profileImage" alt="프로필 이미지" class="profile-uploaded-image" />
+                <div class="upload-overlay">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+                    <circle cx="12" cy="13" r="3"/>
+                  </svg>
+                </div>
               </div>
+              <input 
+                ref="fileInput"
+                type="file" 
+                accept="image/*" 
+                @change="handleImageUpload" 
+                style="display: none;"
+              />
             </div>
             
             <div class="user-info-section">
@@ -49,9 +63,6 @@
                       <div class="label">이름</div>
                       <div class="value">최가을</div>
                     </div>
-                    <button class="edit-button">
-                      <span class="button-text">수정</span>
-                    </button>
                   </div>
                   <div class="reservation-section">
                     <div class="section-title">예약</div>
@@ -207,11 +218,44 @@ const emit = defineEmits<{
 
 const activeTab = ref<'mypage' | 'settings'>('mypage')
 const selectedTheme = ref<'light' | 'dark' | 'system'>('system')
+const profileImage = ref<string | null>(null)
+const fileInput = ref<HTMLInputElement | null>(null)
 
 const setTheme = (theme: 'light' | 'dark' | 'system') => {
   selectedTheme.value = theme
   console.log('테마 변경:', theme)
   // TODO: 실제 테마 변경 로직 구현
+}
+
+const triggerImageUpload = () => {
+  fileInput.value?.click()
+}
+
+const handleImageUpload = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  
+  if (file) {
+    // 파일 크기 제한 (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('파일 크기는 5MB 이하여야 합니다.')
+      return
+    }
+    
+    // 이미지 파일 타입 확인
+    if (!file.type.startsWith('image/')) {
+      alert('이미지 파일만 업로드 가능합니다.')
+      return
+    }
+    
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      profileImage.value = e.target?.result as string
+      console.log('프로필 이미지 업로드 완료')
+      // TODO: 서버에 이미지 업로드 로직 구현
+    }
+    reader.readAsDataURL(file)
+  }
 }
 
 const handleOverlayClick = () => {
@@ -331,6 +375,17 @@ const handleOverlayClick = () => {
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.profile-image:hover {
+  transform: scale(1.05);
+}
+
+.profile-image:hover .upload-overlay {
+  opacity: 1;
 }
 
 .avatar-placeholder {
@@ -346,6 +401,28 @@ const handleOverlayClick = () => {
 .avatar-placeholder svg {
   width: 40px;
   height: 40px;
+}
+
+.profile-uploaded-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.upload-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
 }
 
 .content-section {
@@ -390,7 +467,7 @@ const handleOverlayClick = () => {
 
 .name-section {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   flex-direction: row;
   align-items: center;
   align-self: stretch;
@@ -464,14 +541,6 @@ const handleOverlayClick = () => {
   text-align: center;
 }
 
-.divider {
-  width: 431px;
-  height: 0px;
-  border-top: solid 1px rgb(243, 244, 246);
-  position: absolute;
-  left: 0px;
-  top: 63px;
-}
 
 .reservation-section {
   display: flex;

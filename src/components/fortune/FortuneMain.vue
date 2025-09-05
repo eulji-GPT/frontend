@@ -1,14 +1,14 @@
 <template>
   <div class="fortune-main-container">
     <div class="header-section">
-      <h1 class="main-title">오늘의 사주 ∙ 운세</h1>
+      <h1 class="main-title">{{ headerTitle }}</h1>
       <div class="divider-section">
         <div class="divider-line"></div>
-        <p class="subtitle">행운의 을랑이와 함께 오늘의 운세를 점쳐보세요.</p>
+        <p class="subtitle">{{ headerSubtitle }}</p>
       </div>
     </div>
 
-    <div class="character-section">
+    <div v-if="currentStep !== 'result'" class="character-section">
       <div class="blur-effects">
         <div class="blur-circle-1"></div>
         <div class="blur-circle-2"></div>
@@ -24,6 +24,29 @@
     <div class="fortune-content">
       <!-- 단계 1: 시작 화면 -->
       <div v-if="currentStep === 'start'" class="start-section">
+        <div class="fortune-types">
+          <img 
+            src="/src/assets/fortune/love-fortune.svg" 
+            alt="애정운" 
+            class="fortune-card-image"
+            @error="handleIconError"
+          />
+          
+          <img 
+            src="/src/assets/fortune/success-fortune.svg" 
+            alt="성공운" 
+            class="fortune-card-image"
+            @error="handleIconError"
+          />
+          
+          <img 
+            src="/src/assets/fortune/money-fortune.svg" 
+            alt="재물운" 
+            class="fortune-card-image"
+            @error="handleIconError"
+          />
+        </div>
+        
         <button class="start-button" @click="showBirthdateModal">
           <div class="button-content">
             <span class="button-text">시작하기</span>
@@ -33,34 +56,57 @@
 
       <!-- 단계 2: 카드 선택 화면 -->
       <div v-else-if="currentStep === 'card-selection'" class="card-selection-section">
-        <h3 class="section-title">어떤 운세를 보고 싶으신가요?</h3>
-        <div class="fortune-types">
-          <img 
-            src="/src/assets/icons/love-fortune.svg" 
-            alt="애정운" 
-            class="fortune-card-image"
-            :class="{ 'selected': selectedFortune === 'love' }"
-            @click="selectFortune('love')"
-            @error="handleIconError"
-          />
+        <div class="fortune-types mystical-cards">
+          <div class="fortune-card-container" :class="{ 'selected': selectedFortune === 'love' }">
+            <img 
+              src="/src/assets/fortune/love-fortune.svg" 
+              alt="애정운" 
+              class="fortune-card-image mystical-card"
+              :class="{ 'selected': selectedFortune === 'love' }"
+              @click="selectFortune('love')"
+              @error="handleIconError"
+            />
+            <div class="mystical-glow love-glow"></div>
+            <div class="sparkles">
+              <div class="sparkle sparkle-1"></div>
+              <div class="sparkle sparkle-2"></div>
+              <div class="sparkle sparkle-3"></div>
+            </div>
+          </div>
           
-          <img 
-            src="/src/assets/icons/success-fortune.svg" 
-            alt="성공운" 
-            class="fortune-card-image"
-            :class="{ 'selected': selectedFortune === 'success' }"
-            @click="selectFortune('success')"
-            @error="handleIconError"
-          />
+          <div class="fortune-card-container" :class="{ 'selected': selectedFortune === 'success' }">
+            <img 
+              src="/src/assets/fortune/success-fortune.svg" 
+              alt="성공운" 
+              class="fortune-card-image mystical-card"
+              :class="{ 'selected': selectedFortune === 'success' }"
+              @click="selectFortune('success')"
+              @error="handleIconError"
+            />
+            <div class="mystical-glow success-glow"></div>
+            <div class="sparkles">
+              <div class="sparkle sparkle-1"></div>
+              <div class="sparkle sparkle-2"></div>
+              <div class="sparkle sparkle-3"></div>
+            </div>
+          </div>
           
-          <img 
-            src="/src/assets/icons/money-fortune.svg" 
-            alt="재물운" 
-            class="fortune-card-image"
-            :class="{ 'selected': selectedFortune === 'money' }"
-            @click="selectFortune('money')"
-            @error="handleIconError"
-          />
+          <div class="fortune-card-container" :class="{ 'selected': selectedFortune === 'money' }">
+            <img 
+              src="/src/assets/fortune/money-fortune.svg" 
+              alt="재물운" 
+              class="fortune-card-image mystical-card"
+              :class="{ 'selected': selectedFortune === 'money' }"
+              @click="selectFortune('money')"
+              @error="handleIconError"
+            />
+            <div class="mystical-glow money-glow"></div>
+            <div class="sparkles">
+              <div class="sparkle sparkle-1"></div>
+              <div class="sparkle sparkle-2"></div>
+              <div class="sparkle sparkle-3"></div>
+            </div>
+          </div>
         </div>
         
         <button 
@@ -74,7 +120,16 @@
         </button>
       </div>
 
-      <!-- 단계 3: 로딩 화면은 isLoading 상태로 처리됨 -->
+      <!-- 단계 3: 운세 결과 화면 -->
+      <div v-else-if="currentStep === 'result'" class="result-section">
+        <FortuneResult 
+          :fortuneData="{ fortune: selectedFortune, birthdate: birthdateData }"
+          @goBack="goBackToSelection"
+          @retry="retryFortune"
+        />
+      </div>
+
+      <!-- 단계 4: 로딩 화면은 isLoading 상태로 처리됨 -->
       
     </div>
 
@@ -88,8 +143,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import BirthdateModal from './BirthdateModal.vue';
+import FortuneResult from './FortuneResult.vue';
 
 interface BirthdateData {
   year: number;
@@ -108,6 +164,18 @@ const selectedFortune = ref<string | null>(null);
 const isLoading = ref(false);
 const showModal = ref(false);
 const birthdateData = ref<BirthdateData | null>(null);
+
+const headerTitle = computed(() => {
+  return currentStep.value === 'card-selection' 
+    ? '가장 궁금한 운세를 골라주세요' 
+    : '오늘의 사주 ∙ 운세';
+});
+
+const headerSubtitle = computed(() => {
+  return currentStep.value === 'card-selection'
+    ? '행운의 을랑이가 문제별로 다른 메시지를 준비했어요.'
+    : '행운의 을랑이와 함께 오늘의 운세를 점쳐보세요.';
+});
 
 const selectFortune = (type: string) => {
   selectedFortune.value = type;
@@ -134,12 +202,19 @@ const showFortuneResult = () => {
     // 2-3초 후에 운세 결과 화면으로 이동
     setTimeout(() => {
       isLoading.value = false;
-      emit('showFortuneResult', {
-        fortune: selectedFortune.value,
-        birthdate: birthdateData.value
-      });
+      currentStep.value = 'result';
     }, 3000);
   }
+};
+
+const goBackToSelection = () => {
+  currentStep.value = 'card-selection';
+};
+
+const retryFortune = () => {
+  selectedFortune.value = null;
+  birthdateData.value = null;
+  currentStep.value = 'start';
 };
 
 const handleImageError = (event: Event) => {
@@ -292,10 +367,158 @@ const handleIconError = (event: Event) => {
   filter: brightness(1.1);
 }
 
+/* 신비한 애니메이션을 위한 카드 컨테이너 */
+.fortune-card-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.mystical-cards .fortune-card-container {
+  animation: mysticalFloat 3s ease-in-out infinite;
+}
+
+.mystical-cards .fortune-card-container:nth-child(2) {
+  animation-delay: -1s;
+}
+
+.mystical-cards .fortune-card-container:nth-child(3) {
+  animation-delay: -2s;
+}
+
+/* 신비한 글로우 효과 */
+.mystical-glow {
+  position: absolute;
+  width: 160px;
+  height: 180px;
+  border-radius: 15px;
+  opacity: 0.6;
+  filter: blur(20px);
+  animation: mysticalPulse 2s ease-in-out infinite alternate;
+  z-index: -1;
+  top: -8px;
+  left: -8px;
+}
+
+.love-glow {
+  background: radial-gradient(circle, rgba(255, 105, 180, 0.4) 0%, rgba(255, 182, 193, 0.2) 50%, transparent 70%);
+}
+
+.success-glow {
+  background: radial-gradient(circle, rgba(50, 205, 50, 0.4) 0%, rgba(144, 238, 144, 0.2) 50%, transparent 70%);
+}
+
+.money-glow {
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.4) 0%, rgba(255, 228, 181, 0.2) 50%, transparent 70%);
+}
+
+/* 반짝이는 스파클 효과 */
+.sparkles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.sparkle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: radial-gradient(circle, white, transparent);
+  border-radius: 50%;
+  animation: sparkleAnimation 2s linear infinite;
+}
+
+.sparkle-1 {
+  top: 15%;
+  left: 20%;
+  animation-delay: 0s;
+}
+
+.sparkle-2 {
+  top: 70%;
+  right: 15%;
+  animation-delay: 0.7s;
+}
+
+.sparkle-3 {
+  top: 40%;
+  left: 80%;
+  animation-delay: 1.4s;
+}
+
+/* 키프레임 애니메이션 */
+@keyframes mysticalFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes mysticalPulse {
+  0% {
+    opacity: 0.4;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes sparkleAnimation {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0);
+  }
+}
+
+/* 기존 카드 스타일 업데이트 */
+.mystical-card {
+  position: relative;
+  z-index: 2;
+  transition: all 0.3s ease;
+}
+
+.mystical-card:hover {
+  transform: translateY(-5px) scale(1.03);
+  filter: brightness(1.15) drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
+}
+
 .fortune-card-image.selected {
-  transform: translateY(-3px) scale(1.05);
-  filter: brightness(1.2);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  transform: translateY(-8px) scale(1.08);
+  filter: brightness(1.3) drop-shadow(0 15px 30px rgba(0, 0, 0, 0.4));
+}
+
+.fortune-card-container.selected .mystical-glow {
+  opacity: 1;
+  animation: selectedGlow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes selectedGlow {
+  0% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
 }
 
 .start-button {
@@ -399,8 +622,18 @@ const handleIconError = (event: Event) => {
 
 .start-section {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
+  gap: 40px;
+}
+
+.result-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
 }
 
 /* 모바일 반응형 */
