@@ -1,6 +1,6 @@
 <template>
-  <div class="fortune-main-container">
-    <div class="header-section">
+  <div class="fortune-main-container" :class="{ 'result-view': currentStep === 'result' }">
+    <div v-if="currentStep !== 'result'" class="header-section">
       <h1 class="main-title">{{ headerTitle }}</h1>
       <div class="divider-section">
         <div class="divider-line"></div>
@@ -239,6 +239,11 @@ const handleIconError = (event: Event) => {
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.fortune-main-container.result-view {
+  padding-top: 0;
+  padding-bottom: 120px;
 }
 
 .header-section {

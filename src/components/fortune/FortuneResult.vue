@@ -1,36 +1,91 @@
 <template>
   <div class="fortune-result-container">
-    <div class="result-header-section">
-      <div class="result-content">
-        <div class="date-badge">
-          <span class="date-text">{{ currentDate }}</span>
+    <!-- 헤더 섹션 슬라이더 -->
+    <div class="header-container">
+      <div class="header-slider" :style="{ transform: `translateX(-${(currentPage - 1) * 50}%)` }">
+        <!-- 1페이지: 기본 운세 헤더 -->
+        <div class="header-content">
+          <div class="result-header-section">
+            <div class="result-content">
+              <div class="date-badge">
+                <span class="date-text">{{ currentDate }}</span>
+              </div>
+              <div class="result-main">
+                <img 
+                  :src="fortuneImage" 
+                  :alt="fortuneTitle"
+                  class="fortune-result-image"
+                  @error="handleImageError"
+                />
+                <h2 class="fortune-title">{{ fortuneTitle }}</h2>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="result-main">
-          <img 
-            :src="fortuneImage" 
-            :alt="fortuneTitle"
-            class="fortune-result-image"
-            @error="handleImageError"
-          />
-          <h2 class="fortune-title">{{ fortuneTitle }}</h2>
+
+        <!-- 2페이지: 공유용 헤더 -->
+        <div class="header-content">
+          <div class="result-header-section">
+            <div class="share-card">
+              <div class="share-card-content">
+                <h3 class="share-title">{{ fortuneTitle }}</h3>
+                <img 
+                  :src="fortuneImage" 
+                  :alt="fortuneTitle"
+                  class="share-fortune-image"
+                  @error="handleImageError"
+                />
+              </div>
+              <div class="brand-section">
+                <img src="/src/assets/eul_logo.svg" alt="EULGPT" class="brand-logo" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
     
+    
+    <!-- 하단 콘텐츠 슬라이더 -->
     <div class="result-detail-section">
-      <div class="fortune-description">
-        <p class="description-text" v-html="fortuneDescription"></p>
+      <div class="content-container">
+        <div class="content-slider" :style="{ transform: `translateX(-${(currentPage - 1) * 50}%)` }">
+          <!-- 1페이지: 운세 설명 -->
+          <div class="content-page">
+            <div class="fortune-description">
+              <p class="description-text" v-html="fortuneDescription"></p>
+            </div>
+          </div>
+
+          <!-- 2페이지: 공유 버튼 -->
+          <div class="content-page">
+            <div class="action-buttons">
+              <button class="save-button" @click="saveImage">
+                <span class="button-text">저장하기</span>
+              </button>
+              <button class="share-button" @click="shareToSNS">
+                <span class="button-text">SNS 공유</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="pagination-dots">
-        <div class="dot active"></div>
-        <div class="dot"></div>
-      </div>
+    </div>
+  </div>
+  
+  <!-- 하단 고정 Pagination -->
+  <div class="bottom-fixed-pagination">
+    <div class="pagination-dots">
+      <div class="pagination-icon" @click="goToPreviousPage">&lt;</div>
+      <div class="page-number" :class="{ active: currentPage === 1 }" @click="goToPage(1)">1</div>
+      <div class="page-number" :class="{ active: currentPage === 2 }" @click="goToPage(2)">2</div>
+      <div class="pagination-icon" @click="goToNextPage">&gt;</div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 interface BirthdateData {
   year: number;
@@ -52,6 +107,84 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(['goBack', 'retry']);
+
+const currentPage = ref(1);
+
+const goToPage = (page: number) => {
+  if (page >= 1 && page <= 2) {
+    currentPage.value = page;
+  }
+};
+
+const goToPreviousPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+  }
+};
+
+const goToNextPage = () => {
+  if (currentPage.value < 2) {
+    currentPage.value++;
+  }
+};
+
+const saveImage = async () => {
+  try {
+    // 운세 카드 이미지 다운로드
+    const response = await fetch(fortuneImage.value);
+    const blob = await response.blob();
+    
+    // 파일명 생성 (날짜 + 운세 타입)
+    const date = new Date().toISOString().split('T')[0];
+    const fortuneType = props.fortuneData.fortune;
+    const filename = `운세카드_${fortuneType}_${date}.png`;
+    
+    // 다운로드 실행
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    
+    console.log('이미지가 저장되었습니다.');
+  } catch (error) {
+    console.error('이미지 저장 중 오류가 발생했습니다:', error);
+    alert('이미지 저장 중 오류가 발생했습니다.');
+  }
+};
+
+const shareToSNS = async () => {
+  try {
+    // Web Share API 지원 확인
+    if (navigator.share) {
+      await navigator.share({
+        title: '오늘의 운세',
+        text: fortuneTitle.value,
+        url: window.location.href
+      });
+      console.log('SNS 공유가 완료되었습니다.');
+    } else {
+      // Web Share API를 지원하지 않는 경우 클립보드에 복사
+      const shareText = `${fortuneTitle.value}\n\n오늘의 운세를 확인해보세요!\n${window.location.href}`;
+      await navigator.clipboard.writeText(shareText);
+      alert('공유 링크가 클립보드에 복사되었습니다!');
+      console.log('클립보드에 복사되었습니다.');
+    }
+  } catch (error) {
+    console.error('공유 중 오류가 발생했습니다:', error);
+    // 대체 방법: 클립보드에 URL 복사
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      alert('공유 링크가 클립보드에 복사되었습니다!');
+    } catch (clipboardError) {
+      console.error('클립보드 복사도 실패했습니다:', clipboardError);
+      alert('공유 기능을 사용할 수 없습니다.');
+    }
+  }
+};
 
 const currentDate = computed(() => {
   const now = new Date();
@@ -246,19 +379,297 @@ const handleImageError = (event: Event) => {
   justify-content: flex-start;
   flex-direction: row;
   align-items: center;
-  gap: 10px;
+  gap: 24px;
   box-sizing: border-box;
 }
 
-.dot {
-  width: 10px;
-  height: 10px;
-  background-color: rgb(229, 231, 235);
-  border-radius: 50%;
+.pagination-icon {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  font-size: 18px;
+  color: rgb(75, 85, 99);
+  font-family: Pretendard, sans-serif;
+  font-weight: 600;
 }
 
-.dot.active {
+.page-number {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  border-radius: 6px;
+  width: 35px;
+  height: 35px;
+  background-color: white;
+  box-sizing: border-box;
+  padding: 10px;
+  color: rgb(75, 85, 99);
+  text-overflow: ellipsis;
+  font-size: 18px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 600;
+  line-height: 110%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.page-number.active {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  border: solid 1px rgb(229, 231, 235);
+  border-radius: 6px;
+  width: 35px;
+  height: 35px;
+  background-color: white;
+  box-sizing: border-box;
+  padding: 10px;
+  color: rgb(2, 71, 138);
+  text-overflow: ellipsis;
+  font-size: 18px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 600;
+  line-height: 110%;
+  text-align: left;
+}
+
+.share-save-section {
+  display: flex;
+  justify-content: flex-start;
+  flex-direction: column;
+  align-items: center;
+  gap: 55px;
+  align-self: stretch;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.share-card {
+  display: flex;
+  padding: 23px 42px;
+  flex-direction: column;
+  align-items: center;
+  gap: 25px;
+  border-radius: 20px;
+  background-color: rgb(240, 246, 255);
+  box-sizing: border-box;
+}
+
+.share-card-content {
+  display: flex;
+  justify-content: flex-start;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  align-self: stretch;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.share-title {
+  color: rgb(31, 41, 55);
+  text-overflow: ellipsis;
+  font-size: 20px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 700;
+  line-height: 140%;
+  text-align: center;
+  align-self: stretch;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.share-fortune-image {
+  width: 232px;
+  height: 348px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.brand-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.brand-logo {
+  width: 131px;
+  height: 46px;
+  object-fit: contain;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+  align-items: center;
+  gap: 30px;
+  align-self: stretch;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.save-button {
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0px 4px 10px 0px rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  width: 181px;
+  height: 47px;
+  background-color: rgb(240, 246, 255);
+  box-sizing: border-box;
+  padding: 13px 20px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.save-button:hover {
+  background-color: rgb(226, 239, 254);
+}
+
+.save-button .button-text {
+  color: rgb(2, 71, 138);
+  font-size: 18px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.share-button {
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0px 4px 10px 0px rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  width: 181px;
+  height: 47px;
   background-color: rgb(2, 71, 138);
+  box-sizing: border-box;
+  padding: 13px 20px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.share-button:hover {
+  background-color: rgb(1, 56, 110);
+}
+
+.share-button .button-text {
+  color: white;
+  font-size: 18px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+
+
+/* 헤더 슬라이더 스타일 */
+.header-container {
+  width: 100%;
+  max-width: 532px;
+  overflow: hidden;
+  position: relative;
+  margin: 0 auto;
+}
+
+.header-slider {
+  display: flex;
+  width: 200%;
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.header-content {
+  width: 50%;
+  min-width: 50%;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+.header-content:last-child {
+  padding-top: 60px;
+}
+
+.header-content .result-header-section {
+  width: 100%;
+  max-width: 303px;
+}
+
+/* 콘텐츠 슬라이더 스타일 */
+.content-container {
+  width: 100%;
+  max-width: 532px;
+  overflow: hidden;
+  position: relative;
+  margin: 0 auto;
+}
+
+.content-slider {
+  display: flex;
+  width: 200%;
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.content-page {
+  width: 50%;
+  min-width: 50%;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+/* 하단 고정 Pagination */
+.bottom-fixed-pagination {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  padding: 15px 20px;
+  border-radius: 25px;
+  border: 1px solid rgba(229, 231, 235, 0.5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  z-index: 1000;
+}
+
+/* chat-content-col 영역 기준으로 중앙 정렬 */
+@media (min-width: 769px) {
+  .bottom-fixed-pagination {
+    left: calc(50% + 135px);
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 768px) {
+  .bottom-fixed-pagination {
+    left: 50%;
+    transform: translateX(-50%);
+  }
 }
 
 /* 모바일 반응형 */
