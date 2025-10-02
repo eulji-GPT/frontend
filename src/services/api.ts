@@ -169,3 +169,102 @@ export const healthAPI = {
     });
   },
 };
+
+// 운세 API (AI-RAG 서버)
+const FORTUNE_API_BASE_URL = import.meta.env.VITE_GEMINI_FASTAPI_URL || 'http://localhost:8001';
+
+async function fortuneApiRequest<T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const url = `${FORTUNE_API_BASE_URL}${endpoint}`;
+
+  const defaultHeaders: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  const config: RequestInit = {
+    ...options,
+    headers: {
+      ...defaultHeaders,
+      ...options.headers,
+    },
+  };
+
+  try {
+    const response = await fetch(url, config);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Fortune API request failed:', error);
+    throw error;
+  }
+}
+
+export const fortuneAPI = {
+  // 애정운 조회
+  getLoveFortune: async (data: {
+    name: string;
+    birth_date: string;
+    gender: string;
+    birth_slot?: string;
+  }) => {
+    return fortuneApiRequest<{
+      fortune_type: string;
+      result: string;
+      processing_time: number;
+    }>('/fortune/love', {
+      method: 'POST',
+      body: JSON.stringify({
+        ...data,
+        birth_slot: data.birth_slot || '모름'
+      }),
+    });
+  },
+
+  // 성공운 조회
+  getSuccessFortune: async (data: {
+    name: string;
+    birth_date: string;
+    gender: string;
+    birth_slot?: string;
+  }) => {
+    return fortuneApiRequest<{
+      fortune_type: string;
+      title: string;
+      description: string;
+      processing_time: number;
+    }>('/fortune/success', {
+      method: 'POST',
+      body: JSON.stringify({
+        ...data,
+        birth_slot: data.birth_slot || '모름'
+      }),
+    });
+  },
+
+  // 재물운 조회
+  getWealthFortune: async (data: {
+    name: string;
+    birth_date: string;
+    gender: string;
+    birth_slot?: string;
+  }) => {
+    return fortuneApiRequest<{
+      fortune_type: string;
+      result: string;
+      processing_time: number;
+    }>('/fortune/wealth', {
+      method: 'POST',
+      body: JSON.stringify({
+        ...data,
+        birth_slot: data.birth_slot || '모름'
+      }),
+    });
+  },
+};

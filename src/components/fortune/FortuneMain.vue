@@ -123,7 +123,7 @@
       <!-- 단계 3: 운세 결과 화면 -->
       <div v-else-if="currentStep === 'result'" class="result-section">
         <FortuneResult
-          :fortuneData="{ fortune: selectedFortune!, birthdate: birthdateData! }"
+          :fortuneData="fortuneResultData"
           @goBack="goBackToSelection"
           @retry="retryFortune"
         />
@@ -146,6 +146,7 @@
 import { ref, computed } from 'vue';
 import BirthdateModal from './BirthdateModal.vue';
 import FortuneResult from './FortuneResult.vue';
+import { fortuneAPI } from '../../services/api';
 
 interface BirthdateData {
   year: number;
@@ -155,6 +156,16 @@ interface BirthdateData {
   minute?: number;
   gender: 'male' | 'female';
   isLunar: boolean;
+  name?: string;
+}
+
+interface FortuneData {
+  fortune: string | null;
+  birthdate: BirthdateData | null;
+  result?: string;
+  title?: string;
+  description?: string;
+  error?: string;
 }
 
 const emit = defineEmits(['showFortuneResult']);
@@ -164,6 +175,7 @@ const selectedFortune = ref<string | null>(null);
 const isLoading = ref(false);
 const showModal = ref(false);
 const birthdateData = ref<BirthdateData | null>(null);
+const fortuneResultData = ref<FortuneData | null>(null);
 
 const headerTitle = computed(() => {
   return currentStep.value === 'card-selection' 
@@ -195,15 +207,113 @@ const handleBirthdateSubmit = (data: BirthdateData) => {
   currentStep.value = 'card-selection';
 };
 
-const showFortuneResult = () => {
-  if (selectedFortune.value && birthdateData.value) {
-    isLoading.value = true;
-    
-    // 2-3초 후에 운세 결과 화면으로 이동
-    setTimeout(() => {
-      isLoading.value = false;
-      currentStep.value = 'result';
-    }, 3000);
+const formatBirthdate = (data: BirthdateData): string => {
+  const year = data.year.toString();
+  const month = data.month.toString().padStart(2, '0');
+  const day = data.day.toString().padStart(2, '0');
+  return `${year}${month}${day}`;
+};
+
+const getTimeSlot = (hour?: number): string => {
+  if (!hour) return '모름';
+
+  const timeSlots = [
+    { start: 23, end: 1, name: '자' },
+    { start: 1, end: 3, name: '축' },
+    { start: 3, end: 5, name: '인' },
+    { start: 5, end: 7, name: '묘' },
+    { start: 7, end: 9, name: '진' },
+    { start: 9, end: 11, name: '사' },
+    { start: 11, end: 13, name: '오' },
+    { start: 13, end: 15, name: '미' },
+    { start: 15, end: 17, name: '신' },
+    { start: 17, end: 19, name: '유' },
+    { start: 19, end: 21, name: '술' },
+    { start: 21, end: 23, name: '해' },
+  ];
+
+  for (const slot of timeSlots) {
+    if (slot.start === 23) {
+      if (hour >= slot.start || hour < slot.end) return slot.name;
+    } else {
+      if (hour >= slot.start && hour < slot.end) return slot.name;
+    }
+  }
+
+  return '모름';
+};
+
+const showFortuneResult = async () => {
+  if (!selectedFortune.value || !birthdateData.value) return;
+
+  isLoading.value = true;
+
+  try {
+    const fortuneTypeMap: { [key: string]: string } = {
+      'love': 'love',
+      'success': 'success',
+      'money': 'wealth'
+    };
+
+    const requestData = {
+      name: birthdateData.value.name || '사용자',
+      birth_date: formatBirthdate(birthdateData.value),
+      gender: birthdateData.value.gender === 'male' ? '남자' : '여자',
+      birth_slot: getTimeSlot(birthdateData.value.hour),
+      fortune_type: fortuneTypeMap[selectedFortune.value],
+    };
+
+    console.log('[운세 API 요청]', requestData);
+
+    // 일반 API 호출 (스트리밍 제거)
+    const endpoint = fortuneTypeMap[selectedFortune.value];
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:8001'}/fortune/${endpoint}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('운세 조회 실패');
+    }
+
+    const data = await response.json();
+    console.log('[운세 API 응답]', data);
+
+    // 운세 타입별 제목 매핑
+    const titleMap: { [key: string]: string } = {
+      'love': '오늘의 애정운',
+      'success': '오늘의 성공운',
+      'money': '오늘의 재물운'
+    };
+
+    // 결과 데이터 설정
+    fortuneResultData.value = {
+      fortune: selectedFortune.value,
+      birthdate: birthdateData.value,
+      title: data.title || titleMap[selectedFortune.value] || '오늘의 운세',
+      description: data.description || data.result || '',
+      result: data.result || data.description || '',
+    };
+
+    // 결과 화면으로 전환
+    currentStep.value = 'result';
+    isLoading.value = false;
+
+  } catch (error) {
+    console.error('운세 조회 실패:', error);
+    fortuneResultData.value = {
+      fortune: selectedFortune.value,
+      birthdate: birthdateData.value,
+      error: '운세 조회 중 오류가 발생했습니다. 다시 시도해주세요.',
+    };
+    currentStep.value = 'result';
+    isLoading.value = false;
   }
 };
 

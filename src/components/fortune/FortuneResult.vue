@@ -98,12 +98,16 @@ interface BirthdateData {
 }
 
 interface FortuneData {
-  fortune: string;
-  birthdate: BirthdateData;
+  fortune: string | null;
+  birthdate: BirthdateData | null;
+  result?: string;
+  title?: string;
+  description?: string;
+  error?: string;
 }
 
 const props = defineProps<{
-  fortuneData: FortuneData;
+  fortuneData: FortuneData | null;
 }>();
 
 const emit = defineEmits(['goBack', 'retry']);
@@ -197,48 +201,60 @@ const currentDate = computed(() => {
 });
 
 const fortuneImage = computed(() => {
+  if (!props.fortuneData) return '/src/assets/fortune/사주카드_애정운.svg';
+
   const images = {
     love: '/src/assets/fortune/사주카드_애정운.svg',
-    success: '/src/assets/fortune/사주카드_성공운.svg', 
+    success: '/src/assets/fortune/사주카드_성공운.svg',
     money: '/src/assets/fortune/사주카드_재물운 2.svg'
   };
   return images[props.fortuneData.fortune as keyof typeof images] || images.love;
 });
 
 const fortuneTitle = computed(() => {
-  const titles = {
-    love: '새로운 인연이 다가오고 있어요.',
-    success: '성공의 기회가 눈앞에 있어요.',
-    money: '재물운이 상승하고 있어요.'
-  };
-  return titles[props.fortuneData.fortune as keyof typeof titles];
+  console.log('[FortuneResult] fortuneData:', props.fortuneData);
+
+  if (!props.fortuneData) return '운세를 불러오는 중입니다...';
+
+  // 에러가 있는 경우
+  if (props.fortuneData.error) {
+    return '운세 조회 실패';
+  }
+
+  // title 필드가 있으면 사용 (모든 타입)
+  if (props.fortuneData.title) {
+    console.log('[FortuneResult] 모델 생성 title:', props.fortuneData.title);
+    return props.fortuneData.title;
+  }
+
+  // title이 아직 생성 중이거나 없는 경우
+  console.log('[FortuneResult] title 생성 중');
+  return '모델이 운세 예측중...';
 });
 
 const fortuneDescription = computed(() => {
-  const descriptions = {
-    love: `오늘은 예상치 못한 설렘이 찾아올 수 있는 날입니다.<br/>
-마음 한켠에 스며드는 새로운 이성의 시선이나 고백이 당신을 흔들 수 있습니다.<br/>
-하지만 순간적인 매력에만 이끌려 지금 곁에 있는 소중한 사람의 가치를 놓칠 수 있으니,<br/>
-조금 더 신중하게 마음을 들여다보세요.<br/>
-<br/>
-지금의 파트너야말로 당신에게 가장 잘 맞는 사람일 수 있습니다.<br/>
-잠시의 설렘보다 오래 쌓아온 믿음과 진심이 더 큰 힘을 발휘한다는 걸 잊지 마세요.`,
-    success: `오늘은 당신의 노력이 결실을 맺을 수 있는 특별한 날입니다.<br/>
-그동안 준비해온 프로젝트나 계획이 성공으로 이어질 가능성이 높습니다.<br/>
-주변 사람들의 조언에 귀를 기울이고, 겸손한 마음으로 임한다면<br/>
-예상보다 훨씬 좋은 결과를 얻을 수 있을 것입니다.<br/>
-<br/>
-오늘 하루는 자신감을 가지고 적극적으로 행동해보세요.<br/>
-당신의 진정성과 열정이 많은 사람들에게 인정받는 하루가 될 것입니다.`,
-    money: `재물운이 상승하는 기운이 감지됩니다.<br/>
-예상치 못한 수입이나 투자 기회가 찾아올 수 있는 날입니다.<br/>
-하지만 욕심을 부리기보다는 신중하게 판단하여<br/>
-안전하고 확실한 선택을 하는 것이 좋겠습니다.<br/>
-<br/>
-오늘은 절약보다는 필요한 곳에 합리적인 투자를 하는 것이<br/>
-장기적으로 더 큰 이익을 가져다줄 것입니다.`
-  };
-  return descriptions[props.fortuneData.fortune as keyof typeof descriptions];
+  if (!props.fortuneData) return '운세를 불러오는 중입니다...';
+
+  // 에러가 있는 경우
+  if (props.fortuneData.error) {
+    console.log('[FortuneResult] error:', props.fortuneData.error);
+    return props.fortuneData.error.replace(/\n/g, '<br/>');
+  }
+
+  // description 필드 우선 사용 (모든 타입)
+  if (props.fortuneData.description) {
+    console.log('[FortuneResult] description:', props.fortuneData.description);
+    return props.fortuneData.description.replace(/\n/g, '<br/>');
+  }
+
+  // result 필드 사용 (하위 호환성)
+  if (props.fortuneData.result) {
+    console.log('[FortuneResult] result:', props.fortuneData.result);
+    return props.fortuneData.result.replace(/\n/g, '<br/>');
+  }
+
+  console.log('[FortuneResult] 데이터 없음 - 로딩 중');
+  return '모델이 운세 예측중...';
 });
 
 const handleImageError = (event: Event) => {
