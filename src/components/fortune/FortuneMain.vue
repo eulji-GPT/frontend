@@ -122,8 +122,8 @@
 
       <!-- 단계 3: 운세 결과 화면 -->
       <div v-else-if="currentStep === 'result'" class="result-section">
-        <FortuneResult 
-          :fortuneData="{ fortune: selectedFortune, birthdate: birthdateData }"
+        <FortuneResult
+          :fortuneData="{ fortune: selectedFortune!, birthdate: birthdateData! }"
           @goBack="goBackToSelection"
           @retry="retryFortune"
         />
