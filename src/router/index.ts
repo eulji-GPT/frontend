@@ -38,6 +38,10 @@ const routes = [
     component: () => import('../components/chat/index.vue')
   },
   {
+    path: '/fortune',
+    component: () => import('../views/FortuneView.vue')
+  },
+  {
     path: '/ready/:service',
     component: () => import('../components/common/ReadyBar.vue'),
     props: true

@@ -6,7 +6,18 @@
           <div class="title-section">
             <h2 class="modal-title">운세를 알아보려면<br>생일 정보가 필요해요</h2>
           </div>
-          
+
+          <!-- Name Input Section -->
+          <div class="name-section">
+            <div class="section-label">이름</div>
+            <input
+              v-model="userName"
+              type="text"
+              class="name-input"
+              placeholder="이름을 입력하세요"
+            />
+          </div>
+
           <div class="dropdowns-section">
             <!-- Year Dropdown -->
             <div class="dropdown-container year-dropdown">
@@ -17,8 +28,8 @@
                 </svg>
               </div>
               <div v-if="isYearOpen" class="dropdown-options">
-                <div 
-                  v-for="year in yearOptions" 
+                <div
+                  v-for="year in yearOptions"
                   :key="year"
                   class="dropdown-option"
                   :class="{ 'selected': selectedYear === year }"
@@ -38,8 +49,8 @@
                 </svg>
               </div>
               <div v-if="isMonthOpen" class="dropdown-options">
-                <div 
-                  v-for="month in monthOptions" 
+                <div
+                  v-for="month in monthOptions"
                   :key="month"
                   class="dropdown-option"
                   :class="{ 'selected': selectedMonth === month }"
@@ -59,14 +70,59 @@
                 </svg>
               </div>
               <div v-if="isDayOpen" class="dropdown-options">
-                <div 
-                  v-for="day in dayOptions" 
+                <div
+                  v-for="day in dayOptions"
                   :key="day"
                   class="dropdown-option"
                   :class="{ 'selected': selectedDay === day }"
                   @click="selectDay(day)"
                 >
                   {{ String(day).padStart(2, '0') }}일
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gender Section -->
+          <div class="gender-section">
+            <div class="section-label">성별</div>
+            <div class="gender-buttons">
+              <button
+                class="gender-button"
+                :class="{ 'selected': selectedGender === '남자' }"
+                @click="selectGender('남자')"
+              >
+                남자
+              </button>
+              <button
+                class="gender-button"
+                :class="{ 'selected': selectedGender === '여자' }"
+                @click="selectGender('여자')"
+              >
+                여자
+              </button>
+            </div>
+          </div>
+
+          <!-- Birth Time Section -->
+          <div class="birth-time-section">
+            <div class="section-label">태어난 시각 (선택)</div>
+            <div class="dropdown-container birth-time-dropdown">
+              <div class="dropdown-header" @click="toggleDropdown('birthTime')">
+                <span class="dropdown-value" :class="{ 'selected-value': selectedBirthTime }">{{ selectedBirthTime || '모름' }}</span>
+                <svg class="dropdown-icon" width="20" height="21" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M5 13L10 8L15 13" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div v-if="isBirthTimeOpen" class="dropdown-options">
+                <div
+                  v-for="time in birthTimeOptions"
+                  :key="time"
+                  class="dropdown-option"
+                  :class="{ 'selected': selectedBirthTime === time }"
+                  @click="selectBirthTime(time)"
+                >
+                  {{ time }}
                 </div>
               </div>
             </div>
@@ -85,12 +141,15 @@
 import { ref } from 'vue';
 
 interface BirthdateData {
+  name: string;
   year: number;
   month: number;
   day: number;
   hour?: number;
   minute?: number;
   gender: 'male' | 'female';
+  genderKorean?: string;
+  birthTime?: string;
   isLunar: boolean;
 }
 
@@ -103,28 +162,34 @@ const emit = defineEmits<{
   submit: [data: BirthdateData];
 }>();
 
+const userName = ref<string>('');
 const selectedYear = ref<number | null>(null);
 const selectedMonth = ref<number | null>(null);
 const selectedDay = ref<number | null>(null);
-const selectedGender = ref<'male' | 'female'>('male');
+const selectedGender = ref<string>('남자');
+const selectedBirthTime = ref<string>('모름');
 const isLunar = ref<boolean>(false);
 
 const isYearOpen = ref(true);
 const isMonthOpen = ref(true);
 const isDayOpen = ref(true);
+const isBirthTimeOpen = ref(false);
 
 // 생년월일 옵션들을 더 실용적으로 확장
 const yearOptions = Array.from({ length: 50 }, (_, i) => 2024 - i); // 1975년부터 2024년까지
 const monthOptions = Array.from({ length: 12 }, (_, i) => i + 1); // 1월부터 12월까지
 const dayOptions = Array.from({ length: 31 }, (_, i) => i + 1); // 1일부터 31일까지
+const birthTimeOptions = ['모름', '자시(23:30-01:29)', '축시(01:30-03:29)', '인시(03:30-05:29)', '묘시(05:30-07:29)', '진시(07:30-09:29)', '사시(09:30-11:29)', '오시(11:30-13:29)', '미시(13:30-15:29)', '신시(15:30-17:29)', '유시(17:30-19:29)', '술시(19:30-21:29)', '해시(21:30-23:29)'];
 
-const toggleDropdown = (type: 'year' | 'month' | 'day') => {
+const toggleDropdown = (type: 'year' | 'month' | 'day' | 'birthTime') => {
   if (type === 'year') {
     isYearOpen.value = !isYearOpen.value;
   } else if (type === 'month') {
     isMonthOpen.value = !isMonthOpen.value;
   } else if (type === 'day') {
     isDayOpen.value = !isDayOpen.value;
+  } else if (type === 'birthTime') {
+    isBirthTimeOpen.value = !isBirthTimeOpen.value;
   }
 };
 
@@ -146,6 +211,15 @@ const selectDay = (day: number) => {
   checkAllSelected();
 };
 
+const selectGender = (gender: string) => {
+  selectedGender.value = gender;
+};
+
+const selectBirthTime = (time: string) => {
+  selectedBirthTime.value = time;
+  isBirthTimeOpen.value = false;
+};
+
 const checkAllSelected = () => {
   if (selectedYear.value && selectedMonth.value && selectedDay.value) {
     // 모든 값이 선택되면 모든 드롭다운을 닫음
@@ -160,17 +234,25 @@ const closeModal = () => {
 };
 
 const submitBirthdate = () => {
-  // 선택된 값이 없으면 알림 표시
+  // 이름과 생년월일 유효성 검사
+  if (!userName.value.trim()) {
+    alert('이름을 입력해주세요.');
+    return;
+  }
+
   if (!selectedYear.value || !selectedMonth.value || !selectedDay.value) {
     alert('생년월일을 모두 선택해주세요.');
     return;
   }
-  
+
   const data: BirthdateData = {
+    name: userName.value.trim(),
     year: selectedYear.value,
     month: selectedMonth.value,
     day: selectedDay.value,
-    gender: selectedGender.value,
+    gender: selectedGender.value === '남자' ? 'male' : 'female',
+    genderKorean: selectedGender.value,
+    birthTime: selectedBirthTime.value,
     isLunar: isLunar.value
   };
   emit('submit', data);
@@ -375,6 +457,92 @@ const submitBirthdate = () => {
   color: #000000;
   font-weight: 700;
   background-color: #F0F6FF;
+}
+
+.name-section,
+.gender-section,
+.birth-time-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  align-self: stretch;
+  position: relative;
+}
+
+.section-label {
+  color: #1F2937;
+  font-family: Pretendard, -apple-system, Roboto, Helvetica, sans-serif;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.name-input {
+  width: 100%;
+  padding: 12px 15px;
+  border-radius: 10px;
+  border: 1px solid #E5E7EB;
+  background: #FFF;
+  color: #000;
+  font-family: Pretendard, -apple-system, Roboto, Helvetica, sans-serif;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 25px;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+}
+
+.name-input::placeholder {
+  color: #9CA3AF;
+}
+
+.name-input:focus {
+  outline: none;
+  border-color: #02478A;
+}
+
+.gender-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  align-self: stretch;
+}
+
+.gender-button {
+  display: flex;
+  flex: 1;
+  padding: 12px 20px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 10px;
+  border: 1px solid #E5E7EB;
+  background: #FFF;
+  color: #9CA3AF;
+  font-family: Pretendard, -apple-system, Roboto, Helvetica, sans-serif;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 25px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gender-button:hover {
+  background-color: #F9FAFB;
+}
+
+.gender-button.selected {
+  border-color: #02478A;
+  background: #F0F6FF;
+  color: #02478A;
+  font-weight: 700;
+}
+
+.birth-time-dropdown {
+  width: 100%;
 }
 
 .submit-button {

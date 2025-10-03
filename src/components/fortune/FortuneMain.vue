@@ -149,14 +149,16 @@ import FortuneResult from './FortuneResult.vue';
 import { fortuneAPI } from '../../services/api';
 
 interface BirthdateData {
+  name: string;
   year: number;
   month: number;
   day: number;
   hour?: number;
   minute?: number;
   gender: 'male' | 'female';
+  genderKorean?: string;
+  birthTime?: string;
   isLunar: boolean;
-  name?: string;
 }
 
 interface FortuneData {
@@ -256,10 +258,10 @@ const showFortuneResult = async () => {
     };
 
     const requestData = {
-      name: birthdateData.value.name || '사용자',
+      name: birthdateData.value.name,
       birth_date: formatBirthdate(birthdateData.value),
-      gender: birthdateData.value.gender === 'male' ? '남자' : '여자',
-      birth_slot: getTimeSlot(birthdateData.value.hour),
+      gender: birthdateData.value.genderKorean || (birthdateData.value.gender === 'male' ? '남자' : '여자'),
+      birth_slot: birthdateData.value.birthTime || getTimeSlot(birthdateData.value.hour) || '모름',
       fortune_type: fortuneTypeMap[selectedFortune.value],
     };
 
