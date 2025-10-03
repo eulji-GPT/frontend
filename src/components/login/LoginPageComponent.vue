@@ -108,12 +108,6 @@ const handleLogin = async () => {
     return
   }
 
-  // 이메일 도메인 체크
-  if (!email.value.endsWith('@g.eulji.ac.kr')) {
-    showToastMessage('을지대학교 이메일(@g.eulji.ac.kr)만 사용할 수 있습니다.')
-    return
-  }
-
   isLoading.value = true
 
   try {
@@ -163,8 +157,9 @@ const showToastMessage = (message: string) => {
 }
 
 const handleKakaoLogin = () => {
-  // TODO: 카카오 로그인 로직
   console.log('카카오 로그인 시도')
+  // 백엔드 카카오 로그인 엔드포인트로 리다이렉트
+  window.location.href = '/api/member/kakao/login'
 }
 </script>
 

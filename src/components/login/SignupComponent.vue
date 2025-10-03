@@ -95,26 +95,39 @@ const handleSendVerification = async () => {
     alert('이메일 주소를 입력해주세요.');
     return;
   }
-  
+
   // 이메일 형식 기본 확인
   if (!email.value.includes('@')) {
     alert('올바른 이메일 형식을 입력해주세요.');
     return;
   }
-  
+
   try {
     // 기존 타이머가 있으면 정리
     if (timer) {
       clearInterval(timer);
     }
-    
+
+    console.log('이메일 중복 확인 중:', email.value);
+
+    // 1. 이메일 중복 확인
+    const checkResponse = await fetch('/api/member/check-email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email: email.value }),
+    });
+
+    if (!checkResponse.ok) {
+      const errorData = await checkResponse.json();
+      alert(errorData.detail || '이미 사용 중인 이메일입니다.');
+      return;
+    }
+
     console.log('인증번호 발송 요청:', email.value);
-    
-    // 로딩 상태 표시 (선택사항)
-    const sendingAlert = '인증번호를 전송하고 있습니다. 잠시만 기다려주세요...';
-    console.log(sendingAlert);
-    
-    // 백엔드 API 호출
+
+    // 2. 인증번호 발송
     const response = await fetch('/api/member/send-verification', {
       method: 'POST',
       headers: {
@@ -122,26 +135,26 @@ const handleSendVerification = async () => {
       },
       body: JSON.stringify({ email: email.value }),
     });
-    
+
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.detail || '인증번호 전송에 실패했습니다.');
     }
-    
+
     const result = await response.json();
     console.log('인증번호 전송 성공:', result);
-    
+
     // 이메일 전송이 성공한 후에만 타이머 시작
     if (result.email_sent) {
       isVerificationSent.value = true;
       timeLeft.value = 300; // 5분 = 300초로 수정
       startTimer();
-      
+
       alert('인증번호가 이메일로 전송되었습니다. 5분 내에 입력해주세요.');
     } else {
       throw new Error('이메일 전송 상태를 확인할 수 없습니다.');
     }
-    
+
   } catch (error) {
     console.error('인증번호 전송 오류:', error);
     const errorMessage = error instanceof Error ? error.message : '인증번호 전송에 실패했습니다. 다시 시도해주세요.';

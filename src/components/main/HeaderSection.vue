@@ -70,7 +70,9 @@ const fetchUserInfo = async () => {
 
     if (response.ok) {
       const data = await response.json()
-      userName.value = data.nickname || data.name
+      console.log('사용자 정보:', data)
+      userName.value = data.nickname || data.name || '사용자'
+      console.log('설정된 userName:', userName.value)
     }
   } catch (error) {
     console.error('사용자 정보 로드 오류:', error)
