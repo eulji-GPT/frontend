@@ -60,8 +60,8 @@
                 <div class="user-info-content">
                   <div class="name-section">
                     <div class="name-info">
-                      <div class="label">이름</div>
-                      <div class="value">최가을</div>
+                      <div class="label">닉네임</div>
+                      <div class="value">{{ userInfo?.nickname || '로딩 중...' }}</div>
                     </div>
                   </div>
                   <div class="reservation-section">
@@ -205,7 +205,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import './MyPageModal_settings.css'
 
 defineProps<{
@@ -220,6 +220,57 @@ const activeTab = ref<'mypage' | 'settings'>('mypage')
 const selectedTheme = ref<'light' | 'dark' | 'system'>('system')
 const profileImage = ref<string | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
+
+// 사용자 정보
+const userInfo = ref<{
+  id: number
+  name: string
+  email: string
+  nickname: string
+  phone_number?: string
+  oauth_provider?: string
+  is_pro: boolean
+  verified_email?: string
+  profile_image_url?: string
+} | null>(null)
+
+// 사용자 정보 불러오기
+const fetchUserInfo = async () => {
+  try {
+    const token = localStorage.getItem('access_token')
+    if (!token) {
+      console.error('액세스 토큰이 없습니다.')
+      return
+    }
+
+    const response = await fetch('/api/member/me', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error('사용자 정보를 가져오는데 실패했습니다.')
+    }
+
+    const data = await response.json()
+    userInfo.value = data
+
+    // 카카오 프로필 이미지가 있으면 설정
+    if (data.profile_image_url) {
+      profileImage.value = data.profile_image_url
+    }
+
+    console.log('사용자 정보:', data)
+  } catch (error) {
+    console.error('사용자 정보 로드 오류:', error)
+  }
+}
+
+onMounted(() => {
+  fetchUserInfo()
+})
 
 const setTheme = (theme: 'light' | 'dark' | 'system') => {
   selectedTheme.value = theme

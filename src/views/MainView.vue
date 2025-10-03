@@ -56,19 +56,23 @@ const scrollToSection = async (id: string) => {
 }
 </script>
 
-<style>
-@import url('/src/assets/pretendard.css');
-
+<style scoped>
 .main-container {
   width: 100%;
   min-height: 100vh;
   overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 .main-content {
   width: 100%;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  margin: 0;
+  padding: 0;
 }
 
 /* 전역 반응형 설정 */
@@ -97,11 +101,6 @@ const scrollToSection = async (id: string) => {
 }
 
 /* 스크롤 스무스 처리 제거 (JavaScript로 처리) */
-
-/* 모바일에서 가로 스크롤 방지 */
-body {
-  overflow-x: hidden;
-}
 
 /* 터치 디바이스 최적화 */
 @media (hover: none) and (pointer: coarse) {

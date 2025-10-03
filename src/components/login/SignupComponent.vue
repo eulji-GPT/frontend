@@ -96,9 +96,9 @@ const handleSendVerification = async () => {
     return;
   }
   
-  // 이메일 형식 확인
-  if (!email.value.endsWith('@g.eulji.ac.kr')) {
-    alert('을지대학교 이메일(@g.eulji.ac.kr)만 사용할 수 있습니다.');
+  // 이메일 형식 기본 확인
+  if (!email.value.includes('@')) {
+    alert('올바른 이메일 형식을 입력해주세요.');
     return;
   }
   
@@ -158,36 +158,36 @@ const handleNext = async () => {
     alert('인증번호를 입력해주세요.');
     return;
   }
-  
+
   try {
     console.log('인증번호 확인 중:', { email: email.value, code: verificationCode.value });
-    
+
     // 백엔드 API 호출
     const response = await fetch('/api/member/verify-code', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ 
-        email: email.value, 
-        code: parseInt(verificationCode.value) 
+      body: JSON.stringify({
+        email: email.value,
+        code: parseInt(verificationCode.value)
       }),
     });
-    
+
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.detail || '인증번호가 올바르지 않습니다.');
     }
-    
+
     const result = await response.json();
     console.log('인증번호 확인 성공:', result);
-    
+
     // 이메일을 localStorage에 저장
     localStorage.setItem('signup_email', email.value);
-    
+
     // 인증이 성공하면 동의 페이지로 이동
     router.push('/signup-agreement');
-    
+
   } catch (error) {
     console.error('인증번호 확인 오류:', error);
     const errorMessage = error instanceof Error ? error.message : '인증번호 확인에 실패했습니다. 다시 시도해주세요.';

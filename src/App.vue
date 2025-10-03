@@ -1,18 +1,42 @@
 <template>
-  <router-view />
+  <router-view v-slot="{ Component }">
+    <transition name="fade" mode="out-in">
+      <component :is="Component" />
+    </transition>
+  </router-view>
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
+
+onMounted(() => {
+  // 앱이 마운트되면 loaded 클래스 추가
+  document.getElementById('app')?.classList.add('loaded')
+})
 </script>
 
 <style>
 @import url('/src/assets/pretendard.css');
 
-body {
+* {
   margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: #fff;
   color: #01203E;
+}
+
+#app {
+  width: 100%;
+  min-height: 100vh;
 }
 
 /* 네비게이션 링크에 호버 효과 및 컬러 적용 */
@@ -510,5 +534,16 @@ body {
   .nav-list {
     display: none; /* 모바일에서는 햄버거 메뉴로 변경 고려 */
   }
+}
+
+/* 페이지 전환 애니메이션 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

@@ -14,6 +14,7 @@ export default defineConfig({
     allowedHosts: ['eulgpt-dev.duckdns.org'], // DuckDNS 도메인 허용
     host: '0.0.0.0', // 외부 접속 허용
     port: 3000,
+    strictPort: true, // 포트가 사용 중이면 에러 발생 (스크립트에서 처리)
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:8000',

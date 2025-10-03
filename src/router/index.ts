@@ -54,6 +54,10 @@ const routes = [
     path: '/development-status',
     component: () => import('../views/DevelopmentStatusView.vue')
   },
+  {
+    path: '/kakao/callback',
+    component: () => import('../views/KakaoCallbackView.vue')
+  },
 ]
 
 const router = createRouter({

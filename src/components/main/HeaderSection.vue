@@ -16,7 +16,7 @@
           <router-link to="/signup">회원가입</router-link>
         </template>
         <template v-else>
-          <span class="user-info">안녕하세요!</span>
+          <span class="user-info">안녕하세요!<br>{{ userName }}님</span>
           <button @click="handleLogout" class="logout-btn">로그아웃</button>
         </template>
       </div>
@@ -53,10 +53,36 @@ const emit = defineEmits(['scrollToSection'])
 const router = useRouter()
 const isMobileMenuOpen = ref(false)
 const isLoggedIn = ref(false)
+const userName = ref('')
+
+// 사용자 정보 가져오기
+const fetchUserInfo = async () => {
+  try {
+    const token = localStorage.getItem('access_token')
+    if (!token) return
+
+    const response = await fetch('/api/member/me', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    })
+
+    if (response.ok) {
+      const data = await response.json()
+      userName.value = data.nickname || data.name
+    }
+  } catch (error) {
+    console.error('사용자 정보 로드 오류:', error)
+  }
+}
 
 // 로그인 상태 확인
 onMounted(() => {
   isLoggedIn.value = isAuthenticated()
+  if (isLoggedIn.value) {
+    fetchUserInfo()
+  }
 })
 
 function scrollToSection(id: string) {

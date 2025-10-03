@@ -5,7 +5,7 @@
     <div class="chatbot-sidebar-wrapper" :class="{ 'mobile-hidden': !sidebarVisible }" :style="{ width: sidebarWidth + 'px' }">
       <div class="frame">
         <div class="chatbot-logo-header">
-          <div class="frame-1">
+          <div class="frame-1" @click="goToHome" style="cursor: pointer;">
             <div class="logo-icon"></div>
             <img :src="eulLogo" alt="EULGPT 로고" class="eulgpt-logo-svg" />
           </div>
@@ -13,18 +13,18 @@
         </div>
         <div class="frame-2">
           <div class="chatbot-menu-item">
-            <div class="frame-3" @click="goToDevelopmentStatus">
+            <div class="frame-3" @click="goToCrew">
               <div class="group-4">
                 <div class="group-5"></div>
                 <div class="frame-6"><span class="day">DAY</span></div>
               </div>
               <span class="empty-classroom-check">빈 강의실 확인</span>
             </div>
-            <div class="frame-7" @click="goToDevelopmentStatus">
+            <div class="frame-7" @click="goToCrew">
               <div class="group-8"></div>
               <span class="library-study-room-reservation">도서관 ∙ 열람실 자리 예약</span>
             </div>
-            <div class="frame-9" @click="goToDevelopmentStatus">
+            <div class="frame-9" @click="goToCrew">
               <div class="group-a"></div>
               <span class="status">학식당 현황</span>
             </div>
@@ -44,7 +44,9 @@
         </div>
       </div>
       <div class="side-footer" @click="toggleMyPageModal">
-        <div class="ellipse"></div>
+        <div class="ellipse">
+          <img v-if="userProfileImage" :src="userProfileImage" alt="프로필" class="profile-image" />
+        </div>
         <div class="frame-12">
           <div class="notification-container" @click="toggleNotificationDropdown">
             <div class="notification"></div>
@@ -257,6 +259,7 @@ const maxSidebarWidth = 500;
 const showNotificationDropdown = ref(false);
 const showInfoPanel = ref(false);
 const showMyPageModal = ref(false);
+const userProfileImage = ref<string | null>(null);
 
 const showMobileOverlay = computed(() => isMobile.value && sidebarVisible.value);
 
@@ -340,8 +343,33 @@ const handleClickOutside = (event: Event) => {
   }
 };
 
+// 사용자 프로필 정보 가져오기
+const fetchUserProfile = async () => {
+  try {
+    const token = localStorage.getItem('access_token');
+    if (!token) return;
+
+    const response = await fetch('/api/member/me', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.profile_image_url) {
+        userProfileImage.value = data.profile_image_url;
+      }
+    }
+  } catch (error) {
+    console.error('프로필 정보 로드 오류:', error);
+  }
+};
+
 onMounted(() => {
   checkMobileSize();
+  fetchUserProfile();
   window.addEventListener('resize', checkMobileSize);
   document.addEventListener('click', handleClickOutside);
 });
@@ -350,6 +378,14 @@ onUnmounted(() => {
   window.removeEventListener('resize', checkMobileSize);
   document.removeEventListener('click', handleClickOutside);
 });
+
+const goToHome = () => {
+  router.push('/');
+};
+
+const goToCrew = () => {
+  router.push('/crew');
+};
 
 const goToDevelopmentStatus = () => {
   router.push('/development-status');
@@ -691,6 +727,17 @@ const retryFortune = () => {
   background: url('./icon/회색원.svg') no-repeat center;
   background-size: cover;
   z-index: 43;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ellipse .profile-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   border-radius: 50%;
 }
 .frame-12 {
