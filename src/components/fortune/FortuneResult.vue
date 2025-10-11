@@ -29,8 +29,8 @@
             <div class="share-card">
               <div class="share-card-content">
                 <h3 class="share-title">{{ fortuneTitle }}</h3>
-                <img 
-                  :src="fortuneImage" 
+                <img
+                  :src="fortuneImage"
                   :alt="fortuneTitle"
                   class="share-fortune-image"
                   @error="handleImageError"
@@ -85,9 +85,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch, onUnmounted } from 'vue';
 
 interface BirthdateData {
+  name?: string;
   year: number;
   month: number;
   day: number;
@@ -113,6 +114,10 @@ const props = defineProps<{
 const emit = defineEmits(['goBack', 'retry']);
 
 const currentPage = ref(1);
+const displayedText = ref('');
+const isStreaming = ref(false);
+const lastStreamedText = ref(''); // 마지막으로 스트리밍한 텍스트 추적
+let streamingInterval: ReturnType<typeof setInterval> | null = null;
 
 const goToPage = (page: number) => {
   if (page >= 1 && page <= 2) {
@@ -137,10 +142,10 @@ const saveImage = async () => {
     // 운세 카드 이미지 다운로드
     const response = await fetch(fortuneImage.value);
     const blob = await response.blob();
-    
+
     // 파일명 생성 (날짜 + 운세 타입)
     const date = new Date().toISOString().split('T')[0];
-    const fortuneType = props.fortuneData.fortune;
+    const fortuneType = props.fortuneData?.fortune || 'fortune';
     const filename = `운세카드_${fortuneType}_${date}.png`;
     
     // 다운로드 실행
@@ -212,48 +217,85 @@ const fortuneImage = computed(() => {
 });
 
 const fortuneTitle = computed(() => {
-  console.log('[FortuneResult] fortuneData:', props.fortuneData);
+  console.log('[FortuneResult DEBUG] fortuneData:', props.fortuneData);
 
   if (!props.fortuneData) return '운세를 불러오는 중입니다...';
 
-  // 에러가 있는 경우
+  // Error case
   if (props.fortuneData.error) {
     return '운세 조회 실패';
   }
 
-  // title 필드가 있으면 사용 (모든 타입)
+  // Use title field if available
   if (props.fortuneData.title) {
-    console.log('[FortuneResult] 모델 생성 title:', props.fortuneData.title);
+    console.log('[FortuneResult DEBUG] Model generated title:', props.fortuneData.title);
     return props.fortuneData.title;
   }
 
-  // title이 아직 생성 중이거나 없는 경우
-  console.log('[FortuneResult] title 생성 중');
+  // Title is being generated or not available
+  console.log('[FortuneResult DEBUG] Title is being generated');
   return '모델이 운세 예측중...';
 });
+
+// Text animation for streaming effect
+const startStreaming = (text: string) => {
+  // Skip if already streamed this text
+  if (text === lastStreamedText.value) {
+    console.log('[FortuneResult DEBUG] Same text - skipping streaming');
+    return;
+  }
+
+  // Stop if already streaming
+  if (streamingInterval) {
+    clearInterval(streamingInterval);
+    streamingInterval = null;
+  }
+
+  console.log('[FortuneResult DEBUG] Starting streaming:', text.substring(0, 50) + '...');
+  lastStreamedText.value = text; // Save current text
+  displayedText.value = '';
+  isStreaming.value = true;
+
+  let currentIndex = 0;
+  const speed = 30; // Display speed per character (ms)
+
+  streamingInterval = setInterval(() => {
+    if (currentIndex < text.length) {
+      displayedText.value += text[currentIndex];
+      currentIndex++;
+    } else {
+      if (streamingInterval) {
+        clearInterval(streamingInterval);
+        streamingInterval = null;
+      }
+      isStreaming.value = false;
+      console.log('[FortuneResult DEBUG] Streaming completed');
+    }
+  }, speed);
+};
+
+// fortuneData 변경 감지
+watch(() => props.fortuneData?.description || props.fortuneData?.result, (newText) => {
+  if (newText && !props.fortuneData?.error) {
+    startStreaming(newText);
+  }
+}, { immediate: true });
 
 const fortuneDescription = computed(() => {
   if (!props.fortuneData) return '운세를 불러오는 중입니다...';
 
-  // 에러가 있는 경우
+  // Error case
   if (props.fortuneData.error) {
-    console.log('[FortuneResult] error:', props.fortuneData.error);
+    console.log('[FortuneResult DEBUG] Error:', props.fortuneData.error);
     return props.fortuneData.error.replace(/\n/g, '<br/>');
   }
 
-  // description 필드 우선 사용 (모든 타입)
-  if (props.fortuneData.description) {
-    console.log('[FortuneResult] description:', props.fortuneData.description);
-    return props.fortuneData.description.replace(/\n/g, '<br/>');
+  // Use displayedText if streaming or completed
+  if (displayedText.value) {
+    return displayedText.value.replace(/\n/g, '<br/>');
   }
 
-  // result 필드 사용 (하위 호환성)
-  if (props.fortuneData.result) {
-    console.log('[FortuneResult] result:', props.fortuneData.result);
-    return props.fortuneData.result.replace(/\n/g, '<br/>');
-  }
-
-  console.log('[FortuneResult] 데이터 없음 - 로딩 중');
+  console.log('[FortuneResult DEBUG] No data - loading');
   return '모델이 운세 예측중...';
 });
 
@@ -261,6 +303,14 @@ const handleImageError = (event: Event) => {
   const target = event.target as HTMLImageElement;
   target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjMyIiBoZWlnaHQ9IjM0OCIgdmlld0JveD0iMCAwIDIzMiAzNDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMzIiIGhlaWdodD0iMzQ4IiByeD0iMjAiIGZpbGw9IiNGM0Y0RjYiLz4KPHN2ZyB4PSI5MiIgeT0iMTUwIiB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0yNCAzNkMzMS4xODMgMzYgMzcgMzAuMTgzIDM3IDIzQzM3IDE1LjgxNyAzMS4xODMgMTAgMjQgMTBDMTYuODE3IDEwIDExIDE1LjgxNyAxMSAyM0MxMSAzMC4xODMgMTYuODE3IDM2IDI0IDM2WiIgZmlsbD0iI0Q5RDlEOSIvPgo8Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIyIiBmaWxsPSIjNjM2MzYzIi8+CjxjaXJjbGUgY3g9IjI4IiBjeT0iMjAiIHI9IjIiIGZpbGw9IiM2MzYzNjMiLz4KPHBhdGggZD0iTTIwIDI4QzIwIDI4IDIyIDMwIDI0IDMwQzI2IDMwIDI4IDI4IDI4IDI4IiBzdHJva2U9IiM2MzYzNjMiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo8dGV4dCB4PSIxMTYiIHk9IjIyMCIgZm9udC1mYW1pbHk9IlByZXRlbmRhcmQiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5Q0EzQUYiPuydtOuvuOyngDwvdGV4dD4KPC9zdmc+';
 };
+
+// 컴포넌트 unmount 시 interval 정리
+onUnmounted(() => {
+  if (streamingInterval) {
+    clearInterval(streamingInterval);
+    streamingInterval = null;
+  }
+});
 </script>
 
 <style scoped>
@@ -269,7 +319,7 @@ const handleImageError = (event: Event) => {
   justify-content: flex-start;
   flex-direction: column;
   align-items: center;
-  gap: 30px;
+  gap: 0;
   box-sizing: border-box;
   width: 100%;
   max-width: 532px;
@@ -282,7 +332,7 @@ const handleImageError = (event: Event) => {
   justify-content: center;
   flex-direction: column;
   align-items: center;
-  gap: 30px;
+  gap: 0;
   width: 303px;
   box-sizing: border-box;
 }
@@ -292,7 +342,7 @@ const handleImageError = (event: Event) => {
   justify-content: flex-start;
   flex-direction: column;
   align-items: center;
-  gap: 35px;
+  gap: 20px;
   align-self: stretch;
   box-sizing: border-box;
   flex-shrink: 0;
@@ -325,7 +375,7 @@ const handleImageError = (event: Event) => {
   justify-content: flex-start;
   flex-direction: column;
   align-items: center;
-  gap: 30px;
+  gap: 20px;
   align-self: stretch;
   box-sizing: border-box;
   flex-shrink: 0;
@@ -356,10 +406,11 @@ const handleImageError = (event: Event) => {
   justify-content: flex-start;
   flex-direction: column;
   align-items: center;
-  gap: 45px;
+  gap: 0;
   align-self: stretch;
   box-sizing: border-box;
   flex-shrink: 0;
+  margin-top: 20px;
 }
 
 .fortune-description {
@@ -469,12 +520,12 @@ const handleImageError = (event: Event) => {
 
 .share-card {
   display: flex;
-  padding: 23px 42px;
+  padding: 0;
   flex-direction: column;
   align-items: center;
   gap: 25px;
   border-radius: 20px;
-  background-color: rgb(240, 246, 255);
+  background-color: transparent;
   box-sizing: border-box;
 }
 
@@ -483,7 +534,7 @@ const handleImageError = (event: Event) => {
   justify-content: flex-start;
   flex-direction: column;
   align-items: center;
-  gap: 15px;
+  gap: 20px;
   align-self: stretch;
   box-sizing: border-box;
   flex-shrink: 0;
@@ -492,7 +543,7 @@ const handleImageError = (event: Event) => {
 .share-title {
   color: rgb(31, 41, 55);
   text-overflow: ellipsis;
-  font-size: 20px;
+  font-size: 28px;
   font-family: Pretendard, sans-serif;
   font-weight: 700;
   line-height: 140%;
@@ -609,7 +660,7 @@ const handleImageError = (event: Event) => {
 .header-slider {
   display: flex;
   width: 200%;
-  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  align-items: flex-start;
 }
 
 .header-content {
@@ -622,8 +673,12 @@ const handleImageError = (event: Event) => {
   box-sizing: border-box;
 }
 
+.header-content:first-child {
+  min-height: 490px;
+}
+
 .header-content:last-child {
-  padding-top: 60px;
+  min-height: 490px;
 }
 
 .header-content .result-header-section {
@@ -653,11 +708,12 @@ const handleImageError = (event: Event) => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   padding: 0 20px;
   box-sizing: border-box;
 }
 
-/* 하단 고정 Pagination */
+/* Fixed bottom pagination */
 .bottom-fixed-pagination {
   position: fixed;
   bottom: 20px;
@@ -673,47 +729,37 @@ const handleImageError = (event: Event) => {
   z-index: 1000;
 }
 
-/* chat-content-col 영역 기준으로 중앙 정렬 */
-@media (min-width: 769px) {
-  .bottom-fixed-pagination {
-    left: calc(50% + 135px);
-    transform: translateX(-50%);
-  }
-}
-
-@media (max-width: 768px) {
-  .bottom-fixed-pagination {
-    left: 50%;
-    transform: translateX(-50%);
-  }
-}
-
 /* 모바일 반응형 */
 @media (max-width: 768px) {
   .fortune-result-container {
     max-width: 100%;
     padding: 20px;
   }
-  
+
   .result-header-section {
     width: 100%;
     max-width: 303px;
   }
-  
-  .fortune-result-image {
+
+  .fortune-result-image,
+  .share-fortune-image {
     width: 200px;
     height: 300px;
   }
-  
+
   .fortune-title {
     font-size: 20px;
   }
-  
+
+  .share-title {
+    font-size: 24px;
+  }
+
   .fortune-description {
     min-height: 180px;
     padding: 20px 15px;
   }
-  
+
   .description-text {
     font-size: 13px;
     line-height: 21px;
@@ -721,20 +767,25 @@ const handleImageError = (event: Event) => {
 }
 
 @media (max-width: 480px) {
-  .fortune-result-image {
+  .fortune-result-image,
+  .share-fortune-image {
     width: 180px;
     height: 270px;
   }
-  
+
   .fortune-title {
     font-size: 18px;
   }
-  
+
+  .share-title {
+    font-size: 22px;
+  }
+
   .description-text {
     font-size: 12px;
     line-height: 20px;
   }
-  
+
   .fortune-description {
     padding: 15px 12px;
   }

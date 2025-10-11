@@ -8,14 +8,15 @@
       </div>
     </div>
 
-    <div v-if="currentStep !== 'result'" class="character-section">
+    <div v-if="currentStep !== 'result'" class="character-section" :class="{ 'loading': isLoading }">
       <div class="blur-effects">
         <div class="blur-circle-1"></div>
         <div class="blur-circle-2"></div>
       </div>
-      <img 
-        :src="isLoading ? '/src/assets/fortune-character_eye_off.svg' : '/src/assets/fortune-character.svg'" 
-        alt="을랑이 캐릭터" 
+
+      <img
+        :src="isLoading ? '/src/assets/fortune-character_eye_off.svg' : '/src/assets/fortune-character.svg'"
+        alt="을랑이 캐릭터"
         class="character-image"
         @error="handleImageError"
       />
@@ -24,29 +25,6 @@
     <div class="fortune-content">
       <!-- 단계 1: 시작 화면 -->
       <div v-if="currentStep === 'start'" class="start-section">
-        <div class="fortune-types">
-          <img 
-            src="/src/assets/fortune/love-fortune.svg" 
-            alt="애정운" 
-            class="fortune-card-image"
-            @error="handleIconError"
-          />
-          
-          <img 
-            src="/src/assets/fortune/success-fortune.svg" 
-            alt="성공운" 
-            class="fortune-card-image"
-            @error="handleIconError"
-          />
-          
-          <img 
-            src="/src/assets/fortune/money-fortune.svg" 
-            alt="재물운" 
-            class="fortune-card-image"
-            @error="handleIconError"
-          />
-        </div>
-        
         <button class="start-button" @click="showBirthdateModal">
           <div class="button-content">
             <span class="button-text">시작하기</span>
@@ -56,68 +34,77 @@
 
       <!-- 단계 2: 카드 선택 화면 -->
       <div v-else-if="currentStep === 'card-selection'" class="card-selection-section">
-        <div class="fortune-types mystical-cards">
-          <div class="fortune-card-container" :class="{ 'selected': selectedFortune === 'love' }">
-            <img 
-              src="/src/assets/fortune/love-fortune.svg" 
-              alt="애정운" 
-              class="fortune-card-image mystical-card"
-              :class="{ 'selected': selectedFortune === 'love' }"
-              @click="selectFortune('love')"
-              @error="handleIconError"
-            />
-            <div class="mystical-glow love-glow"></div>
-            <div class="sparkles">
-              <div class="sparkle sparkle-1"></div>
-              <div class="sparkle sparkle-2"></div>
-              <div class="sparkle sparkle-3"></div>
+        <!-- 로딩 중이 아닐 때만 카드와 버튼 표시 -->
+        <div v-if="!isLoading" class="cards-wrapper">
+          <div class="fortune-types mystical-cards">
+            <div class="fortune-card-container" :class="{ 'selected': selectedFortune === 'love' }">
+              <img
+                src="/src/assets/fortune/love-fortune.svg"
+                alt="애정운"
+                class="fortune-card-image mystical-card"
+                :class="{ 'selected': selectedFortune === 'love' }"
+                @click="selectFortune('love')"
+                @error="handleIconError"
+              />
+              <div class="mystical-glow love-glow"></div>
+              <div class="sparkles">
+                <div class="sparkle sparkle-1"></div>
+                <div class="sparkle sparkle-2"></div>
+                <div class="sparkle sparkle-3"></div>
+              </div>
+            </div>
+
+            <div class="fortune-card-container" :class="{ 'selected': selectedFortune === 'success' }">
+              <img
+                src="/src/assets/fortune/success-fortune.svg"
+                alt="성공운"
+                class="fortune-card-image mystical-card"
+                :class="{ 'selected': selectedFortune === 'success' }"
+                @click="selectFortune('success')"
+                @error="handleIconError"
+              />
+              <div class="mystical-glow success-glow"></div>
+              <div class="sparkles">
+                <div class="sparkle sparkle-1"></div>
+                <div class="sparkle sparkle-2"></div>
+                <div class="sparkle sparkle-3"></div>
+              </div>
+            </div>
+
+            <div class="fortune-card-container" :class="{ 'selected': selectedFortune === 'money' }">
+              <img
+                src="/src/assets/fortune/money-fortune.svg"
+                alt="재물운"
+                class="fortune-card-image mystical-card"
+                :class="{ 'selected': selectedFortune === 'money' }"
+                @click="selectFortune('money')"
+                @error="handleIconError"
+              />
+              <div class="mystical-glow money-glow"></div>
+              <div class="sparkles">
+                <div class="sparkle sparkle-1"></div>
+                <div class="sparkle sparkle-2"></div>
+                <div class="sparkle sparkle-3"></div>
+              </div>
             </div>
           </div>
-          
-          <div class="fortune-card-container" :class="{ 'selected': selectedFortune === 'success' }">
-            <img 
-              src="/src/assets/fortune/success-fortune.svg" 
-              alt="성공운" 
-              class="fortune-card-image mystical-card"
-              :class="{ 'selected': selectedFortune === 'success' }"
-              @click="selectFortune('success')"
-              @error="handleIconError"
-            />
-            <div class="mystical-glow success-glow"></div>
-            <div class="sparkles">
-              <div class="sparkle sparkle-1"></div>
-              <div class="sparkle sparkle-2"></div>
-              <div class="sparkle sparkle-3"></div>
+
+          <button
+            v-if="selectedFortune"
+            class="next-button"
+            @click="showFortuneResult"
+          >
+            <div class="button-content">
+              <span class="button-text">다음</span>
             </div>
-          </div>
-          
-          <div class="fortune-card-container" :class="{ 'selected': selectedFortune === 'money' }">
-            <img 
-              src="/src/assets/fortune/money-fortune.svg" 
-              alt="재물운" 
-              class="fortune-card-image mystical-card"
-              :class="{ 'selected': selectedFortune === 'money' }"
-              @click="selectFortune('money')"
-              @error="handleIconError"
-            />
-            <div class="mystical-glow money-glow"></div>
-            <div class="sparkles">
-              <div class="sparkle sparkle-1"></div>
-              <div class="sparkle sparkle-2"></div>
-              <div class="sparkle sparkle-3"></div>
-            </div>
-          </div>
+          </button>
         </div>
-        
-        <button 
-          v-if="selectedFortune"
-          class="next-button"
-          @click="showFortuneResult"
-        >
-          <div class="button-content">
-            <span class="button-text">다음</span>
-          </div>
-        </button>
+
+        <!-- 로딩 중일 때 메시지 표시 -->
+        <div v-else class="loading-message-container">
+          <h3 class="loading-title">을랑이가 운세를 생성하고 있습니다</h3>
+          <p class="loading-subtitle">조금만 기다려주세요</p>
+        </div>
       </div>
 
       <!-- 단계 3: 운세 결과 화면 -->
@@ -146,7 +133,6 @@
 import { ref, computed } from 'vue';
 import BirthdateModal from './BirthdateModal.vue';
 import FortuneResult from './FortuneResult.vue';
-import { fortuneAPI } from '../../services/api';
 
 interface BirthdateData {
   name: string;
@@ -246,9 +232,16 @@ const getTimeSlot = (hour?: number): string => {
 };
 
 const showFortuneResult = async () => {
-  if (!selectedFortune.value || !birthdateData.value) return;
+  if (!selectedFortune.value || !birthdateData.value) {
+    console.error('[FORTUNE DEBUG] No fortune selected or birthdate data missing', {
+      selectedFortune: selectedFortune.value,
+      birthdateData: birthdateData.value
+    });
+    return;
+  }
 
   isLoading.value = true;
+  console.log('[FORTUNE DEBUG] Loading started');
 
   try {
     const fortuneTypeMap: { [key: string]: string } = {
@@ -265,36 +258,78 @@ const showFortuneResult = async () => {
       fortune_type: fortuneTypeMap[selectedFortune.value],
     };
 
-    console.log('[운세 API 요청]', requestData);
-
-    // 일반 API 호출 (스트리밍 제거)
     const endpoint = fortuneTypeMap[selectedFortune.value];
-    const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:8001'}/fortune/${endpoint}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestData),
-      }
-    );
+    const apiUrl = `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:8001'}/fortune/${endpoint}`;
+
+    console.log('[FORTUNE DEBUG] API request info:', {
+      url: apiUrl,
+      endpoint: endpoint,
+      requestData: requestData,
+      env: import.meta.env.VITE_BACKEND_URL
+    });
+
+    // API call without streaming
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestData),
+    });
+
+    console.log('[FORTUNE DEBUG] API response status:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
+      headers: Object.fromEntries(response.headers.entries())
+    });
 
     if (!response.ok) {
-      throw new Error('운세 조회 실패');
+      const errorText = await response.text();
+      console.error('[FORTUNE DEBUG] API error response:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText
+      });
+      throw new Error(`Fortune query failed: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
-    const data = await response.json();
-    console.log('[운세 API 응답]', data);
+    const responseText = await response.text();
+    console.log('[FORTUNE DEBUG] API response raw:', responseText);
 
-    // 운세 타입별 제목 매핑
+    let data;
+    try {
+      data = JSON.parse(responseText);
+      console.log('[FORTUNE DEBUG] JSON parsing successful:', data);
+    } catch (parseError) {
+      console.error('[FORTUNE DEBUG] JSON parsing failed:', parseError);
+      const errorMessage = parseError instanceof Error ? parseError.message : String(parseError);
+      throw new Error(`JSON parsing error: ${errorMessage}`);
+    }
+
+    // Data validation
+    if (!data || typeof data !== 'object') {
+      console.error('[FORTUNE DEBUG] Invalid response data structure:', data);
+      throw new Error('Response data structure is invalid');
+    }
+
+    console.log('[FORTUNE DEBUG] Response data analysis:', {
+      hasTitle: !!data.title,
+      hasDescription: !!data.description,
+      hasResult: !!data.result,
+      titleLength: data.title?.length || 0,
+      descriptionLength: data.description?.length || 0,
+      resultLength: data.result?.length || 0
+    });
+
+    // Fortune type title mapping
     const titleMap: { [key: string]: string } = {
       'love': '오늘의 애정운',
       'success': '오늘의 성공운',
       'money': '오늘의 재물운'
     };
 
-    // 결과 데이터 설정
+    // Set result data
     fortuneResultData.value = {
       fortune: selectedFortune.value,
       birthdate: birthdateData.value,
@@ -303,16 +338,26 @@ const showFortuneResult = async () => {
       result: data.result || data.description || '',
     };
 
-    // 결과 화면으로 전환
+    console.log('[FORTUNE DEBUG] Final result data:', fortuneResultData.value);
+
+    // Switch to result screen
     currentStep.value = 'result';
     isLoading.value = false;
+    console.log('[FORTUNE DEBUG] Switched to result screen successfully');
 
   } catch (error) {
-    console.error('운세 조회 실패:', error);
+    const err = error as Error;
+    console.error('[FORTUNE DEBUG] Complete error info:', {
+      errorMessage: err.message,
+      errorStack: err.stack,
+      errorType: err.constructor.name,
+      error: error
+    });
+
     fortuneResultData.value = {
       fortune: selectedFortune.value,
       birthdate: birthdateData.value,
-      error: '운세 조회 중 오류가 발생했습니다. 다시 시도해주세요.',
+      error: `Error occurred while fetching fortune.\nError: ${err.message}\n\nPlease check F12 console for details.`,
     };
     currentStep.value = 'result';
     isLoading.value = false;
@@ -449,6 +494,21 @@ const handleIconError = (event: Event) => {
   left: 50px;
   top: -20px;
   z-index: 10;
+  transition: all 0.5s ease;
+}
+
+/* 로딩 중 캐릭터 떠오르는 효과 */
+.character-section.loading .character-image {
+  animation: floatingCharacter 3s ease-in-out infinite;
+}
+
+@keyframes floatingCharacter {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 .fortune-content {
@@ -712,6 +772,14 @@ const handleIconError = (event: Event) => {
   gap: 24px;
 }
 
+.cards-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+}
+
 .next-button {
   display: flex;
   justify-content: center;
@@ -745,6 +813,47 @@ const handleIconError = (event: Event) => {
   gap: 40px;
 }
 
+/* 로딩 메시지 스타일 */
+.loading-message-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  padding: 60px 40px;
+  min-height: 200px;
+}
+
+.loading-title {
+  color: rgb(31, 41, 55);
+  font-size: 24px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 700;
+  line-height: 140%;
+  text-align: center;
+  margin: 0;
+  animation: fadeInOut 2s ease-in-out infinite;
+}
+
+.loading-subtitle {
+  color: rgb(107, 114, 128);
+  font-size: 16px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 500;
+  text-align: center;
+  margin: 0;
+  opacity: 0.8;
+}
+
+@keyframes fadeInOut {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 .result-section {
   display: flex;
   flex-direction: column;
@@ -758,77 +867,194 @@ const handleIconError = (event: Event) => {
   .fortune-main-container {
     padding: 20px;
   }
-  
+
+  .fortune-main-container.result-view {
+    padding-bottom: 100px;
+  }
+
   .header-section {
     width: 100%;
     max-width: 659px;
+    margin-bottom: 35px;
   }
-  
+
   .main-title {
     font-size: 28px;
   }
-  
+
+  .subtitle {
+    font-size: 14px;
+  }
+
   .character-section {
     width: 280px;
     height: 230px;
     margin-bottom: 30px;
   }
-  
-  .character-image {
+
+  .blur-circle-1 {
     width: 150px;
-    height: 200px;
-    left: 65px;
+    height: 150px;
+    left: 15px;
+    top: 40px;
   }
-  
+
+  .blur-circle-2 {
+    width: 100px;
+    height: 100px;
+    left: 120px;
+    top: 15px;
+  }
+
+  .character-image {
+    width: 200px;
+    height: 230px;
+    left: 40px;
+    top: -10px;
+  }
+
   .fortune-content {
     width: 100%;
     max-width: 532px;
     gap: 30px;
   }
-  
+
   .fortune-types {
     gap: 20px;
     flex-wrap: wrap;
     justify-content: center;
   }
-  
+
   .fortune-card-image {
     width: 120px;
     height: 140px;
   }
-  
-  .start-button {
+
+  .mystical-glow {
+    width: 130px;
+    height: 150px;
+  }
+
+  .start-button,
+  .next-button {
     width: 200px;
     height: 45px;
     padding: 10px 50px;
   }
-  
+
   .button-text {
     font-size: 16px;
+  }
+
+  .loading-message-container {
+    padding: 40px 20px;
+  }
+
+  .loading-title {
+    font-size: 20px;
+  }
+
+  .loading-subtitle {
+    font-size: 14px;
   }
 }
 
 @media (max-width: 480px) {
+  .fortune-main-container {
+    padding: 15px;
+  }
+
+  .fortune-main-container.result-view {
+    padding-bottom: 80px;
+  }
+
   .header-section {
     text-align: center;
+    align-items: center;
+    margin-bottom: 25px;
   }
-  
+
   .main-title {
     font-size: 24px;
   }
-  
+
+  .subtitle {
+    font-size: 13px;
+    text-align: center;
+  }
+
   .divider-line {
     width: 100%;
   }
-  
+
+  .character-section {
+    width: 220px;
+    height: 180px;
+    margin-bottom: 20px;
+  }
+
+  .blur-circle-1 {
+    width: 120px;
+    height: 120px;
+    left: 10px;
+    top: 30px;
+  }
+
+  .blur-circle-2 {
+    width: 80px;
+    height: 80px;
+    left: 90px;
+    top: 10px;
+  }
+
+  .character-image {
+    width: 160px;
+    height: 180px;
+    left: 30px;
+    top: -5px;
+  }
+
+  .fortune-content {
+    gap: 25px;
+  }
+
   .fortune-types {
     flex-direction: column;
     gap: 15px;
   }
-  
+
   .fortune-card-image {
     width: 140px;
     height: 150px;
+  }
+
+  .mystical-glow {
+    width: 150px;
+    height: 160px;
+  }
+
+  .start-button,
+  .next-button {
+    width: 180px;
+    height: 42px;
+    padding: 10px 45px;
+  }
+
+  .button-text {
+    font-size: 15px;
+  }
+
+  .loading-message-container {
+    padding: 30px 15px;
+    min-height: 150px;
+  }
+
+  .loading-title {
+    font-size: 18px;
+  }
+
+  .loading-subtitle {
+    font-size: 13px;
   }
 }
 </style>

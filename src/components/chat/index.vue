@@ -387,9 +387,10 @@ const goToCrew = () => {
   router.push('/crew');
 };
 
-const goToDevelopmentStatus = () => {
-  router.push('/development-status');
-};
+// Reserved for future use
+// const goToDevelopmentStatus = () => {
+//   router.push('/development-status');
+// };
 
 const goToFortuneMain = () => {
   currentView.value = 'fortune-main';
