@@ -90,6 +90,7 @@ import HeaderSection from '../main/HeaderSection.vue'
 import { setAccessToken } from '../../utils/auth'
 
 const router = useRouter()
+const API_BASE_URL = import.meta.env.VITE_FASTAPI_URL || '/api'
 
 const email = ref('')
 const password = ref('')
@@ -112,8 +113,8 @@ const handleLogin = async () => {
 
   try {
     console.log('로그인 시도:', { email: email.value })
-    
-    const response = await fetch('/api/member/signin', {
+
+    const response = await fetch(`${API_BASE_URL}/member/signin`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -159,7 +160,7 @@ const showToastMessage = (message: string) => {
 const handleKakaoLogin = () => {
   console.log('카카오 로그인 시도')
   // 백엔드 카카오 로그인 엔드포인트로 리다이렉트
-  window.location.href = '/api/member/kakao/login'
+  window.location.href = `${API_BASE_URL}/member/kakao/login`
 }
 </script>
 

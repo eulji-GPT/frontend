@@ -152,6 +152,7 @@ import type { ChatMode } from '../../composables/useChat';
 import eulLogo from '../../assets/eul_logo.svg';
 
 const router = useRouter();
+const API_BASE_URL = import.meta.env.VITE_FASTAPI_URL || '/api';
 import "./index.css";
 
 const { 
@@ -349,7 +350,7 @@ const fetchUserProfile = async () => {
     const token = localStorage.getItem('access_token');
     if (!token) return;
 
-    const response = await fetch('/api/member/me', {
+    const response = await fetch(`${API_BASE_URL}/member/me`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,

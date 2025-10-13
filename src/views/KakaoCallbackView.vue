@@ -12,6 +12,7 @@ import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
+const API_BASE_URL = import.meta.env.VITE_FASTAPI_URL || '/api';
 
 onMounted(async () => {
   try {
@@ -26,7 +27,7 @@ onMounted(async () => {
     console.log('카카오 인가 코드:', code);
 
     // 백엔드로 인가 코드 전송
-    const response = await fetch(`/api/member/kakao/callback?code=${code}`, {
+    const response = await fetch(`${API_BASE_URL}/member/kakao/callback?code=${code}`, {
       method: 'GET',
       credentials: 'include', // 쿠키 포함
     });

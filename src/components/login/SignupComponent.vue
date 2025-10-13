@@ -64,6 +64,7 @@ import HeaderSection from '../main/HeaderSection.vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
+const API_BASE_URL = import.meta.env.VITE_FASTAPI_URL || '/api';
 const email = ref('');
 const verificationCode = ref('');
 const isVerificationSent = ref(false);
@@ -111,7 +112,7 @@ const handleSendVerification = async () => {
     console.log('이메일 중복 확인 중:', email.value);
 
     // 1. 이메일 중복 확인
-    const checkResponse = await fetch('/api/member/check-email', {
+    const checkResponse = await fetch(`${API_BASE_URL}/member/check-email`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -128,7 +129,7 @@ const handleSendVerification = async () => {
     console.log('인증번호 발송 요청:', email.value);
 
     // 2. 인증번호 발송
-    const response = await fetch('/api/member/send-verification', {
+    const response = await fetch(`${API_BASE_URL}/member/send-verification`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -176,7 +177,7 @@ const handleNext = async () => {
     console.log('인증번호 확인 중:', { email: email.value, code: verificationCode.value });
 
     // 백엔드 API 호출
-    const response = await fetch('/api/member/verify-code', {
+    const response = await fetch(`${API_BASE_URL}/member/verify-code`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

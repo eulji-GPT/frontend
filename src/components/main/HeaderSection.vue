@@ -51,6 +51,7 @@ import { isAuthenticated, logout } from '../../utils/auth'
 
 const emit = defineEmits(['scrollToSection'])
 const router = useRouter()
+const API_BASE_URL = import.meta.env.VITE_FASTAPI_URL || '/api'
 const isMobileMenuOpen = ref(false)
 const isLoggedIn = ref(false)
 const userName = ref('')
@@ -61,7 +62,7 @@ const fetchUserInfo = async () => {
     const token = localStorage.getItem('access_token')
     if (!token) return
 
-    const response = await fetch('/api/member/me', {
+    const response = await fetch(`${API_BASE_URL}/member/me`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,

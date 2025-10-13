@@ -135,6 +135,7 @@ import { useRouter } from 'vue-router'
 import HeaderSection from '../main/HeaderSection.vue'
 
 const router = useRouter()
+const API_BASE_URL = import.meta.env.VITE_FASTAPI_URL || '/api'
 
 // Form data
 const formData = ref({
@@ -301,8 +302,8 @@ const handleSubmit = async () => {
     
     console.log('백엔드로 전송할 데이터:', signupData);
     console.log('API 호출 시작...');
-    
-    const response = await fetch('/api/member/signup-init', {
+
+    const response = await fetch(`${API_BASE_URL}/member/signup-init`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

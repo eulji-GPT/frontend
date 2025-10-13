@@ -1,5 +1,5 @@
 // API 기본 설정 및 서비스
-const API_BASE_URL = '/api'; // 프록시를 통해 백엔드로 라우팅
+const API_BASE_URL = import.meta.env.VITE_FASTAPI_URL || '/api'; // 환경 변수 또는 프록시 경로 사용
 
 // API 요청을 위한 기본 fetch 함수
 async function apiRequest<T>(

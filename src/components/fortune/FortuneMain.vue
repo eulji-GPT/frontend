@@ -264,13 +264,13 @@ const showFortuneResult = async () => {
     };
 
     const endpoint = fortuneTypeMap[selectedFortune.value];
-    const apiUrl = `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:8001'}/fortune/${endpoint}`;
+    const apiUrl = `${import.meta.env.VITE_GEMINI_FASTAPI_URL || '/gemini-api'}/fortune/${endpoint}`;
 
     console.log('[FORTUNE DEBUG] API request info:', {
       url: apiUrl,
       endpoint: endpoint,
       requestData: requestData,
-      env: import.meta.env.VITE_BACKEND_URL
+      env: import.meta.env.VITE_GEMINI_FASTAPI_URL
     });
 
     // API call without streaming

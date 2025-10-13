@@ -216,6 +216,7 @@ const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
+const API_BASE_URL = import.meta.env.VITE_FASTAPI_URL || '/api'
 const activeTab = ref<'mypage' | 'settings'>('mypage')
 const selectedTheme = ref<'light' | 'dark' | 'system'>('system')
 const profileImage = ref<string | null>(null)
@@ -243,7 +244,7 @@ const fetchUserInfo = async () => {
       return
     }
 
-    const response = await fetch('/api/member/me', {
+    const response = await fetch(`${API_BASE_URL}/member/me`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
