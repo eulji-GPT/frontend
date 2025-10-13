@@ -67,7 +67,7 @@ export function useChat() {
     }
   };
 
-  const FASTAPI_BASE_URL = '/gemini-api'; // 프록시를 통해 Gemini FastAPI로 라우팅
+  const FASTAPI_BASE_URL = import.meta.env.VITE_GEMINI_FASTAPI_URL || '/gemini-api'; // 환경 변수 또는 프록시 경로 사용
   const getAPIUrl = (mode: ChatMode): string => {
     const endpoints = {
       general: '/chat',

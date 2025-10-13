@@ -37,7 +37,7 @@
                 />
               </div>
               <div class="brand-section">
-                <img src="/src/assets/eul_logo.svg" alt="EULGPT" class="brand-logo" />
+                <img :src="eulLogo" alt="EULGPT" class="brand-logo" />
               </div>
             </div>
           </div>
@@ -86,6 +86,10 @@
 
 <script setup lang="ts">
 import { computed, ref, watch, onUnmounted } from 'vue';
+import eulLogo from '@/assets/eul_logo.svg';
+import loveFortuneCard from '@/assets/fortune/사주카드_애정운.svg';
+import successFortuneCard from '@/assets/fortune/사주카드_성공운.svg';
+import moneyFortuneCard from '@/assets/fortune/사주카드_재물운 2.svg';
 
 interface BirthdateData {
   name?: string;
@@ -206,12 +210,12 @@ const currentDate = computed(() => {
 });
 
 const fortuneImage = computed(() => {
-  if (!props.fortuneData) return '/src/assets/fortune/사주카드_애정운.svg';
+  if (!props.fortuneData) return loveFortuneCard;
 
   const images = {
-    love: '/src/assets/fortune/사주카드_애정운.svg',
-    success: '/src/assets/fortune/사주카드_성공운.svg',
-    money: '/src/assets/fortune/사주카드_재물운 2.svg'
+    love: loveFortuneCard,
+    success: successFortuneCard,
+    money: moneyFortuneCard
   };
   return images[props.fortuneData.fortune as keyof typeof images] || images.love;
 });

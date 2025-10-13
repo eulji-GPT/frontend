@@ -81,6 +81,8 @@
 import { ref, computed } from 'vue';
 import HeaderSection from '../main/HeaderSection.vue';
 import { useRouter } from 'vue-router';
+import eyeIcon from '@/assets/eye.svg';
+import eyeSlashIcon from '@/assets/eye-slash.svg';
 
 const router = useRouter();
 
@@ -89,10 +91,6 @@ const password = ref('');
 const confirmPassword = ref('');
 const showPassword = ref(false);
 const showConfirmPassword = ref(false);
-
-// 아이콘 경로 (실제 아이콘 파일로 교체 필요)
-const eyeIcon = '/src/assets/eye.svg';
-const eyeSlashIcon = '/src/assets/eye-slash.svg';
 
 // 비밀번호 유효성 검사
 const isPasswordValid = ref(false);

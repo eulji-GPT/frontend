@@ -6,7 +6,10 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-.env
+
+# Environment files (로컬 환경 변수만 무시, development/production은 커밋)
+.env.local
+.env.*.local
 #tool
 assistant
 

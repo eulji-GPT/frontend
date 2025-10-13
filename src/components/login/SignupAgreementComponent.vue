@@ -99,12 +99,10 @@ import { ref, computed } from 'vue';
 import HeaderSection from '../main/HeaderSection.vue';
 import TermsModal from './TermsModal.vue';
 import { useRouter } from 'vue-router';
+import checkedIcon from '@/assets/checkbox-checked.svg';
+import uncheckedIcon from '@/assets/checkbox-unchecked.svg';
 
 const router = useRouter();
-
-// 체크박스 이미지 (실제 이미지 경로로 교체 필요)
-const checkedIcon = '/src/assets/checkbox-checked.svg';
-const uncheckedIcon = '/src/assets/checkbox-unchecked.svg';
 
 // 개별 동의 상태
 const agreements = ref({

@@ -16,7 +16,7 @@ onMounted(() => {
 </script>
 
 <style>
-@import url('/src/assets/pretendard.css');
+@import url('./assets/pretendard.css');
 
 * {
   margin: 0;

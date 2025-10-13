@@ -15,7 +15,7 @@
       </div>
 
       <img
-        :src="isLoading ? '/src/assets/fortune-character_eye_off.svg' : '/src/assets/fortune-character.svg'"
+        :src="isLoading ? fortuneCharacterEyeOff : fortuneCharacter"
         alt="을랑이 캐릭터"
         class="character-image"
         @error="handleImageError"
@@ -39,7 +39,7 @@
           <div class="fortune-types mystical-cards">
             <div class="fortune-card-container" :class="{ 'selected': selectedFortune === 'love' }">
               <img
-                src="/src/assets/fortune/love-fortune.svg"
+                :src="loveFortuneIcon"
                 alt="애정운"
                 class="fortune-card-image mystical-card"
                 :class="{ 'selected': selectedFortune === 'love' }"
@@ -56,7 +56,7 @@
 
             <div class="fortune-card-container" :class="{ 'selected': selectedFortune === 'success' }">
               <img
-                src="/src/assets/fortune/success-fortune.svg"
+                :src="successFortuneIcon"
                 alt="성공운"
                 class="fortune-card-image mystical-card"
                 :class="{ 'selected': selectedFortune === 'success' }"
@@ -73,7 +73,7 @@
 
             <div class="fortune-card-container" :class="{ 'selected': selectedFortune === 'money' }">
               <img
-                src="/src/assets/fortune/money-fortune.svg"
+                :src="moneyFortuneIcon"
                 alt="재물운"
                 class="fortune-card-image mystical-card"
                 :class="{ 'selected': selectedFortune === 'money' }"
@@ -133,6 +133,11 @@
 import { ref, computed } from 'vue';
 import BirthdateModal from './BirthdateModal.vue';
 import FortuneResult from './FortuneResult.vue';
+import fortuneCharacter from '@/assets/fortune-character.svg';
+import fortuneCharacterEyeOff from '@/assets/fortune-character_eye_off.svg';
+import loveFortuneIcon from '@/assets/fortune/love-fortune.svg';
+import successFortuneIcon from '@/assets/fortune/success-fortune.svg';
+import moneyFortuneIcon from '@/assets/fortune/money-fortune.svg';
 
 interface BirthdateData {
   name: string;
