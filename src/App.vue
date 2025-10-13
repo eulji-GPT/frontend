@@ -1,4 +1,5 @@
 <template>
+  <FortunePopup v-if="showPopup" />
   <router-view v-slot="{ Component }">
     <transition name="fade" mode="out-in">
       <component :is="Component" />
@@ -7,11 +8,30 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import FortunePopup from './components/common/FortunePopup.vue'
+
+const route = useRoute()
+const showPopup = ref(false)
 
 onMounted(() => {
   // 앱이 마운트되면 loaded 클래스 추가
   document.getElementById('app')?.classList.add('loaded')
+
+  // 메인 페이지(/)에 접속 시 팝업 표시
+  if (route.path === '/') {
+    showPopup.value = true
+  }
+})
+
+// 라우트 변경 시 메인 페이지로 이동하면 팝업 표시
+watch(() => route.path, (newPath) => {
+  if (newPath === '/') {
+    showPopup.value = true
+  } else {
+    showPopup.value = false
+  }
 })
 </script>
 
