@@ -4,7 +4,7 @@
       <div class="modal-content">
         <div class="content-section">
           <div class="title-section">
-            <h2 class="modal-title">운세를 알아보려면<br>생일 정보가 필요해요</h2>
+            <h2 class="modal-title">운세를 알아보려면<br>정보가 필요해요!</h2>
           </div>
 
           <!-- Name Input Section -->
@@ -579,18 +579,27 @@ const submitBirthdate = () => {
 
 /* 모바일 반응형 */
 @media (max-width: 768px) {
+  .modal-overlay {
+    align-items: flex-start;
+    padding-top: 20px;
+    overflow-y: auto;
+  }
+
   .modal-container {
     width: 90%;
     max-width: 400px;
     height: auto;
+    max-height: none;
     position: relative;
     left: auto;
     top: auto;
+    margin: 20px auto;
   }
 
   .modal-content {
     width: 100%;
     height: auto;
+    max-height: none;
   }
 
   .dropdowns-section {
@@ -602,12 +611,33 @@ const submitBirthdate = () => {
   .dropdown-container {
     flex: none;
   }
+
+  .year-dropdown {
+    width: 120px;
+  }
+
+  .month-dropdown,
+  .day-dropdown {
+    width: 110px;
+  }
 }
 
 @media (max-width: 480px) {
+  .modal-overlay {
+    align-items: flex-start;
+    padding: 15px;
+    overflow-y: auto;
+  }
+
+  .modal-container {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+  }
+
   .modal-content {
-    padding: 20px 25px;
-    gap: 25px;
+    padding: 20px 20px;
+    gap: 20px;
   }
 
   .modal-title {
@@ -616,14 +646,22 @@ const submitBirthdate = () => {
   }
 
   .dropdowns-section {
-    flex-direction: column;
-    gap: 15px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: space-between;
+    width: 100%;
   }
 
-  .year-dropdown,
+  .year-dropdown {
+    width: 100%;
+    min-width: 100%;
+  }
+
   .month-dropdown,
   .day-dropdown {
-    width: 140px;
+    width: calc(50% - 6px);
+    min-width: calc(50% - 6px);
   }
 
   .submit-button {

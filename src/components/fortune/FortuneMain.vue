@@ -178,7 +178,7 @@ const headerTitle = computed(() => {
 
 const headerSubtitle = computed(() => {
   return currentStep.value === 'card-selection'
-    ? '행운의 을랑이가 문제별로 다른 메시지를 준비했어요.'
+    ? '행운의 을랑이가 운세별로 다른 메시지를 준비했어요.'
     : '행운의 을랑이와 함께 오늘의 운세를 점쳐보세요.';
 });
 
