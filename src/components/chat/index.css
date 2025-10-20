@@ -106,10 +106,11 @@
 @media (max-width: 320px) {
   .mode-selector-header {
     padding: 8px 10px;
+    min-width: 140px;
   }
-  
+
   .mode-selector-container {
-    max-width: 180px;
+    max-width: 200px;
     min-width: 140px;
   }
   

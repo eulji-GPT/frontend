@@ -5,6 +5,7 @@ import path from 'path'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [vue()],
+  envDir: path.resolve(__dirname, '..'), // 프로젝트 루트의 .env 파일 사용
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src')

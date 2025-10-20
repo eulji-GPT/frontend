@@ -78,8 +78,9 @@
         <!-- 일반 채팅 화면 -->
         <div v-if="currentView === 'chat'" class="chat-main-area">
           <div class="mode-selector-container">
-            <ChatModeSelector 
+            <ChatModeSelector
               :currentMode="chatMode"
+              :isProUser="isProUser"
               @modeChange="handleModeChange"
             />
           </div>
@@ -261,6 +262,7 @@ const showNotificationDropdown = ref(false);
 const showInfoPanel = ref(false);
 const showMyPageModal = ref(false);
 const userProfileImage = ref<string | null>(null);
+const isProUser = ref(false);
 
 const showMobileOverlay = computed(() => isMobile.value && sidebarVisible.value);
 
@@ -362,6 +364,7 @@ const fetchUserProfile = async () => {
       if (data.profile_image_url) {
         userProfileImage.value = data.profile_image_url;
       }
+      isProUser.value = data.is_pro || false;
     }
   } catch (error) {
     console.error('프로필 정보 로드 오류:', error);
@@ -864,11 +867,13 @@ const retryFortune = () => {
 
 /* Mode selector container */
 .mode-selector-container {
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  padding: 16px 0 0 20px;
+  flex-shrink: 0;
   z-index: 100;
-  margin: 16px 0 0 20px;
 }
 
 .chat-main-area {
@@ -1001,9 +1006,7 @@ const retryFortune = () => {
   }
   
   .mode-selector-container {
-    top: 0;
-    left: 0;
-    margin: 12px 0 0 16px;
+    padding: 12px 0 0 16px;
   }
   
   .empty-classroom-check,

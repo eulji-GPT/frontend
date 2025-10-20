@@ -90,9 +90,9 @@
                 </button>
               </div>
             </div>
-            <div class="premium-section">
+            <div class="premium-section" :class="{ 'verification-active': showProVerification }">
               <div class="premium-card">
-                <div class="premium-content">
+                <div class="premium-content" v-if="!showProVerification && !userInfo?.is_pro">
                   <div class="premium-info">
                     <div class="premium-brand">
                       <div class="brand-group">
@@ -102,11 +102,75 @@
                     </div>
                     <span class="premium-description">이메일을 인증 시, 더 많은 기능</span>
                   </div>
-                  <button class="verify-button">
+                  <button class="verify-button" @click="startProVerification">
                     <span class="verify-text">인증</span>
                   </button>
                 </div>
-                <div class="premium-logo">
+
+                <!-- Pro 인증이 완료된 경우 -->
+                <div class="premium-content" v-if="userInfo?.is_pro">
+                  <div class="premium-info">
+                    <div class="premium-brand">
+                      <div class="brand-group">
+                        <span class="eulgpt-text">EULGPT</span>
+                        <div class="union-icon"></div>
+                      </div>
+                    </div>
+                    <span class="premium-description">✨ Pro 계정 활성화됨</span>
+                  </div>
+                  <div class="pro-badge">
+                    <span class="pro-text">PRO</span>
+                  </div>
+                </div>
+
+                <!-- 이메일 인증 UI -->
+                <div class="pro-verification-form" v-if="showProVerification && !userInfo?.is_pro">
+                  <div class="verification-header">
+                    <span class="verification-title">을지대 이메일 인증</span>
+                    <button class="close-verification" @click="cancelProVerification">✕</button>
+                  </div>
+
+                  <div class="email-verification-section">
+                    <div class="email-input-row">
+                      <input
+                        v-model="proEmail"
+                        type="email"
+                        placeholder="이메일 (@g.eulji.ac.kr)"
+                        class="pro-email-input"
+                        :disabled="isProVerificationSent"
+                      />
+                      <button
+                        class="send-code-button"
+                        @click="handleSendProVerification"
+                        :disabled="isProVerificationSent"
+                      >
+                        <span>{{ isProVerificationSent ? '전송됨' : '인증번호' }}</span>
+                      </button>
+                    </div>
+
+                    <div v-if="isProVerificationSent" class="verification-code-row">
+                      <input
+                        v-model="proVerificationCode"
+                        type="text"
+                        placeholder="인증번호 6자리"
+                        class="pro-code-input"
+                        maxlength="6"
+                      />
+                      <span class="timer-text">{{ formattedProTime }}</span>
+                    </div>
+
+                    <button
+                      class="complete-verification-button"
+                      @click="handleCompleteProVerification"
+                      :disabled="!isProVerificationSent || !proVerificationCode"
+                    >
+                      <span>인증 완료</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Premium Logo - 인증 폼이 아닐 때만 표시 -->
+                <div class="premium-logo" v-if="!showProVerification">
                   <div class="logo-group">
                     <span class="eulgpt-large">EULGPT</span>
                     <div class="union-large"></div>
@@ -205,7 +269,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import './MyPageModal_settings.css'
 
 defineProps<{
@@ -221,6 +285,21 @@ const activeTab = ref<'mypage' | 'settings'>('mypage')
 const selectedTheme = ref<'light' | 'dark' | 'system'>('system')
 const profileImage = ref<string | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
+
+// Pro 인증 관련 상태
+const showProVerification = ref(false)
+const proEmail = ref('')
+const proVerificationCode = ref('')
+const isProVerificationSent = ref(false)
+const proTimeLeft = ref(300) // 5분
+let proTimer: ReturnType<typeof setInterval> | null = null
+
+// Pro 타이머 포맷
+const formattedProTime = computed(() => {
+  const minutes = Math.floor(proTimeLeft.value / 60)
+  const seconds = proTimeLeft.value % 60
+  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+})
 
 // 사용자 정보
 const userInfo = ref<{
@@ -310,9 +389,154 @@ const handleImageUpload = (event: Event) => {
   }
 }
 
+// Pro 인증 시작
+const startProVerification = () => {
+  showProVerification.value = true
+  proEmail.value = ''
+  proVerificationCode.value = ''
+  isProVerificationSent.value = false
+}
+
+// Pro 인증 취소
+const cancelProVerification = () => {
+  showProVerification.value = false
+  proEmail.value = ''
+  proVerificationCode.value = ''
+  isProVerificationSent.value = false
+  if (proTimer) {
+    clearInterval(proTimer)
+    proTimer = null
+  }
+}
+
+// Pro 인증번호 타이머 시작
+const startProTimer = () => {
+  proTimer = setInterval(() => {
+    if (proTimeLeft.value > 0) {
+      proTimeLeft.value--
+    } else {
+      clearInterval(proTimer!)
+      proTimer = null
+      isProVerificationSent.value = false
+      alert('인증 시간이 만료되었습니다. 다시 인증번호를 요청해주세요.')
+    }
+  }, 1000)
+}
+
+// Pro 인증번호 발송
+const handleSendProVerification = async () => {
+  if (!proEmail.value) {
+    alert('이메일 주소를 입력해주세요.')
+    return
+  }
+
+  // 을지대 이메일 확인
+  if (!proEmail.value.endsWith('@g.eulji.ac.kr')) {
+    alert('을지대학교 이메일(@g.eulji.ac.kr)만 인증 가능합니다.')
+    return
+  }
+
+  try {
+    // 기존 타이머가 있으면 정리
+    if (proTimer) {
+      clearInterval(proTimer)
+    }
+
+    console.log('Pro 인증번호 발송 요청:', proEmail.value)
+
+    const response = await fetch(`${API_BASE_URL}/member/send-verification`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email: proEmail.value }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.detail || '인증번호 전송에 실패했습니다.')
+    }
+
+    const result = await response.json()
+    console.log('Pro 인증번호 전송 성공:', result)
+
+    if (result.email_sent) {
+      isProVerificationSent.value = true
+      proTimeLeft.value = 300
+      startProTimer()
+      alert('인증번호가 이메일로 전송되었습니다. 5분 내에 입력해주세요.')
+    } else {
+      throw new Error('이메일 전송 상태를 확인할 수 없습니다.')
+    }
+  } catch (error) {
+    console.error('Pro 인증번호 전송 오류:', error)
+    const errorMessage = error instanceof Error ? error.message : '인증번호 전송에 실패했습니다.'
+    alert(errorMessage)
+  }
+}
+
+// Pro 인증 완료
+const handleCompleteProVerification = async () => {
+  if (!proVerificationCode.value) {
+    alert('인증번호를 입력해주세요.')
+    return
+  }
+
+  try {
+    const token = localStorage.getItem('access_token')
+    if (!token) {
+      alert('로그인이 필요합니다.')
+      return
+    }
+
+    console.log('Pro 인증 확인 중:', { email: proEmail.value, code: proVerificationCode.value })
+
+    const response = await fetch(`${API_BASE_URL}/member/verify-pro?email=${encodeURIComponent(proEmail.value)}&code=${proVerificationCode.value}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.detail || 'Pro 인증에 실패했습니다.')
+    }
+
+    const result = await response.json()
+    console.log('Pro 인증 성공:', result)
+
+    // 타이머 정리
+    if (proTimer) {
+      clearInterval(proTimer)
+      proTimer = null
+    }
+
+    alert('🎉 Pro 계정이 활성화되었습니다!')
+
+    // 사용자 정보 다시 불러오기
+    await fetchUserInfo()
+
+    // Pro 인증 UI 닫기
+    showProVerification.value = false
+  } catch (error) {
+    console.error('Pro 인증 오류:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Pro 인증에 실패했습니다.'
+    alert(errorMessage)
+  }
+}
+
 const handleOverlayClick = () => {
   emit('close')
 }
+
+// 컴포넌트 언마운트 시 타이머 정리
+onUnmounted(() => {
+  if (proTimer) {
+    clearInterval(proTimer)
+  }
+})
 </script>
 
 <style scoped>
@@ -723,6 +947,11 @@ const handleOverlayClick = () => {
   position: relative;
   margin: 0 auto;
   flex-shrink: 0;
+  transition: min-height 0.3s ease;
+}
+
+.premium-section.verification-active {
+  min-height: 220px;
 }
 
 .premium-card {
@@ -879,6 +1108,191 @@ const handleOverlayClick = () => {
   transform: rotate(-15deg);
   transform-origin: top left;
   border-radius: 2px;
+}
+
+/* Pro 배지 스타일 */
+.pro-badge {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  border-radius: 8px;
+  padding: 6px 12px;
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+}
+
+.pro-text {
+  color: white;
+  font-size: 12px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+/* Pro 인증 폼 스타일 */
+.pro-verification-form {
+  width: calc(100% - 32px);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  position: relative;
+  margin: 16px;
+  z-index: 10;
+}
+
+.verification-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.verification-title {
+  color: white;
+  font-size: 14px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 600;
+}
+
+.close-verification {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.close-verification:hover {
+  color: white;
+}
+
+.email-verification-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.email-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pro-email-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 14px;
+  font-family: Pretendard, sans-serif;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.pro-email-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.pro-email-input:focus {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.pro-email-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.send-code-button {
+  padding: 10px 16px;
+  background: white;
+  color: rgb(20, 29, 48);
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.send-code-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
+}
+
+.send-code-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.verification-code-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.pro-code-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: white;
+  font-size: 14px;
+  font-family: Pretendard, sans-serif;
+  outline: none;
+}
+
+.pro-code-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.timer-text {
+  color: #fbbf24;
+  font-size: 13px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.complete-verification-button {
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+}
+
+.complete-verification-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(245, 158, 11, 0.4);
+}
+
+.complete-verification-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* 반응형 */

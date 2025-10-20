@@ -37,10 +37,10 @@ const routes = [
     path: '/chat',
     component: () => import('../components/chat/index.vue')
   },
-  {
-    path: '/fortune',
-    component: () => import('../views/FortuneView.vue')
-  },
+  // {
+  //   path: '/fortune',
+  //   component: () => import('../views/FortuneView.vue')
+  // },  // 운세 기능 비활성화
   {
     path: '/ready/:service',
     component: () => import('../components/common/ReadyBar.vue'),

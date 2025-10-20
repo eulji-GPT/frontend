@@ -11,8 +11,8 @@
     
     <div v-if="isOpen" class="mode-dropdown">
       <div class="mode-list">
-        <div 
-          v-for="mode in availableModes" 
+        <div
+          v-for="mode in availableModes"
           :key="mode.key"
           class="mode-item"
           :class="{ active: currentMode === mode.key, 'cot-mode': mode.key === 'cot' }"
@@ -21,9 +21,49 @@
           <div class="mode-header">
             <div class="mode-name">{{ mode.name }}</div>
             <div v-if="mode.key === 'cot'" class="cot-badge">Beta</div>
+            <div v-if="mode.key === 'rag' && !isProUser" class="pro-badge">PRO</div>
           </div>
           <div class="mode-description">{{ mode.description }}</div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRO 인증 안내 모달 -->
+  <div v-if="showProModal" class="pro-modal-overlay" @click="closeProModal">
+    <div class="pro-modal" @click.stop>
+      <div class="pro-modal-header">
+        <div class="pro-icon">🎓</div>
+        <h2 class="pro-modal-title">을지대 정보검색은 PRO 기능입니다</h2>
+        <button class="pro-modal-close" @click="closeProModal">×</button>
+      </div>
+      <div class="pro-modal-body">
+        <p class="pro-modal-description">
+          을지대학교 공식 자료를 검색하는 기능은<br>
+          학교 도메인 인증을 완료한 PRO 회원만 이용할 수 있습니다.
+        </p>
+        <div class="pro-features">
+          <div class="pro-feature-item">
+            <span class="pro-feature-icon">✓</span>
+            <span>을지대학교 공식 자료 검색</span>
+          </div>
+          <div class="pro-feature-item">
+            <span class="pro-feature-icon">✓</span>
+            <span>학사 정보 정확한 답변</span>
+          </div>
+          <div class="pro-feature-item">
+            <span class="pro-feature-icon">✓</span>
+            <span>캠퍼스 전용 서비스</span>
+          </div>
+        </div>
+      </div>
+      <div class="pro-modal-footer">
+        <button class="pro-verify-button" @click="goToProVerification">
+          PRO 인증하러 가기
+        </button>
+        <button class="pro-cancel-button" @click="closeProModal">
+          나중에 하기
+        </button>
       </div>
     </div>
   </div>
@@ -35,6 +75,7 @@ import type { ChatMode } from '../../composables/useChat'
 
 const props = defineProps<{
   currentMode: ChatMode
+  isProUser: boolean
 }>()
 
 const emit = defineEmits<{
@@ -42,6 +83,7 @@ const emit = defineEmits<{
 }>()
 
 const isOpen = ref(false)
+const showProModal = ref(false)
 
 const availableModes = [
   {
@@ -91,8 +133,24 @@ const toggleSelector = () => {
 }
 
 const selectMode = (mode: ChatMode) => {
+  // RAG 모드 선택 시 PRO 인증 체크
+  if (mode === 'rag' && !props.isProUser) {
+    showProModal.value = true
+    isOpen.value = false
+    return
+  }
+
   emit('modeChange', mode)
   isOpen.value = false
+}
+
+const closeProModal = () => {
+  showProModal.value = false
+}
+
+const goToProVerification = () => {
+  // TODO: PRO 인증 페이지로 이동
+  window.location.href = '/pro-verification'
 }
 
 // 외부 클릭 시 드롭다운 닫기
@@ -110,7 +168,7 @@ document.addEventListener('click', (e) => {
   flex-direction: row;
   align-items: center;
   flex: none;
-  gap: 81px;
+  gap: 8px;
   box-shadow: 1px 1px 4px 0px rgb(217, 217, 217);
   border: solid 1px rgb(243, 244, 246);
   border-radius: 15px;
@@ -121,6 +179,8 @@ document.addEventListener('click', (e) => {
   transition: all 0.2s ease;
   position: relative;
   overflow: visible;
+  min-width: 160px;
+  width: auto;
 }
 
 .mode-selector-header:hover {
@@ -241,21 +301,22 @@ document.addEventListener('click', (e) => {
   justify-content: flex-start;
   flex-direction: row;
   align-items: center;
-  flex: none;
-  width: 98px;
+  flex: 1;
+  gap: 8px;
   box-sizing: border-box;
+  min-width: 120px;
 }
 
 .current-mode {
   color: black;
-  text-overflow: ellipsis;
   font-size: 14px;
   font-family: Pretendard, sans-serif;
   font-weight: 600;
   line-height: 23px;
   text-align: left;
-  width: 82px;
-  min-height: 25px;
+  white-space: nowrap;
+  flex: 1;
+  min-width: max-content;
 }
 
 .mode-icon-indicator {
@@ -422,25 +483,238 @@ document.addEventListener('click', (e) => {
   .mode-selector {
     max-width: 100%;
   }
-  
+
   .mode-selector-header {
     padding: 10px 14px;
+    min-width: 140px;
   }
-  
+
+  .header-content {
+    min-width: 100px;
+  }
+
   .current-mode {
     font-size: 13px;
   }
-  
+
   .mode-item {
     padding: 10px;
   }
-  
+
   .mode-name {
     font-size: 13px;
   }
-  
+
   .mode-description {
     font-size: 11px;
+  }
+}
+
+/* PRO 배지 스타일 */
+.pro-badge {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 3px 8px 4px;
+  border-radius: 10px;
+  font-family: Pretendard, sans-serif;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+}
+
+/* PRO 모달 스타일 */
+.pro-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.2s ease;
+}
+
+.pro-modal {
+  background: white;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 480px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+  overflow: hidden;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pro-modal-header {
+  position: relative;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 32px 24px 24px;
+  text-align: center;
+}
+
+.pro-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.pro-modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.4;
+  font-family: Pretendard, sans-serif;
+}
+
+.pro-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 28px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  line-height: 1;
+  padding: 0;
+}
+
+.pro-modal-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.pro-modal-body {
+  padding: 32px 24px;
+}
+
+.pro-modal-description {
+  color: #4b5563;
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0 0 24px 0;
+  text-align: center;
+  font-family: Pretendard, sans-serif;
+}
+
+.pro-features {
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pro-feature-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: #374151;
+  font-family: Pretendard, sans-serif;
+}
+
+.pro-feature-icon {
+  color: #667eea;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.pro-modal-footer {
+  padding: 0 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pro-verify-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 24px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: Pretendard, sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.pro-verify-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.pro-cancel-button {
+  background: transparent;
+  color: #6b7280;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: Pretendard, sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pro-cancel-button:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+@media (max-width: 768px) {
+  .pro-modal {
+    width: 95%;
+    max-width: 400px;
+  }
+
+  .pro-modal-header {
+    padding: 24px 20px 20px;
+  }
+
+  .pro-icon {
+    font-size: 40px;
+  }
+
+  .pro-modal-title {
+    font-size: 18px;
+  }
+
+  .pro-modal-body {
+    padding: 24px 20px;
+  }
+
+  .pro-modal-footer {
+    padding: 0 20px 24px;
+  }
+
+  .pro-verify-button {
+    padding: 14px 20px;
+    font-size: 15px;
   }
 }
 </style>

@@ -1,4 +1,5 @@
 import { ref, onMounted } from 'vue';
+import { isAuthenticated, getAuthHeaders, apiRequest } from '../utils/auth';
 
 export interface ChatMessage {
   text: string;
@@ -68,6 +69,7 @@ export function useChat() {
   };
 
   const FASTAPI_BASE_URL = import.meta.env.VITE_GEMINI_FASTAPI_URL || '/gemini-api'; // 환경 변수 또는 프록시 경로 사용
+  const BACKEND_BASE_URL = import.meta.env.VITE_FASTAPI_URL || 'http://localhost:8000'; // 백엔드 API URL
   const getAPIUrl = (mode: ChatMode): string => {
     const endpoints = {
       general: '/chat',
@@ -104,11 +106,38 @@ export function useChat() {
     }
   });
 
-  function loadChatHistory() {
+  async function loadChatHistory() {
+    // 로그인된 사용자인 경우 백엔드에서 로드
+    if (isAuthenticated()) {
+      try {
+        console.log('📥 백엔드에서 채팅 히스토리 로드 중...');
+        const response = await apiRequest(`${BACKEND_BASE_URL}/chat/history`, {
+          method: 'GET'
+        });
+
+        if (response.ok) {
+          const histories = await response.json();
+          console.log('✅ 채팅 히스토리 로드 완료:', histories.length, '개');
+
+          // 백엔드 데이터를 프론트엔드 형식으로 변환
+          chatHistory.value = histories.map((h: any) => ({
+            id: String(h.id), // 백엔드 integer ID를 string으로 변환
+            title: h.title,
+            messages: [], // 메시지는 개별 히스토리 조회 시 로드
+            sessionId: String(h.id)
+          }));
+          return;
+        }
+      } catch (error) {
+        console.error('❌ 채팅 히스토리 로드 실패:', error);
+        // 에러 발생 시 로컬스토리지로 fallback
+      }
+    }
+
+    // 비로그인 사용자 또는 백엔드 로드 실패 시 로컬스토리지에서 로드
     const history = localStorage.getItem('chatHistory');
     if (history) {
       const parsedHistory = JSON.parse(history);
-      // timestamp를 Date 객체로 복원
       chatHistory.value = parsedHistory.map((chat: ChatSession) => ({
         ...chat,
         messages: chat.messages.map((msg: ChatMessage) => ({
@@ -148,11 +177,42 @@ export function useChat() {
   }
 
   async function startNewChat() {
+    // 로그인된 사용자인 경우 백엔드에 채팅 히스토리 생성
+    if (isAuthenticated()) {
+      try {
+        console.log('📝 백엔드에 새 채팅 히스토리 생성 중...');
+        const response = await apiRequest(`${BACKEND_BASE_URL}/chat/history`, {
+          method: 'POST',
+          body: JSON.stringify({ title: '새 대화' })
+        });
+
+        if (response.ok) {
+          const chatHistoryData = await response.json();
+          console.log('✅ 채팅 히스토리 생성 완료:', chatHistoryData);
+
+          const backendSessionId = await createBackendSession();
+
+          const newChat: ChatSession = {
+            id: String(chatHistoryData.id),
+            title: chatHistoryData.title,
+            messages: [],
+            sessionId: backendSessionId || undefined
+          };
+          chatHistory.value.unshift(newChat);
+          currentChatId.value = newChat.id;
+          messages.value = newChat.messages;
+          return;
+        }
+      } catch (error) {
+        console.error('❌ 채팅 히스토리 생성 실패:', error);
+        // 에러 발생 시 로컬 방식으로 fallback
+      }
+    }
+
+    // 비로그인 사용자 또는 백엔드 생성 실패 시 로컬 방식
     currentChatId.value = `chat-${Date.now()}`;
-    
-    // 백엔드 세션 생성
     const backendSessionId = await createBackendSession();
-    
+
     const newChat: ChatSession = {
       id: currentChatId.value,
       title: '새 대화',
@@ -161,21 +221,67 @@ export function useChat() {
     };
     chatHistory.value.unshift(newChat);
     messages.value = newChat.messages;
-    
+
     if (backendSessionId) {
       console.log('새 백엔드 세션 생성됨:', backendSessionId);
     }
   }
 
-  function selectChat(id: string) {
+  async function selectChat(id: string) {
     const chat = chatHistory.value.find(c => c.id === id);
     if (chat) {
       currentChatId.value = id;
+
+      // 로그인된 사용자이고 메시지가 아직 로드되지 않은 경우 백엔드에서 로드
+      if (isAuthenticated() && chat.messages.length === 0) {
+        try {
+          console.log(`📥 채팅 메시지 로드 중... (ID: ${id})`);
+          const response = await apiRequest(`${BACKEND_BASE_URL}/chat/history/${id}`, {
+            method: 'GET'
+          });
+
+          if (response.ok) {
+            const chatDetail = await response.json();
+            console.log('✅ 채팅 메시지 로드 완료:', chatDetail.messages.length, '개');
+
+            // 백엔드 메시지를 프론트엔드 형식으로 변환
+            chat.messages = chatDetail.messages.map((msg: any) => ({
+              text: msg.message,
+              isUser: msg.is_user,
+              timestamp: new Date(),
+              isLoading: false,
+              isStreaming: false,
+              hasError: false
+            }));
+          }
+        } catch (error) {
+          console.error('❌ 채팅 메시지 로드 실패:', error);
+        }
+      }
+
       messages.value = chat.messages;
     }
   }
 
-  function deleteChat(id: string) {
+  async function deleteChat(id: string) {
+    // 로그인된 사용자인 경우 백엔드에서 삭제
+    if (isAuthenticated()) {
+      try {
+        console.log(`🗑️ 채팅 히스토리 삭제 중... (ID: ${id})`);
+        const response = await apiRequest(`${BACKEND_BASE_URL}/chat/history/${id}`, {
+          method: 'DELETE'
+        });
+
+        if (response.ok) {
+          console.log('✅ 채팅 히스토리 삭제 완료');
+        }
+      } catch (error) {
+        console.error('❌ 채팅 히스토리 삭제 실패:', error);
+        // 에러가 나도 로컬에서는 삭제 진행
+      }
+    }
+
+    // 로컬 상태에서 삭제
     const index = chatHistory.value.findIndex(c => c.id === id);
     if (index !== -1) {
       chatHistory.value.splice(index, 1);
@@ -1095,13 +1201,32 @@ export function useChat() {
     console.log('⏹️ 답변 중지됨');
   }
 
-  function updateChatTitle(chatId: string, newTitle: string) {
+  async function updateChatTitle(chatId: string, newTitle: string) {
     const chat = chatHistory.value.find(c => c.id === chatId);
-    if (chat) {
-      chat.title = newTitle;
-      saveChatHistory();
-      console.log('📝 대화 제목 수정:', newTitle);
+    if (!chat) return;
+
+    // 로그인된 사용자인 경우 백엔드에 업데이트
+    if (isAuthenticated()) {
+      try {
+        console.log(`📝 채팅 제목 수정 중... (ID: ${chatId})`);
+        const response = await apiRequest(`${BACKEND_BASE_URL}/chat/history/${chatId}`, {
+          method: 'PUT',
+          body: JSON.stringify({ title: newTitle })
+        });
+
+        if (response.ok) {
+          console.log('✅ 채팅 제목 수정 완료');
+        }
+      } catch (error) {
+        console.error('❌ 채팅 제목 수정 실패:', error);
+        // 에러가 나도 로컬에서는 수정 진행
+      }
     }
+
+    // 로컬 상태 업데이트
+    chat.title = newTitle;
+    saveChatHistory();
+    console.log('📝 대화 제목 수정:', newTitle);
   }
 
   // RAG 시스템 상태 확인
