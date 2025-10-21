@@ -1,6 +1,28 @@
 import { ref, onMounted } from 'vue';
 import { isAuthenticated, getAuthHeaders, apiRequest } from '../utils/auth';
 
+export interface RagSource {
+  title: string;
+  content: string;
+  domain: string;
+  category?: string;
+  score?: number;
+}
+
+export interface ArtifactVersion {
+  content: string;
+  timestamp: number;
+  description?: string;
+}
+
+export interface Artifact {
+  title: string;
+  content: string;
+  type: string;
+  versions?: ArtifactVersion[];
+  currentVersion?: number;
+}
+
 export interface ChatMessage {
   text: string;
   isUser: boolean;
@@ -20,6 +42,8 @@ export interface ChatMessage {
     reason?: string;
     phase?: string;
   };
+  ragSources?: RagSource[];
+  artifact?: Artifact | null;
 }
 
 export interface ChatSession {
@@ -91,6 +115,143 @@ export function useChat() {
       }
     }, 100);
   };
+
+  // 긴 답변을 아티팩트로 변환할지 판단하는 함수
+  const shouldConvertToArtifact = (text: string): boolean => {
+    // 조건 1: 3000자 이상
+    if (text.length < 3000) return false;
+
+    // 조건 2: 여러 섹션 포함 (## 또는 ### 또는 숫자. 로 시작하는 제목이 3개 이상)
+    const sectionPatterns = [
+      /^#{1,3}\s+/gm,  // 마크다운 제목
+      /^\d+\.\s+/gm,    // 숫자로 시작하는 항목
+      /^[IⅡⅢ]+\.\s+/gm  // 로마 숫자로 시작하는 항목
+    ];
+
+    let sectionCount = 0;
+    for (const pattern of sectionPatterns) {
+      const matches = text.match(pattern);
+      if (matches) sectionCount += matches.length;
+    }
+
+    return sectionCount >= 3;
+  };
+
+  // 아티팩트 제목 추출 함수
+  const extractArtifactTitle = (text: string): string => {
+    // 첫 번째 제목을 찾기
+    const titlePatterns = [
+      /^#\s+(.+)$/m,      // # 제목
+      /^##\s+(.+)$/m,     // ## 제목
+      /^(.+)\n={3,}$/m,   // 밑줄 제목
+      /^(\d+\.\s+.+)$/m   // 1. 제목
+    ];
+
+    for (const pattern of titlePatterns) {
+      const match = text.match(pattern);
+      if (match) {
+        return match[1].trim().substring(0, 50); // 최대 50자
+      }
+    }
+
+    // 제목을 찾지 못하면 첫 100자 사용
+    return text.substring(0, 100).replace(/\n/g, ' ') + '...';
+  };
+
+  // 상세한 답변이 필요한 질문인지 감지하는 함수
+  const requiresDetailedResponse = (message: string): boolean => {
+    const detailedIndicators = [
+      /설명해.*주세요|설명.*해줘|설명해|설명.*드려/i,     // explain
+      /분석.*주세요|분석.*해줘|분석해|분석.*드려/i,       // analyze
+      /알려.*주세요|알려.*줘|알려주|알려.*드려/i,         // tell me
+      /작성.*주세요|작성.*해줘|작성해|작성.*드려/i,       // write
+      /정리.*주세요|정리.*해줘|정리해|정리.*드려/i,       // summarize/organize
+      /비교.*주세요|비교.*해줘|비교해|비교.*드려/i,       // compare
+      /검토.*주세요|검토.*해줘|검토해|검토.*드려/i,       // review
+      /평가.*주세요|평가.*해줘|평가해|평가.*드려/i,       // evaluate
+      /조사.*주세요|조사.*해줘|조사해|조사.*드려/i,       // research
+      /연구.*주세요|연구.*해줘|연구해/i,                  // research
+      /보고서/i,                                          // report
+      /논문/i,                                            // thesis
+      /레포트/i,                                          // report (english)
+      /자세히|상세히|자세하게|상세하게/i,                 // in detail
+      /전체적|전반적/i,                                   // comprehensive
+      /체계적|구조적/i,                                   // systematic/structured
+      /종합적/i,                                          // comprehensive
+      /요약.*주세요|요약.*해줘|요약해|요약.*드려/i,       // summarize
+      /리스트.*주세요|리스트.*해줘|목록.*주세요/i,       // list
+      /단계별|순서대로/i,                                 // step by step
+      /방법.*알려|방법.*설명|방법.*정리/i,               // methods
+      /차이.*설명|차이.*알려|차이점|차이가/i,            // differences
+      /장단점|장점.*단점|pros.*cons/i,                   // pros and cons
+      /특징.*설명|특징.*알려|특징.*정리/i,               // characteristics
+      /과정.*설명|과정.*알려|과정.*정리/i,               // process
+      /원리.*설명|원리.*알려|원리.*정리/i,               // principles
+      /개념.*설명|개념.*알려|개념.*정리/i,               // concepts
+      /이론.*설명|이론.*알려|이론.*정리/i,               // theory
+      /역사.*설명|역사.*알려|역사.*정리/i,               // history
+      /배경.*설명|배경.*알려|배경.*정리/i,               // background
+      /구조.*설명|구조.*알려|구조.*정리/i,               // structure
+      /시스템.*설명|시스템.*알려|시스템.*정리/i,         // system
+      /어떻게|어떤|무엇|왜|언제|누가/i,                   // what/how/why/when/who question words
+    ];
+
+    // 조건 완화: 15자 이상이거나, 또는 특정 키워드 포함 시 보고서 모드
+    // "~에 대해", "관련", "대한" 등의 표현도 체크
+    const hasKeyPhrase = /에\s*대해|에\s*관해|관련|대한/i.test(message);
+
+    return (message.length >= 15 && detailedIndicators.some(pattern => pattern.test(message)))
+           || (message.length >= 30 && hasKeyPhrase);
+  };
+
+  // 메시지 전처리: 상세 답변이 필요한 경우 보고서 스타일 지침 추가
+  const prepareMessageForAI = (message: string, mode: ChatMode): string => {
+    // CoT, RAG 모드는 이미 특화된 프롬프트가 있으므로 건너뜀
+    if (mode === 'cot' || mode === 'rag') {
+      return message;
+    }
+
+    // 상세 답변이 필요한 질문인 경우 보고서 스타일 지침 추가
+    if (requiresDetailedResponse(message)) {
+      const reportStyleInstruction = `<SYSTEM_INSTRUCTION>
+당신은 전문 보고서 작성 AI입니다. 다음 질문에 대해 반드시 아래 형식을 엄격히 준수하여 답변해야 합니다.
+
+[필수 준수 사항]
+1. **구조화된 제목 체계**: 반드시 마크다운 제목(# ## ###)을 사용하여 계층적으로 구조화
+2. **명확한 섹션 구분**: 최소 3개 이상의 주요 섹션으로 나누어 작성
+   - 서론/개요 섹션
+   - 본론/상세 내용 섹션들 (2개 이상)
+   - 결론/요약 섹션
+3. **전문적 작성 스타일**:
+   - 객관적이고 정확한 사실 중심
+   - "~인 것 같습니다", "아마도", "생각합니다" 등 불확실한 표현 금지
+   - 인사말, 감정 표현, 공감 표현 일체 금지
+4. **체계적 정보 제시**:
+   - 번호 목록(1. 2. 3.)이나 불릿 목록(-)을 적극 활용
+   - 각 항목은 구체적 정보와 상세 설명 포함
+   - 추상적 표현보다 구체적 사례와 데이터 제시
+5. **전문 문서 어조**: 논문, 공식 보고서, 기술 문서 수준의 격식있는 문체
+
+[금지 사항]
+- "안녕하세요", "도움이 되었으면 합니다" 등의 인사/맺음말
+- "~같아요", "~것 같습니다" 등 불확실한 표현
+- 짧고 간단한 답변 (최소 2000자 이상 작성)
+- 구조화되지 않은 연속된 문단
+
+질문: ${message}
+
+위 지침을 철저히 준수하여 전문 보고서 형식으로 답변하십시오.
+</SYSTEM_INSTRUCTION>`;
+
+      console.log("📋 [REPORT MODE] 보고서 스타일 지침이 추가되었습니다.");
+      console.log("🔍 [REPORT MODE] 원본 질문:", message);
+      return reportStyleInstruction;
+    }
+
+    console.log("💬 [NORMAL MODE] 일반 답변 모드");
+    return message;
+  };
+
   const FASTAPI_HEALTH_URL = `${FASTAPI_BASE_URL}/health`;
 
   onMounted(async () => {
@@ -680,11 +841,20 @@ export function useChat() {
   async function callFastAPIChat(message: string, messageIndex: number) {
     const apiUrl = getAPIUrl(chatMode.value);
     console.log("🚀 FastAPI 호출 시작:", apiUrl, "(모드:", chatMode.value, ")");
-    console.log("📤 전송 메시지:", message);
-    
+    console.log("📤 원본 메시지:", message);
+
+    // 메시지 전처리: 상세 답변이 필요한 경우 보고서 스타일 지침 추가
+    const preparedMessage = prepareMessageForAI(message, chatMode.value);
+    if (preparedMessage !== message) {
+      console.log("📝 ✅ 보고서 스타일 지침 추가됨 - AI에게 전문 보고서 형식으로 답변하도록 지시");
+      console.log("📋 전처리된 메시지 길이:", preparedMessage.length, "자");
+    } else {
+      console.log("💬 일반 모드로 전송");
+    }
+
     // 새로운 AbortController 생성
     currentController = new AbortController();
-    
+
     const currentChat = chatHistory.value.find(c => c.id === currentChatId.value);
     if (!currentChat) {
       console.error("❌ 현재 채팅을 찾을 수 없습니다.");
@@ -700,13 +870,13 @@ export function useChat() {
         },
         signal: currentController.signal, // AbortController 신호 추가
         body: JSON.stringify(
-          chatMode.value === 'cot' 
-            ? { question: message, context: null, session_id: currentChat.sessionId }
+          chatMode.value === 'cot'
+            ? { question: preparedMessage, context: null, session_id: currentChat.sessionId }
             : chatMode.value === 'study'
-            ? { question: message, subject: null, session_id: currentChat.sessionId }
+            ? { question: preparedMessage, subject: null, session_id: currentChat.sessionId }
             : chatMode.value === 'career'
-            ? { question: message, major: null, session_id: currentChat.sessionId }
-            : { message: message, context: null, session_id: currentChat.sessionId }
+            ? { question: preparedMessage, major: null, session_id: currentChat.sessionId }
+            : { message: preparedMessage, context: null, session_id: currentChat.sessionId }
         )
       });
 
@@ -749,31 +919,66 @@ export function useChat() {
 
       if (data.success && data.response && data.response.trim()) {
         const responseText = data.response;
+
+        // 긴 답변 체크: 아티팩트로 변환할지 판단
+        if (shouldConvertToArtifact(responseText)) {
+          // 아티팩트로 변환
+          const artifactTitle = extractArtifactTitle(responseText);
+
+          if (currentChat.messages[messageIndex]) {
+            const initialVersion: ArtifactVersion = {
+              content: responseText,
+              timestamp: Date.now(),
+              description: '초기 생성'
+            };
+
+            // 보고서 스타일 아티팩트임을 명확히 표시
+            const wordCount = Math.floor(responseText.length / 2); // 대략적인 한글 기준 글자 수
+            currentChat.messages[messageIndex].text = `📄 체계적인 보고서를 아티팩트로 생성하였습니다.\n\n**${artifactTitle}**\n\n오른쪽 패널에서 전문 보고서 형식의 상세 내용을 확인하실 수 있습니다. (약 ${wordCount.toLocaleString()}자)`;
+            currentChat.messages[messageIndex].artifact = {
+              title: artifactTitle,
+              content: responseText,
+              type: 'document',
+              versions: [initialVersion],
+              currentVersion: 0
+            };
+            currentChat.messages[messageIndex].isLoading = false;
+            currentChat.messages[messageIndex].isStreaming = false;
+            currentChat.messages[messageIndex].currentStep = undefined;
+          }
+
+          isStreaming.value = false;
+          saveChatHistory();
+          console.log('📄 보고서 스타일 아티팩트 생성:', artifactTitle, `(${Math.floor(responseText.length / 2)}자)`);
+          return;
+        }
+
+        // 일반 답변: 타이핑 효과 적용
         let currentIndex = 0;
         let lastUpdateTime = 0;
-        const UPDATE_INTERVAL = 150; // 150ms마다 업데이트로 부드럽게
-        
+        const UPDATE_INTERVAL = 50; // 50ms마다 업데이트 (더 빠르게)
+
         // 한글과 영어를 자연스럽게 처리하기 위한 청크 단위 계산
         const getNextChunkIndex = (text: string, currentIndex: number) => {
           if (currentIndex >= text.length) return text.length;
-          
+
           const char = text[currentIndex];
-          
+
           // 한글의 경우 음절 단위로, 영어의 경우 문자 단위로
           if (char.match(/[가-힣]/)) {
-            return Math.min(currentIndex + 2, text.length); // 한글은 2글자씩
+            return Math.min(currentIndex + 3, text.length); // 한글은 3글자씩 (더 빠르게)
           } else if (char.match(/[a-zA-Z]/)) {
             // 영어 단어는 공백이나 구두점까지 함께
             let nextIndex = currentIndex + 1;
             while (nextIndex < text.length && text[nextIndex].match(/[a-zA-Z]/)) {
               nextIndex++;
             }
-            return Math.min(nextIndex, currentIndex + 4); // 최대 4글자씩
+            return Math.min(nextIndex, currentIndex + 6); // 최대 6글자씩 (더 빠르게)
           } else {
             return currentIndex + 1; // 숫자, 기호 등은 1글자씩
           }
         };
-        
+
         const typeWriter = () => {
           // 중지된 경우 타이핑 중단
           if (!isStreaming.value || !currentChat.messages[messageIndex]) {
@@ -784,27 +989,27 @@ export function useChat() {
             }
             return;
           }
-          
+
           const now = Date.now();
-          
+
           if (currentIndex < responseText.length) {
             // 다음 청크 인덱스 계산
             const nextIndex = getNextChunkIndex(responseText, currentIndex);
-            
+
             // 텍스트 직접 업데이트 (객체 재생성 없이)
             currentChat.messages[messageIndex].text = responseText.substring(0, nextIndex);
-            
+
             currentIndex = nextIndex;
-            
+
             // 디바운싱된 스크롤
             if (now - lastUpdateTime > UPDATE_INTERVAL) {
               setTimeout(() => {
                 scrollToBottom();
-              }, 20);
+              }, 10);
               lastUpdateTime = now;
             }
-            
-            setTimeout(typeWriter, 80); // 80ms 간격으로 부드럽게
+
+            setTimeout(typeWriter, 30); // 30ms 간격으로 더 빠르게
           } else {
             // 타이핑 완료
             currentChat.messages[messageIndex].isStreaming = false;
@@ -813,7 +1018,7 @@ export function useChat() {
             saveChatHistory();
           }
         };
-        
+
         typeWriter();
       } else {
         if (currentChat.messages[messageIndex]) {
@@ -923,12 +1128,25 @@ export function useChat() {
           currentChat.messages[messageIndex].isStreaming = false;
           currentChat.messages[messageIndex].currentStep = undefined;
           currentChat.messages[messageIndex].hasError = false;
-          
+
+          // RAG 소스 정보 추가 (임시 목 데이터 - 향후 백엔드에서 실제 데이터로 교체)
+          const mockSources: RagSource[] = [];
+          for (let i = 0; i < Math.min(data.search_results_count || 5, 6); i++) {
+            mockSources.push({
+              title: `을지대학교 관련 정보 ${i + 1}`,
+              content: `을지대학교에 대한 상세 정보와 관련 자료를 포함하고 있습니다. 해당 문서는 학교 공식 웹사이트 및 관련 자료에서 추출되었습니다.`,
+              domain: `eulji.ac.kr`,
+              category: '대학 정보',
+              score: 0.95 - (i * 0.1)
+            });
+          }
+          currentChat.messages[messageIndex].ragSources = mockSources;
+
           // RAG 디버그 정보 표시 (옵셔널)
           if (data.debug_info && data.debug_info.length > 0) {
             console.log("🔍 RAG 디버그 정보:", data.debug_info);
           }
-          
+
           // RAG 메타데이터 표시 (처리시간, 검색된 문서 수 등)
           console.log(`📊 RAG 성능: ${data.processing_time?.toFixed(2)}초, 검색문서: ${data.search_results_count}개, 프롬프트: ${data.prompt_type_used}`);
         }
@@ -973,10 +1191,19 @@ export function useChat() {
 
   async function callFastAPIChatWithImages(message: string, images: File[], messageIndex: number) {
     console.log("🚀 이미지 포함 FastAPI 호출 시작:", message, "이미지 수:", images.length);
-    
+
+    // 메시지 전처리: 상세 답변이 필요한 경우 보고서 스타일 지침 추가
+    const preparedMessage = prepareMessageForAI(message, chatMode.value);
+    if (preparedMessage !== message) {
+      console.log("📝 ✅ 이미지 분석용 보고서 스타일 지침 추가됨");
+      console.log("📋 전처리된 메시지 길이:", preparedMessage.length, "자");
+    } else {
+      console.log("💬 일반 모드로 전송");
+    }
+
     // 새로운 AbortController 생성
     currentController = new AbortController();
-    
+
     const currentChat = chatHistory.value.find(c => c.id === currentChatId.value);
     if (!currentChat) {
       console.error("❌ 현재 채팅을 찾을 수 없습니다.");
@@ -986,7 +1213,7 @@ export function useChat() {
     try {
       // FormData 생성
       const formData = new FormData();
-      formData.append('message', message);
+      formData.append('message', preparedMessage);
       
       // 이미지들을 FormData에 추가
       images.forEach((image, _) => {

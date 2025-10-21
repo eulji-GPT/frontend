@@ -4,9 +4,9 @@
       <div class="message-content">
         <!-- 파일 미리보기 (사용자 메시지에서만) -->
         <div v-if="images && Array.isArray(images) && images.length > 0 && align === 'right'" class="message-files">
-          <div 
-            v-for="(file, index) in images" 
-            :key="index" 
+          <div
+            v-for="(file, index) in images"
+            :key="index"
             class="message-file"
           >
             <img v-if="file.type && file.type.startsWith('image/')" :src="getFilePreview(file)" :alt="file.name || '이미지'" class="message-image" />
@@ -16,7 +16,22 @@
             </div>
           </div>
         </div>
-        <div v-if="displayContent && displayContent.trim()">
+
+        <!-- CoT 단계별 번호 표시 -->
+        <div v-if="parsedCotContent && parsedCotContent.length > 0" class="cot-content">
+          <div v-for="step in parsedCotContent" :key="step.number" class="cot-step-block">
+            <div class="cot-step-number">
+              <span class="step-circle">{{ step.number }}</span>
+            </div>
+            <div class="cot-step-text">
+              <div class="cot-question">{{ step.question }}</div>
+              <div v-html="marked(step.answer)" class="cot-answer markdown-content"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 일반 콘텐츠 -->
+        <div v-else-if="displayContent && displayContent.trim()">
           <div v-if="useMarkdown" v-html="streamingRenderedContent" class="markdown-content"></div>
           <div v-else v-text="displayContent"></div>
         </div>
@@ -25,16 +40,40 @@
         </div>
         <span v-if="isStreaming" class="streaming-cursor">|</span>
       </div>
+
+      <!-- 아티팩트 생성 알림 카드 (챗봇 메시지에 아티팩트가 있을 때) -->
+      <div v-if="hasArtifact && align === 'left' && !isStreaming" class="artifact-notification-card" @click="handleOpenArtifact">
+        <div class="artifact-icon-wrapper">
+          <svg class="artifact-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14,2 14,8 20,8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10,9 9,9 8,9"></polyline>
+          </svg>
+        </div>
+        <div class="artifact-notification-content">
+          <div class="artifact-notification-title">📄 상세 보고서가 생성되었습니다</div>
+          <div class="artifact-notification-subtitle">클릭하여 전체 내용 보기</div>
+        </div>
+        <div class="artifact-notification-arrow">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9,18 15,12 9,6"></polyline>
+          </svg>
+        </div>
+      </div>
     </div>
-    
+
     <!-- 피드백 버튼 (챗봇 메시지에만 표시) -->
     <div v-if="align === 'left' && content && content.trim() && !isStreaming" class="feedback-container">
       <ChatFeedbackButtons
         :content="content"
         :messageId="messageId"
         :isBot="true"
+        :hasArtifact="hasArtifact"
         @feedback="handleFeedback"
         @regenerate="handleRegenerate"
+        @openArtifact="handleOpenArtifact"
       />
     </div>
   </div>
@@ -78,10 +117,22 @@ const props = defineProps({
   messageId: {
     type: String,
     default: ''
+  },
+  cotSteps: {
+    type: Array,
+    default: () => []
+  },
+  showCotNumbers: {
+    type: Boolean,
+    default: false
+  },
+  hasArtifact: {
+    type: Boolean,
+    default: false
   }
 });
 
-const emit = defineEmits(['feedback', 'regenerate']);
+const emit = defineEmits(['feedback', 'regenerate', 'openArtifact']);
 
 const slots = useSlots();
 
@@ -117,6 +168,34 @@ const displayContent = computed(() => {
   return props.content || '';
 });
 
+// CoT 단계별 content 파싱
+const parsedCotContent = computed(() => {
+  if (!props.showCotNumbers || !props.content) return null;
+
+  // content를 줄바꿈으로 분리
+  const lines = props.content.split('\n\n');
+  const steps = [];
+  let stepNumber = 1;
+
+  for (const line of lines) {
+    // **질문** 형태를 찾아서 단계로 인식
+    if (line.trim().startsWith('**') && line.includes('**')) {
+      const parts = line.split('\n');
+      if (parts.length >= 2) {
+        const question = parts[0].replace(/\*\*/g, '').trim();
+        const answer = parts.slice(1).join('\n').trim();
+        steps.push({
+          number: stepNumber++,
+          question,
+          answer
+        });
+      }
+    }
+  }
+
+  return steps.length > 0 ? steps : null;
+});
+
 // 렌더링된 마크다운 콘텐츠 (스트리밍 실시간 반영)
 const streamingRenderedContent = computed(() => {
   const content = displayContent.value;
@@ -142,6 +221,12 @@ const handleFeedback = (type, messageId) => {
 const handleRegenerate = (messageId) => {
   console.log('답변 재생성 요청:', messageId);
   emit('regenerate', messageId);
+};
+
+// 아티팩트 열기 처리 함수
+const handleOpenArtifact = (messageId) => {
+  console.log('아티팩트 열기 요청:', messageId);
+  emit('openArtifact', messageId);
 };
 </script>
 
@@ -293,7 +378,7 @@ const handleRegenerate = (messageId) => {
 
 /* 마크다운 스타일링 */
 :deep(.markdown-content) {
-  line-height: 1.4;
+  line-height: 1.6;
   white-space: pre-line; /* 개행 문자를 실제 개행으로 처리 */
 }
 
@@ -303,70 +388,70 @@ const handleRegenerate = (messageId) => {
 :deep(.markdown-content h4),
 :deep(.markdown-content h5),
 :deep(.markdown-content h6) {
-  margin: 0.2em 0 0.1em 0;
+  margin: 12px 0 4px 0;
   font-weight: 700;
-  line-height: 1.1;
+  line-height: 1.3;
   color: #02478a;
 }
 
 /* 대제목 - 가장 크고 눈에 띄게 */
-:deep(.markdown-content h1) { 
-  font-size: 1.8em !important;
+:deep(.markdown-content h1) {
+  font-size: 2em !important;
   font-weight: 800 !important;
   color: #02478a !important;
-  border-bottom: 2px solid #02478a !important;
-  padding-bottom: 0.1em !important;
-  margin: 0.3em 0 0.15em 0 !important;
+  border-bottom: 3px solid #02478a !important;
+  padding-bottom: 4px !important;
+  margin: 16px 0 8px 0 !important;
   display: block !important;
 }
 
 /* 중제목 - 뚜렷하게 구분 */
-:deep(.markdown-content h2) { 
-  font-size: 1.5em !important;
+:deep(.markdown-content h2) {
+  font-size: 1.6em !important;
   font-weight: 700 !important;
-  color: #1e40af !important;
-  border-bottom: 1px solid #e5e7eb !important;
-  padding-bottom: 0.05em !important;
-  margin: 0.25em 0 0.1em 0 !important;
+  color: #0c4a6e !important;
+  border-bottom: 2px solid #bae6fd !important;
+  padding-bottom: 3px !important;
+  margin: 14px 0 6px 0 !important;
   display: block !important;
 }
 
 /* 소제목 - 적당한 크기로 */
-:deep(.markdown-content h3) { 
-  font-size: 1.25em !important;
-  font-weight: 600 !important;
-  color: #1f2937 !important;
-  margin: 0.2em 0 0.05em 0 !important;
+:deep(.markdown-content h3) {
+  font-size: 1.3em !important;
+  font-weight: 700 !important;
+  color: #1e40af !important;
+  margin: 12px 0 4px 0 !important;
   display: block !important;
 }
 
 /* 세부 제목들 */
-:deep(.markdown-content h4) { 
-  font-size: 1.1em !important;
+:deep(.markdown-content h4) {
+  font-size: 1.15em !important;
   font-weight: 600 !important;
   color: #374151 !important;
-  margin: 0.15em 0 0.05em 0 !important;
+  margin: 10px 0 3px 0 !important;
   display: block !important;
 }
 
-:deep(.markdown-content h5) { 
+:deep(.markdown-content h5) {
   font-size: 1.05em !important;
   font-weight: 600 !important;
   color: #4b5563 !important;
-  margin: 0.1em 0 0.03em 0 !important;
+  margin: 8px 0 2px 0 !important;
   display: block !important;
 }
 
-:deep(.markdown-content h6) { 
+:deep(.markdown-content h6) {
   font-size: 1em !important;
   font-weight: 600 !important;
   color: #6b7280 !important;
-  margin: 0.08em 0 0.02em 0 !important;
+  margin: 6px 0 2px 0 !important;
   display: block !important;
 }
 
 :deep(.markdown-content p) {
-  margin: 0.1em 0;
+  margin: 3px 0;
 }
 
 :deep(.markdown-content strong) {
@@ -378,14 +463,14 @@ const handleRegenerate = (messageId) => {
   font-style: italic;
   color: #1e40af;
   background: rgba(30, 64, 175, 0.05);
-  padding: 0.1em 0.2em;
+  padding: 1px 3px;
   border-radius: 2px;
 }
 
 :deep(.markdown-content ul),
 :deep(.markdown-content ol) {
-  margin: 0.1em 0;
-  padding-left: 1em;
+  margin: 4px 0;
+  padding-left: 1.2em;
 }
 
 :deep(.markdown-content ul) {
@@ -394,7 +479,7 @@ const handleRegenerate = (messageId) => {
 
 :deep(.markdown-content ul li) {
   position: relative;
-  margin: 0.05em 0;
+  margin: 2px 0;
   padding-left: 1em;
 }
 
@@ -407,8 +492,8 @@ const handleRegenerate = (messageId) => {
 }
 
 :deep(.markdown-content ol li) {
-  margin: 0.05em 0;
-  padding-left: 0.2em;
+  margin: 2px 0;
+  padding-left: 0.3em;
 }
 
 :deep(.markdown-content ol) {
@@ -438,8 +523,8 @@ const handleRegenerate = (messageId) => {
 :deep(.markdown-content blockquote) {
   border-left: 4px solid #02478a;
   background: linear-gradient(135deg, #f0f6ff 0%, #f8fafc 100%);
-  margin: 0.2em 0;
-  padding: 0.3em 0.8em;
+  margin: 6px 0;
+  padding: 8px 12px;
   font-style: normal;
   border-radius: 0 6px 6px 0;
   box-shadow: 0 1px 3px rgba(2, 71, 138, 0.1);
@@ -471,7 +556,7 @@ const handleRegenerate = (messageId) => {
 :deep(.markdown-content code) {
   background: #f1f5f9;
   color: #0f172a;
-  padding: 0.1em 0.3em;
+  padding: 2px 5px;
   border-radius: 3px;
   font-size: 0.9em;
   font-family: 'Courier New', monospace;
@@ -480,10 +565,10 @@ const handleRegenerate = (messageId) => {
 :deep(.markdown-content pre) {
   background: #1e293b;
   color: #e2e8f0;
-  padding: 0.5em;
+  padding: 8px;
   border-radius: 4px;
   overflow-x: auto;
-  margin: 0.2em 0;
+  margin: 6px 0;
 }
 
 :deep(.markdown-content pre code) {
@@ -496,9 +581,59 @@ const handleRegenerate = (messageId) => {
 :deep(.markdown-content hr) {
   border: none;
   border-top: 1px solid #e5e7eb;
-  margin: 0.3em 0;
+  margin: 8px 0;
   background: linear-gradient(to right, #02478a, #e5e7eb, #02478a);
   height: 1px;
+}
+
+/* CoT 단계별 번호 스타일 */
+.cot-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cot-step-block {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.cot-step-number {
+  flex-shrink: 0;
+}
+
+.step-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #10b981;
+  color: white;
+  font-weight: 700;
+  font-size: 16px;
+  font-family: Pretendard, sans-serif;
+}
+
+.cot-step-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cot-question {
+  font-weight: 700;
+  font-size: 16px;
+  color: #02478a;
+  line-height: 1.4;
+}
+
+.cot-answer {
+  color: #222;
+  line-height: 1.6;
 }
 
 /* 파일 미리보기 스타일 */
@@ -554,6 +689,154 @@ const handleRegenerate = (messageId) => {
   line-clamp: 2;
   -webkit-box-orient: vertical;
   line-height: 1.2;
+}
+
+/* 아티팩트 알림 카드 스타일 */
+.artifact-notification-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  margin-top: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+  animation: artifactSlideIn 0.5s ease-out, artifactPulse 2s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+.artifact-notification-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.artifact-notification-card:hover::before {
+  left: 100%;
+}
+
+.artifact-notification-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
+}
+
+.artifact-notification-card:active {
+  transform: translateY(0);
+}
+
+@keyframes artifactSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes artifactPulse {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+  }
+}
+
+.artifact-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  flex-shrink: 0;
+  backdrop-filter: blur(10px);
+}
+
+.artifact-icon {
+  color: white;
+  animation: artifactIconBounce 1s ease-in-out infinite;
+}
+
+@keyframes artifactIconBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.artifact-notification-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.artifact-notification-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.3;
+}
+
+.artifact-notification-subtitle {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.artifact-notification-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  opacity: 0.8;
+  transition: all 0.3s ease;
+}
+
+.artifact-notification-card:hover .artifact-notification-arrow {
+  opacity: 1;
+  transform: translateX(4px);
+}
+
+/* 모바일 대응 */
+@media (max-width: 768px) {
+  .artifact-notification-card {
+    padding: 14px 16px;
+    gap: 12px;
+  }
+
+  .artifact-icon-wrapper {
+    width: 40px;
+    height: 40px;
+  }
+
+  .artifact-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .artifact-notification-title {
+    font-size: 14px;
+  }
+
+  .artifact-notification-subtitle {
+    font-size: 12px;
+  }
 }
 </style>
 

@@ -80,18 +80,22 @@
           </div>
         </div>
       </div>
-      <ChatBubble 
-        v-else 
+      <ChatBubble
+        v-else
         :key="`bubble-${idx}`"
-        :align="msg.isUser ? 'right' : 'left'" 
-        :is-loading="false" 
+        :align="msg.isUser ? 'right' : 'left'"
+        :is-loading="false"
         :is-streaming="msg.isStreaming || false"
         :content="msg.text || ''"
         :use-markdown="!msg.isUser"
         :images="msg.images"
         :messageId="`${idx}-${msg.timestamp instanceof Date ? msg.timestamp.getTime() : Date.now()}`"
+        :cotSteps="msg.cotSteps || []"
+        :showCotNumbers="!!(msg.cotSteps && msg.cotSteps.length > 0)"
+        :hasArtifact="!!(msg.artifact)"
         @feedback="handleFeedback"
         @regenerate="handleRegenerate"
+        @openArtifact="handleOpenArtifact"
       />
       <!-- 디버깅용 로그 -->
       <!-- {{ console.log('메시지 렌더링:', idx, msg.isUser ? 'user' : 'bot', msg.text?.substring(0, 20), 'hasError:', msg.hasError, 'isLoading:', msg.isLoading, 'currentStep:', msg.currentStep) }} -->
@@ -109,7 +113,7 @@ const props = defineProps<{
   messages: ChatMessage[];
 }>();
 
-const emit = defineEmits(['feedback', 'regenerate']);
+const emit = defineEmits(['feedback', 'regenerate', 'openArtifact']);
 
 // 메시지 컨테이너 ref
 const messagesContainer = ref<HTMLElement | null>(null);
@@ -159,6 +163,12 @@ const handleFeedback = (type: 'good' | 'bad', messageId: string) => {
 const handleRegenerate = (messageId: string) => {
   console.log('답변 재생성:', messageId);
   emit('regenerate', messageId);
+};
+
+// 아티팩트 열기 처리
+const handleOpenArtifact = (messageId: string) => {
+  console.log('아티팩트 열기:', messageId);
+  emit('openArtifact', messageId);
 };
 
 

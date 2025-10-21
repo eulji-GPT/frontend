@@ -91,10 +91,11 @@
             <RagInitializer />
           </div>
           <div class="chat-messages-container">
-            <ChatMessageArea 
+            <ChatMessageArea
               :messages="messages"
               @feedback="handleMessageFeedback"
               @regenerate="handleMessageRegenerate"
+              @openArtifact="handleOpenArtifact"
             />
           </div>
           <div class="chat-input-area">
@@ -134,10 +135,27 @@
         />
       </div>
     </div>
-    
+
+    <!-- RAG Source Sidebar -->
+    <SourceSidebar
+      v-if="showSourceSidebar && currentRagSources"
+      :sources="currentRagSources"
+      @close="handleCloseSidebar"
+    />
+
+    <!-- Artifact Panel -->
+    <ArtifactPanel
+      v-if="showArtifactPanel && currentArtifact"
+      :artifact="currentArtifact"
+      @close="handleCloseArtifact"
+      @update="handleUpdateArtifact"
+      @regenerate="handleRegenerateArtifact"
+      @improveSelection="handleImproveSelection"
+    />
+
     <!-- My Page Modal -->
-    <MyPageModal 
-      :isVisible="showMyPageModal" 
+    <MyPageModal
+      :isVisible="showMyPageModal"
       @close="toggleMyPageModal"
     />
   </div>
@@ -151,6 +169,8 @@ import ChatMessageArea from './ChatMessageArea.vue';
 import ChatInput from './ChatInput.vue';
 import ChatModeSelector from './ChatModeSelector.vue';
 import RagInitializer from './RagInitializer.vue';
+import SourceSidebar from './SourceSidebar.vue';
+import ArtifactPanel from './ArtifactPanel.vue';
 import NotificationDropdown from '../common/NotificationDropdown.vue';
 import InfoPanel from '../common/InfoPanel.vue';
 import MyPageModal from '../common/MyPageModal.vue';
@@ -158,7 +178,7 @@ import FortuneMain from '../fortune/FortuneMain.vue';
 import FortuneChat from '../fortune/FortuneChat.vue';
 import FortuneResult from '../fortune/FortuneResult.vue';
 import { useChat } from '../../composables/useChat';
-import type { ChatMode } from '../../composables/useChat';
+import type { ChatMode, RagSource, Artifact, ArtifactVersion } from '../../composables/useChat';
 import eulLogo from '../../assets/eul_logo.svg';
 
 const router = useRouter();
@@ -258,6 +278,12 @@ const handleMessageRegenerate = (messageId: string) => {
   }
 };
 
+// 아티팩트 열기 처리
+const handleOpenArtifact = (messageId: string) => {
+  console.log('아티팩트 열기 요청:', messageId);
+  showArtifactPanel.value = true;
+};
+
 // 디버깅을 위한 messages 로그
 console.log('현재 메시지들:', messages.value);
 
@@ -272,8 +298,131 @@ const showInfoPanel = ref(false);
 const showMyPageModal = ref(false);
 const userProfileImage = ref<string | null>(null);
 const isProUser = ref(false);
+const showSourceSidebar = ref(true); // RAG 소스 사이드바 표시 여부
+const showArtifactPanel = ref(true); // 아티팩트 패널 표시 여부
 
 const showMobileOverlay = computed(() => isMobile.value && sidebarVisible.value);
+
+// 최신 RAG 소스 가져오기 (가장 마지막 봇 메시지의 소스)
+const currentRagSources = computed(() => {
+  if (chatMode.value !== 'rag') return undefined;
+
+  // 메시지를 역순으로 탐색하여 가장 최근의 RAG 소스 찾기
+  for (let i = messages.value.length - 1; i >= 0; i--) {
+    const msg = messages.value[i];
+    if (!msg.isUser && msg.ragSources && msg.ragSources.length > 0) {
+      return msg.ragSources;
+    }
+  }
+  return undefined;
+});
+
+// 최신 아티팩트 가져오기 (가장 마지막 봇 메시지의 아티팩트)
+const currentArtifact = computed(() => {
+  // 메시지를 역순으로 탐색하여 가장 최근의 아티팩트 찾기
+  for (let i = messages.value.length - 1; i >= 0; i--) {
+    const msg = messages.value[i];
+    if (!msg.isUser && msg.artifact) {
+      return msg.artifact;
+    }
+  }
+  return undefined;
+});
+
+const handleCloseSidebar = () => {
+  showSourceSidebar.value = false;
+};
+
+const handleCloseArtifact = () => {
+  showArtifactPanel.value = false;
+};
+
+const handleUpdateArtifact = (updatedArtifact: Artifact) => {
+  console.log('아티팩트 업데이트:', updatedArtifact);
+
+  // 가장 최근 아티팩트가 있는 메시지 찾기
+  for (let i = messages.value.length - 1; i >= 0; i--) {
+    const msg = messages.value[i];
+    if (!msg.isUser && msg.artifact) {
+      // 아티팩트 업데이트
+      msg.artifact = updatedArtifact;
+
+      // 채팅 히스토리 저장
+      saveChatHistory();
+      console.log('✅ 아티팩트가 업데이트되었습니다.');
+      break;
+    }
+  }
+};
+
+const handleRegenerateArtifact = async (artifact: Artifact) => {
+  console.log('🔄 아티팩트 재생성 요청');
+
+  // 재생성 요청 메시지 추가
+  const regenerateMessage = `"${artifact.title}" 아티팩트를 완전히 새롭게 재작성해주세요. 이전 내용과는 다른 관점이나 추가 정보를 포함하여 더 풍부한 내용으로 작성해주세요.`;
+
+  // 사용자 메시지로 추가 (handleSend 사용)
+  const inputValue = { value: regenerateMessage };
+  handleSend(inputValue);
+};
+
+const handleImproveSelection = async (payload: { selectedText: string; fullContent: string }) => {
+  console.log('🤖 텍스트 개선 요청:', payload.selectedText.substring(0, 50));
+
+  // 개선 요청 메시지 생성
+  const improveMessage = `다음 텍스트를 개선해주세요:\n\n"${payload.selectedText}"\n\n전체 맥락:\n${payload.fullContent.substring(0, 500)}...`;
+
+  try {
+    const response = await fetch(`${import.meta.env.VITE_GEMINI_FASTAPI_URL}/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: improveMessage,
+        context: [],
+        session_id: currentChat.sessionId
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('AI 개선 요청 실패');
+    }
+
+    const data = await response.json();
+    const improvedText = data.response;
+
+    console.log('✅ 텍스트 개선 완료');
+
+    // 개선된 텍스트로 아티팩트 업데이트
+    for (let i = messages.value.length - 1; i >= 0; i--) {
+      const msg = messages.value[i];
+      if (!msg.isUser && msg.artifact) {
+        const newContent = msg.artifact.content.replace(payload.selectedText, improvedText);
+
+        const newVersion: ArtifactVersion = {
+          content: newContent,
+          timestamp: Date.now(),
+          description: 'AI 부분 개선'
+        };
+
+        msg.artifact = {
+          ...msg.artifact,
+          content: newContent,
+          versions: [...(msg.artifact.versions || []), newVersion],
+          currentVersion: (msg.artifact.versions?.length || 0)
+        };
+
+        saveChatHistory();
+        console.log('✅ 개선된 텍스트로 아티팩트 업데이트됨');
+        break;
+      }
+    }
+  } catch (error) {
+    console.error('텍스트 개선 실패:', error);
+    alert('텍스트 개선에 실패했습니다. 다시 시도해주세요.');
+  }
+};
 
 const checkMobileSize = () => {
   isMobile.value = window.innerWidth <= 768;

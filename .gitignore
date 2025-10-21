@@ -18,6 +18,8 @@ assistant
 .mcp.json
 .playwright-mcp
 
+temp-assets
+
 node_modules
 dist
 dist-ssr

@@ -25,13 +25,14 @@ export default defineConfig(({ mode }) => {
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
         rewrite: (path: string) => path.replace(/^\/api/, ''),
-        timeout: 10000, // 10초 타임아웃
+        timeout: 30000, // 30초 타임아웃
       },
       '/gemini-api': {
         target: 'http://127.0.0.1:8001',
         changeOrigin: true,
         rewrite: (path: string) => path.replace(/^\/gemini-api/, ''),
-        timeout: 10000, // 10초 타임아웃
+        timeout: 60000, // 60초 타임아웃 (AI 응답 대기)
+        proxyTimeout: 60000,
       },
     },
     },

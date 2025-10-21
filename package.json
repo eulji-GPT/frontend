@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "html2pdf.js": "^0.12.1",
     "lottie-react": "^2.4.1",
     "marked": "^16.1.2",
     "vue": "^3.5.17",
