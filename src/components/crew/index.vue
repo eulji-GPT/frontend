@@ -72,21 +72,21 @@ const handleScroll = () => {
 const updateScrollEffects = () => {
   const scrolled = window.pageYOffset
   const maxScroll = document.documentElement.scrollHeight - window.innerHeight
-  
+
   scrollProgress.value = Math.min(scrolled / maxScroll, 1)
   showFloatingActions.value = scrolled > 300
 
   if (backgroundGradient.value) {
-    const parallaxSpeed = scrolled * 0.3
+    const parallaxSpeed = scrolled * 0.15
     backgroundGradient.value.style.transform = `translate3d(0, ${parallaxSpeed}px, 0)`
   }
 
   const sections = [
-    { ref: heroRef.value, speed: 0.1 },
-    { ref: infoRef.value, speed: 0.15 },
-    { ref: featuresRef.value, speed: 0.2 },
-    { ref: recruitmentRef.value, speed: 0.25 },
-    { ref: faqRef.value, speed: 0.3 }
+    { ref: heroRef.value, speed: 0.05 },
+    { ref: infoRef.value, speed: 0.075 },
+    { ref: featuresRef.value, speed: 0.1 },
+    { ref: recruitmentRef.value, speed: 0.125 },
+    { ref: faqRef.value, speed: 0.15 }
   ]
 
   sections.forEach(({ ref, speed }) => {
@@ -98,21 +98,22 @@ const updateScrollEffects = () => {
 
 const animateOnScroll = (element: HTMLElement | undefined, scrolled: number, _speed: number) => {
   if (!element) return
-  
+
   const rect = element.getBoundingClientRect()
   const elementTop = rect.top + scrolled
   const elementHeight = rect.height
   const windowHeight = window.innerHeight
-  
+
   if (scrolled + windowHeight > elementTop && scrolled < elementTop + elementHeight) {
     const progress = (scrolled + windowHeight - elementTop) / (windowHeight + elementHeight)
     const clampedProgress = Math.max(0, Math.min(1, progress))
-    
-    const translateY = (1 - clampedProgress) * 50
-    const opacity = Math.max(0.3, clampedProgress)
-    
+
+    const translateY = (1 - clampedProgress) * 30
+    const opacity = Math.max(0.5, clampedProgress)
+
     element.style.transform = `translate3d(0, ${translateY}px, 0)`
     element.style.opacity = opacity.toString()
+    element.style.transition = 'transform 0.1s ease-out, opacity 0.1s ease-out'
   }
 }
 
@@ -167,7 +168,7 @@ onUnmounted(() => {
   padding: 0;
   position: relative;
   overflow-x: hidden;
-  will-change: transform;
+  scroll-behavior: smooth;
 }
 
 .scroll-container {
@@ -180,6 +181,7 @@ onUnmounted(() => {
   width: 100%;
   max-width: 1440px;
   margin: 0 auto;
+  will-change: auto;
 }
 
 .crew-page > *:not(.background-gradient):not(.scroll-progress):not(.floating-actions) {
@@ -197,6 +199,8 @@ onUnmounted(() => {
   z-index: 0;
   overflow: hidden;
   will-change: transform;
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
 .animated-gradient {
@@ -369,6 +373,7 @@ body, html {
   padding: 0;
   overflow-x: hidden;
   width: 100%;
+  scroll-behavior: smooth;
 }
 
 #app {
@@ -376,5 +381,6 @@ body, html {
   background: #141D30 !important;
   min-height: 100vh;
   width: 100%;
+  scroll-behavior: smooth;
 }
 </style>

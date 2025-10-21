@@ -10,8 +10,13 @@ lerna-debug.log*
 # Environment files (로컬 환경 변수만 무시, development/production은 커밋)
 .env.local
 .env.*.local
+
+.claude
 #tool
 assistant
+.claude
+.mcp.json
+.playwright-mcp
 
 node_modules
 dist

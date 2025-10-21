@@ -16,36 +16,49 @@
       </div>
     </div>
     <div class="buttons-container" ref="buttonsRef">
-      <div class="apply-button interactive-button" @mousemove="onButtonHover" @mouseleave="onButtonLeave">
+      <div class="apply-button interactive-button" @click="goToApply" @mousemove="onButtonHover" @mouseleave="onButtonLeave">
         <span class="button-text">지원하기</span>
         <div class="button-glow"></div>
       </div>
-      <div class="explore-button interactive-button" @mousemove="onButtonHover" @mouseleave="onButtonLeave">
+      <div class="explore-button interactive-button" @click="goToExplore" @mousemove="onButtonHover" @mouseleave="onButtonLeave">
         <span class="button-text">둘러보기</span>
         <div class="button-glow"></div>
       </div>
     </div>
 
-    <!-- Orbital graphics with glowing X -->
+    <!-- Orbital graphics with glowing X (Solar System Style) -->
     <div class="orbital-graphics">
-      <!-- Central X (non-rotating) -->
-      <div class="orbital-center">
-        <img src="@/components/crew/img/a1383640386a4468f3aafbd85f25d782ba898213.png" alt="Glowing X" class="glowing-x glowing-x-blur" />
-        <img src="@/components/crew/img/a1383640386a4468f3aafbd85f25d782ba898213.png" alt="Glowing X" class="glowing-x glowing-x-sharp" />
-      </div>
       <!-- Blue gradient ellipses around center (non-rotating) -->
       <img src="@/components/crew/img/25a43ac12a8d753b067a4c4069a3f3341b2d58f6.svg" alt="" class="orbital-ellipse ellipse-1" />
       <img src="@/components/crew/img/dc7b486bfbbe722d0e80300ae0204de2ed66dedc.svg" alt="" class="orbital-ellipse ellipse-2" />
 
-      <!-- Rotating orbital container -->
-      <div class="orbit-rotation-container">
+      <!-- Orbital rings BEHIND the sun (lower z-index) -->
+      <div class="orbit-rings-container orbit-back">
+        <!-- Orbital ring paths -->
         <img src="@/components/crew/img/f663413e85514dd24d4819857a1b49b20eb547c0.svg" alt="Orbital ring" class="orbital-ring orbital-ring-1" />
         <img src="@/components/crew/img/5cda7af5cc885470a0642ad0b337664fdaac6c1c.svg" alt="Orbital ring" class="orbital-ring orbital-ring-2" />
-        <!-- Blue dots fixed on orbital paths -->
-        <img src="@/components/crew/img/4d6e604a8ebfdbe0dd5075eee8e8976b3ce46760.svg" alt="" class="orbital-dot dot-1" />
-        <img src="@/components/crew/img/4d6e604a8ebfdbe0dd5075eee8e8976b3ce46760.svg" alt="" class="orbital-dot dot-2" />
-        <img src="@/components/crew/img/f2050756aa70caf5c98711fd9d2dcbe64525dba7.svg" alt="" class="orbital-dot dot-3" />
-        <img src="@/components/crew/img/d29d3c3543fd8f5da994a9cbd2e6d84abd3fb801.svg" alt="" class="orbital-dot dot-4" />
+
+        <!-- Blue dots on back orbital paths -->
+        <div class="orbital-dot dot-1"></div>
+        <div class="orbital-dot dot-2"></div>
+      </div>
+
+      <!-- Central X (Sun - non-rotating, glowing) -->
+      <div class="orbital-center sun">
+        <img src="@/components/crew/img/a1383640386a4468f3aafbd85f25d782ba898213.png" alt="Glowing X" class="glowing-x glowing-x-blur" />
+        <img src="@/components/crew/img/a1383640386a4468f3aafbd85f25d782ba898213.png" alt="Glowing X" class="glowing-x glowing-x-sharp" />
+      </div>
+
+      <!-- Orbital rings IN FRONT of the sun (higher z-index) -->
+      <div class="orbit-rings-container orbit-front">
+        <!-- Orbital ring paths -->
+        <img src="@/components/crew/img/f663413e85514dd24d4819857a1b49b20eb547c0.svg" alt="Orbital ring" class="orbital-ring orbital-ring-1" />
+        <img src="@/components/crew/img/5cda7af5cc885470a0642ad0b337664fdaac6c1c.svg" alt="Orbital ring" class="orbital-ring orbital-ring-2" />
+
+        <!-- Blue dots on front orbital paths -->
+        <div class="orbital-dot dot-3"></div>
+        <div class="orbital-dot dot-4"></div>
+        <div class="orbital-dot dot-5"></div>
       </div>
     </div>
   </div>
@@ -53,6 +66,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 const heroContainer = ref<HTMLElement>()
 const titleRef = ref<HTMLElement>()
@@ -101,6 +117,14 @@ const startTypingAnimation = () => {
   }, 150)
 }
 
+const goToApply = () => {
+  router.push('/crew/apply')
+}
+
+const goToExplore = () => {
+  router.push('/crew/explore')
+}
+
 onMounted(() => {
   nextTick(() => {
     setTimeout(() => {
@@ -122,7 +146,7 @@ onMounted(() => {
   padding: 148px 0 100px 180px;
   background: transparent;
   position: relative;
-  overflow: visible;
+  overflow: hidden;
   width: 100%;
   min-height: 700px;
 }
@@ -286,53 +310,55 @@ onMounted(() => {
 /* Orbital Graphics */
 .orbital-graphics {
   position: absolute;
-  right: -200px;
-  top: -50px;
-  width: 900px;
-  height: 700px;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 600px;
+  height: 600px;
   pointer-events: none;
   z-index: 1;
-  overflow: hidden;
-}
-
-/* Rotation container for orbits and dots */
-.orbit-rotation-container {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 100%;
-  height: 100%;
+  overflow: visible;
+  perspective: 1000px;
   transform-style: preserve-3d;
-  animation: rotateOrbitY 60s linear infinite;
 }
 
-.orbital-ring {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  object-fit: contain;
-}
-
-.orbital-ring-1 {
-  width: 100%;
-  height: 100%;
-  transform: translate(-50%, -50%);
-}
-
-.orbital-ring-2 {
-  width: 85%;
-  height: 85%;
-  transform: translate(-50%, -50%) rotate(15deg);
-}
-
-.orbital-center {
+/* Sun (Central X) - Glowing and pulsing */
+.orbital-center.sun {
   position: absolute;
   left: 50%;
   top: 50%;
   width: 180px;
   height: 180px;
   transform: translate(-50%, -50%);
-  animation: pulse 3s ease-in-out infinite;
+  animation: sunPulse 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 30px rgba(71, 137, 238, 0.8))
+          drop-shadow(0 0 60px rgba(71, 137, 238, 0.6))
+          drop-shadow(0 0 90px rgba(71, 137, 238, 0.4));
+  z-index: 10;
+}
+
+/* Orbital rings container - Tilted disc rotating on Z-axis */
+.orbit-rings-container {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform: translate(-50%, -50%) rotateX(65deg);
+  animation: orbitRingsRotate 120s linear infinite;
+}
+
+/* Orbit behind the sun (lower z-index, slightly dimmer) */
+.orbit-back {
+  z-index: 5;
+  opacity: 0.7;
+}
+
+/* Orbit in front of the sun (higher z-index) */
+.orbit-front {
+  z-index: 15;
+  opacity: 1;
 }
 
 .glowing-x {
@@ -359,54 +385,93 @@ onMounted(() => {
   object-fit: contain;
   left: 50%;
   top: 50%;
+  filter: brightness(1.3);
 }
 
 .ellipse-1 {
   width: 300px;
   height: 300px;
   transform: translate(-50%, -50%) rotate(2.53deg);
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 .ellipse-2 {
   width: 220px;
   height: 220px;
   transform: translate(-50%, -50%) rotate(-3.464deg);
-  opacity: 0.5;
+  opacity: 0.4;
 }
 
-.orbital-dot {
+/* SVG orbital rings */
+.orbital-ring {
   position: absolute;
-  width: 16px;
-  height: 16px;
+  left: 50%;
+  top: 50%;
   object-fit: contain;
-  animation: pulseDot 2s ease-in-out infinite;
+  opacity: 0.8;
+  filter: brightness(1.2);
+  transform-style: preserve-3d;
+}
+
+.orbital-ring-1 {
+  width: 100%;
+  height: 100%;
   transform: translate(-50%, -50%);
 }
 
-/* 점들을 궤도 타원 라인 위에 정확히 배치 */
-.dot-1 {
-  /* 우측 (궤도 라인 위) */
-  left: 85%;
-  top: 50%;
+.orbital-ring-2 {
+  width: 85%;
+  height: 85%;
+  transform: translate(-50%, -50%) rotateZ(15deg);
 }
 
-.dot-2 {
-  /* 하단 (궤도 라인 위) */
-  left: 50%;
+/* Blue dots on orbital paths */
+.orbital-dot {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: linear-gradient(135deg, #4789ee, #6ba3ff);
+  border-radius: 50%;
+  box-shadow: 0 0 12px rgba(71, 137, 238, 0.9),
+              0 0 24px rgba(71, 137, 238, 0.6),
+              0 0 36px rgba(71, 137, 238, 0.4);
+  animation: dotPulse 2s ease-in-out infinite;
+  z-index: 5;
+}
+
+/* Position dots on the orbital ellipse paths */
+/* Dots on BACK orbit (behind sun) - slightly dimmer */
+.orbit-back .dot-1 {
+  left: 19%;
   top: 85%;
+  animation-delay: 0s;
+  opacity: 0.7;
 }
 
-.dot-3 {
-  /* 좌측 (궤도 라인 위) */
-  left: 15%;
-  top: 50%;
+.orbit-back .dot-2 {
+  left: 9%;
+  top: 74%;
+  animation-delay: 0.4s;
+  opacity: 0.7;
 }
 
-.dot-4 {
-  /* 상단 (궤도 라인 위) */
-  left: 50%;
-  top: 15%;
+/* Dots on FRONT orbit (in front of sun) - brighter */
+.orbit-front .dot-3 {
+  left: 63%;
+  top: 69%;
+  animation-delay: 0.8s;
+}
+
+.orbit-front .dot-4 {
+  left: 54%;
+  top: 19%;
+  animation-delay: 1.2s;
+}
+
+.orbit-front .dot-5 {
+  left: 75%;
+  top: 14%;
+  animation-delay: 1.6s;
 }
 
 @keyframes letterDrop {
@@ -421,34 +486,50 @@ onMounted(() => {
   51%, 100% { opacity: 0; }
 }
 
-@keyframes pulseDot {
+/* Sun pulse animation */
+@keyframes sunPulse {
   0%, 100% {
-    opacity: 0.5;
+    transform: translate(-50%, -50%) scale(1);
+    filter: drop-shadow(0 0 30px rgba(71, 137, 238, 0.8))
+            drop-shadow(0 0 60px rgba(71, 137, 238, 0.6))
+            drop-shadow(0 0 90px rgba(71, 137, 238, 0.4));
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.05);
+    filter: drop-shadow(0 0 40px rgba(71, 137, 238, 1))
+            drop-shadow(0 0 80px rgba(71, 137, 238, 0.8))
+            drop-shadow(0 0 120px rgba(71, 137, 238, 0.6));
+  }
+}
+
+/* Orbital rings slow rotation - Tilted disc rotating on Z-axis */
+@keyframes orbitRingsRotate {
+  from {
+    transform: translate(-50%, -50%) rotateX(65deg) rotateZ(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotateX(65deg) rotateZ(360deg);
+  }
+}
+
+/* Dot pulse animation */
+@keyframes dotPulse {
+  0%, 100% {
+    opacity: 0.8;
     transform: scale(1);
+    box-shadow: 0 0 12px rgba(71, 137, 238, 0.9),
+                0 0 24px rgba(71, 137, 238, 0.6),
+                0 0 36px rgba(71, 137, 238, 0.4);
   }
   50% {
     opacity: 1;
     transform: scale(1.3);
+    box-shadow: 0 0 18px rgba(71, 137, 238, 1),
+                0 0 36px rgba(71, 137, 238, 0.8),
+                0 0 54px rgba(71, 137, 238, 0.6);
   }
 }
 
-@keyframes rotateOrbitY {
-  from {
-    transform: translate(-50%, -50%) rotateX(0deg);
-  }
-  to {
-    transform: translate(-50%, -50%) rotateX(360deg);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    transform: translate(-50%, -50%) scale(1);
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.05);
-  }
-}
 
 @media (max-width: 768px) {
   .hero-container {

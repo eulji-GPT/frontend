@@ -35,33 +35,39 @@
 
 <style scoped>
 .footer-desktop {
-  align-items: flex-start;
+  align-items: center;
   background-color: #141d30;
   display: flex;
   justify-content: center;
   width: 100%;
   min-height: 1051px;
   position: relative;
+  margin: 0 auto;
+  padding: 0;
 }
 
 .overlap-wrapper {
   background-color: #141d30;
   height: 1051px;
-  overflow: hidden;
-  width: 1440px;
+  width: 100%;
   position: relative;
+  margin: 0;
+  padding: 0;
 }
 
 .overlap {
-  height: 1635px;
-  left: -453px;
+  height: 100%;
   position: relative;
-  width: 2235px;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0;
 }
 
 .group {
   height: 1027px;
-  left: 946px;
+  left: 50%;
+  transform: translateX(50px);
   position: absolute;
   top: 0;
   width: 947px;
@@ -74,7 +80,8 @@
   display: flex;
   flex-direction: column;
   gap: 50px;
-  left: 633px;
+  left: 50%;
+  transform: translateX(-620px);
   position: absolute;
   top: 148px;
   width: 550px;
@@ -166,10 +173,10 @@
   border-radius: 308px;
   filter: blur(250px);
   height: 617px;
-  left: 1550px;
+  right: -300px;
   opacity: 0.6;
   position: absolute;
-  top: 831px;
+  bottom: 100px;
   transform: rotate(-14.68deg);
   width: 617px;
 }
@@ -179,10 +186,10 @@
   border-radius: 308px;
   filter: blur(250px);
   height: 617px;
-  left: 68px;
+  left: -300px;
   opacity: 0.6;
   position: absolute;
-  top: 562px;
+  top: 400px;
   transform: rotate(-14.68deg);
   width: 617px;
 }
@@ -192,10 +199,10 @@
   border-radius: 337px;
   filter: blur(250px);
   height: 675px;
-  left: 203px;
+  left: -200px;
   opacity: 0.8;
   position: absolute;
-  top: 886px;
+  bottom: 50px;
   transform: rotate(-14.68deg);
   width: 675px;
 }
@@ -208,12 +215,13 @@
   flex: none;
   gap: 5px;
   box-sizing: border-box;
-  padding: 10px 200px;
+  padding: 10px 20px;
   height: 120px;
-  left: 453px;
+  left: 0;
+  right: 0;
   position: absolute;
-  top: 931px;
-  width: 1440px;
+  bottom: 0;
+  width: 100%;
   background: transparent;
   border-top: none;
 }
@@ -258,12 +266,12 @@
   .footer-desktop {
     min-height: 800px;
   }
-  
+
   .overlap-wrapper {
     width: 100%;
     height: 800px;
   }
-  
+
   .overlap {
     width: 100%;
     height: 800px;
@@ -318,8 +326,9 @@
   
   .common-footer {
     left: 0;
+    right: 0;
     width: 100%;
-    top: 600px;
+    bottom: 0;
   }
   
   .footer-content {
@@ -331,5 +340,15 @@
   .footer-info {
     align-items: center;
   }
+}
+</style>
+
+<style>
+/* 전역 스타일 - Footer 영역 테두리 제거 */
+body,
+html {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
 }
 </style>

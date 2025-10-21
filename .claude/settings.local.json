@@ -5,7 +5,20 @@
       "Read(//c/Users/SAMSUNG/AppData/Local/**)",
       "Read(//c/Users/SAMSUNG/Pictures/Screenshots/**)",
       "mcp__figma-dev-mode-mcp-server__get_screenshot",
-      "mcp__figma-dev-mode-mcp-server__get_design_context"
+      "mcp__figma-dev-mode-mcp-server__get_design_context",
+      "Bash(npm run dev)",
+      "Read(//c/Users/geon1/OneDrive/사진/Screenshots/**)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_wait_for",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_evaluate",
+      "mcp__playwright__browser_type",
+      "mcp__figma-dev-mode-mcp-server__get_metadata",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_drag",
+      "Bash(git add:*)",
+      "Bash(git push)"
     ],
     "deny": [],
     "ask": []

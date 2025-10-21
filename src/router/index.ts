@@ -55,6 +55,14 @@ const routes = [
     component: () => import('../components/crew/index.vue')
   },
   {
+    path: '/crew/apply',
+    component: () => import('../views/CrewApplyView.vue')
+  },
+  {
+    path: '/crew/explore',
+    component: () => import('../views/CrewExploreView.vue')
+  },
+  {
     path: '/development-status',
     component: () => import('../views/DevelopmentStatusView.vue')
   },
