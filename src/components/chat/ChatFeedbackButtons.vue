@@ -161,8 +161,8 @@ const regenerateAnswer = () => {
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 10px;
+  margin-top: 10px;
   opacity: 0.7;
   transition: opacity 0.2s ease;
 }

@@ -74,16 +74,19 @@
           <span class="eulgpt-mobile">EULGPT</span>
         </div>
       </div>
+
+      <!-- Mode selector - 전체 화면 기준 절대 위치 -->
+      <div v-if="currentView === 'chat'" class="mode-selector-container" :style="{ left: (sidebarWidth + 18) + 'px' }">
+        <ChatModeSelector
+          :currentMode="chatMode"
+          :isProUser="isProUser"
+          @modeChange="handleModeChange"
+        />
+      </div>
+
       <div class="chat-content-col">
         <!-- 일반 채팅 화면 -->
         <div v-if="currentView === 'chat'" class="chat-main-area">
-          <div class="mode-selector-container">
-            <ChatModeSelector
-              :currentMode="chatMode"
-              :isProUser="isProUser"
-              @modeChange="handleModeChange"
-            />
-          </div>
           <div class="rag-initializer-container">
             <RagInitializer />
           </div>
@@ -95,12 +98,18 @@
             />
           </div>
           <div class="chat-input-area">
-            <ChatInput 
-              :isLoading="isLoading" 
+            <ChatInput
+              :isLoading="isLoading"
               :isStreaming="isStreaming"
-              @sendMessage="handleSendMessage" 
+              @sendMessage="handleSendMessage"
               @stopResponse="stopResponse"
             />
+            <button class="help-button" @click="toggleInfoPanel" title="도움말">
+              <svg width="8" height="15" viewBox="0 0 8 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="4" cy="11.5" r="0.5" fill="black"/>
+                <path d="M4 1C2.34315 1 1 2.34315 1 4H2C2 2.89543 2.89543 2 4 2C5.10457 2 6 2.89543 6 4C6 5.10457 5.10457 6 4 6V9H5V6C6.65685 6 8 4.65685 8 3C8 1.34315 6.65685 0 5 0H4V1Z" fill="black"/>
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -426,6 +435,7 @@ const retryFortune = () => {
   overflow: hidden;
   width: 100vw;
   height: 100vh;
+  position: relative;
 }
 
 .chatbot-sidebar-wrapper {
@@ -435,9 +445,16 @@ const retryFortune = () => {
   width: 270px;
   height: 100vh;
   background: #ffffff;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-right: 1px solid #e5e7eb;
   min-width: 200px;
   max-width: 500px;
+  border-radius: 20px;
+  box-shadow:
+    inset 0px 0px 6px 0px rgba(255, 255, 255, 0.15),
+    inset 2px 2px 4px 0px rgba(255, 255, 255, 0.96),
+    inset -2px -2px 3px 0px rgba(255, 255, 255, 0.7);
 }
 
 .chat-content-col {
@@ -535,11 +552,11 @@ const retryFortune = () => {
   align-items: stretch;
   flex-wrap: nowrap;
   flex-shrink: 0;
-  gap: 4px;
+  gap: 16px;
   position: relative;
   width: 100%;
   padding: 0 20px 0 20px;
-  background: #ffffff;
+  background: transparent;
   z-index: 18;
 }
 
@@ -548,7 +565,7 @@ const retryFortune = () => {
   align-items: center;
   flex-wrap: nowrap;
   flex-shrink: 0;
-  gap: 8px;
+  gap: 13px;
   position: relative;
   width: 100%;
   cursor: pointer;
@@ -559,7 +576,7 @@ const retryFortune = () => {
 }
 
 .chatbot-menu-item > div:hover {
-  background-color: #f0f0f0;
+  background-color: #f3f4f6;
   transform: translateY(-1px);
 }
 .frame-3 {
@@ -867,11 +884,10 @@ const retryFortune = () => {
 
 /* Mode selector container */
 .mode-selector-container {
-  position: relative;
-  width: 100%;
+  position: absolute;
+  top: 20px;
   display: flex;
   justify-content: flex-start;
-  padding: 16px 0 0 20px;
   flex-shrink: 0;
   z-index: 100;
 }
@@ -892,6 +908,39 @@ const retryFortune = () => {
 
 .chat-input-area {
   flex-shrink: 0;
+  position: relative;
+}
+
+.help-button {
+  position: absolute;
+  bottom: 30px;
+  right: 30px;
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 100px;
+  cursor: pointer;
+  padding: 0;
+  box-sizing: border-box;
+  transition: background-color 0.2s ease;
+  z-index: 101;
+  overflow: visible;
+}
+
+.help-button:hover {
+  background-color: #F3F4F6;
+}
+
+.help-button svg {
+  width: 10px;
+  height: 16px;
+  display: block;
 }
 
 /* Sidebar resizer */

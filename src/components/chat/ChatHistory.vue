@@ -2,6 +2,7 @@
   <div class="frame-10">
     <div class="chat-list-link">
       <span class="conversation-list">대화 리스트</span>
+      <button @click="$emit('startNewChat')" class="new-chat-button">새 대화</button>
     </div>
     <div class="frame-11">
       <div v-if="chatHistory.length === 0" class="chat-list-container">
@@ -167,13 +168,37 @@ onUnmounted(() => {
   align-items: center;
   padding: 0;
   width: 100%;
+  flex-shrink: 0;
+  overflow: visible;
+  gap: 8px;
 }
 
 .conversation-list {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
-  color: #1f2937;
+  line-height: 23px;
+  color: #6B7280;
   font-family: Pretendard, var(--default-font-family);
+}
+
+.new-chat-button {
+  background-color: #F3F4F6;
+  border: 1px solid #E5E7EB;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #374151;
+  font-family: Pretendard, var(--default-font-family);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.new-chat-button:hover {
+  background-color: #E5E7EB;
+  transform: translateY(-1px);
 }
 
 

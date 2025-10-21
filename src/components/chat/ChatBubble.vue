@@ -166,7 +166,7 @@ const handleRegenerate = (messageId) => {
 
 .feedback-container {
   width: 100%;
-  margin-top: 4px;
+  margin-top: 10px;
 }
 
 .chat-bubble {
@@ -243,7 +243,7 @@ const handleRegenerate = (messageId) => {
   /* 챗봇 메시지 - 좌측 정렬 */
   display: block;
   width: 100%;
-  max-width: 100%;
+  max-width: 770px;
   padding: 16px 20px;
   background: transparent;
   border: none;
