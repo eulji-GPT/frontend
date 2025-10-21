@@ -45,12 +45,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import eulLogo from '../../assets/eul_logo.svg'
 import { isAuthenticated, logout } from '../../utils/auth'
 
 const emit = defineEmits(['scrollToSection'])
 const router = useRouter()
+const route = useRoute()
 const API_BASE_URL = import.meta.env.VITE_FASTAPI_URL || '/api'
 const isMobileMenuOpen = ref(false)
 const isLoggedIn = ref(false)
@@ -89,7 +90,24 @@ onMounted(() => {
 })
 
 function scrollToSection(id: string) {
-  emit('scrollToSection', id)
+  // 현재 메인 페이지가 아니면 메인 페이지로 이동
+  if (route.path !== '/') {
+    router.push('/').then(() => {
+      // 페이지 이동 후 스크롤
+      setTimeout(() => {
+        const element = document.getElementById(id)
+        if (element) {
+          const headerHeight = 100
+          const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
+          const targetPosition = elementPosition - headerHeight
+          window.scrollTo({ top: targetPosition, behavior: 'smooth' })
+        }
+      }, 300)
+    })
+  } else {
+    // 이미 메인 페이지에 있으면 emit
+    emit('scrollToSection', id)
+  }
 }
 
 function handleLogout() {
@@ -98,8 +116,25 @@ function handleLogout() {
 }
 
 function scrollToMobileSection(id: string) {
-  emit('scrollToSection', id)
   closeMobileMenu()
+  // 현재 메인 페이지가 아니면 메인 페이지로 이동
+  if (route.path !== '/') {
+    router.push('/').then(() => {
+      // 페이지 이동 후 스크롤
+      setTimeout(() => {
+        const element = document.getElementById(id)
+        if (element) {
+          const headerHeight = 100
+          const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
+          const targetPosition = elementPosition - headerHeight
+          window.scrollTo({ top: targetPosition, behavior: 'smooth' })
+        }
+      }, 300)
+    })
+  } else {
+    // 이미 메인 페이지에 있으면 emit
+    emit('scrollToSection', id)
+  }
 }
 
 function toggleMobileMenu() {

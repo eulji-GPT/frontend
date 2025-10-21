@@ -157,12 +157,13 @@ onUnmounted(() => {
 
 <style scoped>
 .crew-page {
-  width: 1440px;
+  width: 100%;
+  min-width: 100vw;
   min-height: 100vh;
   background: var(--dark-primary, #141D30) !important;
   display: flex;
   flex-direction: column;
-  margin: 0 auto;
+  margin: 0;
   padding: 0;
   position: relative;
   overflow-x: hidden;
@@ -175,6 +176,10 @@ onUnmounted(() => {
   gap: 120px;
   position: relative;
   z-index: 2;
+  overflow: visible;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
 }
 
 .crew-page > *:not(.background-gradient):not(.scroll-progress):not(.floating-actions) {
@@ -359,12 +364,17 @@ onUnmounted(() => {
 /* 전역 스타일로 body와 html 배경색 설정 */
 body, html {
   background-color: #141D30 !important;
+  background: #141D30 !important;
   margin: 0;
   padding: 0;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 #app {
   background-color: #141D30 !important;
+  background: #141D30 !important;
   min-height: 100vh;
+  width: 100%;
 }
 </style>

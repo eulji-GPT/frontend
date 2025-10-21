@@ -169,12 +169,14 @@ const handleRegenerate = (messageId: string) => {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 100%; /* 부모 컨테이너에 맞춤 */
-  flex: 1 1 auto; /* Let it grow and shrink */
-  overflow-x: hidden; /* 가로 스크롤 방지 */
-  overflow-y: auto; /* 세로 스크롤만 이 컨테이너에서 처리 */
-  min-height: 0; /* Important for shrinking below its content size */
-  position: relative; /* 떠있는 요소의 기준점 */
+  max-width: 100%;
+  flex: 1 1 auto;
+  overflow-x: visible; /* 오른쪽 말풍선이 잘리지 않도록 변경 */
+  overflow-y: auto;
+  min-height: 0;
+  position: relative;
+  padding: 0 20px; /* 좌우 여유 공간 추가 */
+  box-sizing: border-box;
 }
 
 .message-wrapper {
@@ -183,7 +185,8 @@ const handleRegenerate = (messageId: string) => {
   flex-direction: column;
   align-items: flex-start;
   margin-bottom: 12px;
-  overflow: visible; /* 스크롤을 상위 컨테이너에 위임 */
+  overflow: visible;
+  padding: 0 10px; /* 추가 여유 공간 */
 }
 
 .loading-indicator {

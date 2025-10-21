@@ -1,30 +1,32 @@
 <template>
-  <div v-if="isVisible" class="modal-overlay" @click="$emit('cancel')">
-    <div class="root-wrapper-common-delete-modal" @click.stop>
-      <div class="frame-2147227194">
-        <span class="delete-title">
-          삭제하시겠습니까?
-        </span>
-        <span class="delete-subtitle">
-          삭제된 대화는 복구할 수 없습니다.
-        </span>
-      </div>
-      <div class="frame-2147227155">
-        <div class="button-pc" @click="$emit('cancel')">
-          <span class="text">
-            취소
+  <Teleport to="body">
+    <div v-if="isVisible" class="modal-overlay" @click="$emit('cancel')">
+      <div class="root-wrapper-common-delete-modal" @click.stop>
+        <div class="frame-2147227194">
+          <span class="delete-title">
+            삭제하시겠습니까?
+          </span>
+          <span class="delete-subtitle">
+            삭제된 대화는 복구할 수 없습니다.
           </span>
         </div>
-        <div class="button-pc-delete" @click="$emit('confirm')">
-          <div class="frame-2147227341">
-            <span class="text-delete">
-              삭제하기
+        <div class="frame-2147227155">
+          <div class="button-pc" @click="$emit('cancel')">
+            <span class="text">
+              취소
             </span>
+          </div>
+          <div class="button-pc-delete" @click="$emit('confirm')">
+            <div class="frame-2147227341">
+              <span class="text-delete">
+                삭제하기
+              </span>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -45,13 +47,14 @@ defineEmits<{
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 9999; /* 모든 요소보다 위에 표시 */
+  backdrop-filter: blur(2px); /* 흐림 효과 추가 */
 }
 
 .root-wrapper-common-delete-modal {

@@ -887,7 +887,7 @@ const retryFortune = () => {
 .chat-messages-container {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible; /* 오른쪽 말풍선이 잘리지 않도록 변경 */
 }
 
 .chat-input-area {

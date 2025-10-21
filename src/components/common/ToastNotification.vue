@@ -60,7 +60,7 @@ watch(() => props.show, (newValue) => {
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 1000;
+  z-index: 10000; /* 모달보다 위에 표시 */
   animation: slideDown 0.3s ease-out;
 }
 

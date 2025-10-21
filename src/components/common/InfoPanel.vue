@@ -55,7 +55,7 @@ watch(() => props.isVisible, updatePosition)
   background-color: white;
   box-sizing: border-box;
   padding: 15px;
-  z-index: 999999;
+  z-index: 1500; /* 모달보다 아래에 표시 */
   width: 200px;
 }
 

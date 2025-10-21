@@ -16,60 +16,58 @@
           <button @click="removeImage(index)" class="remove-file-btn">×</button>
         </div>
       </div>
-      <div class="input-content">
-        <div class="text-container">
-          <div class="textarea-wrapper">
-            <textarea
-              ref="textareaRef"
-              placeholder="무엇이든 물어보세요."
-              v-model="inputValue"
-              @keydown.enter.exact.prevent="onSend"
-              @input="autoGrow"
-              :disabled="isLoading"
-              rows="1"
-            ></textarea>
-          </div>
-        </div>
-        <div class="button-container">
-          <div class="input-state-button" @click="triggerImageUpload" title="이미지 업로드">
-            <img :src="InputStateButtonImport" alt="파일 업로드" class="button-icon" />
-            <input 
-              ref="imageInput" 
-              type="file" 
-              accept="image/*,.pdf" 
-              @change="handleFileUpload" 
-              style="display: none" 
-              multiple
-            />
-          </div>
-          <div 
-            class="input-state-button-send" 
-            @click="isStreaming ? onStop() : onSend()"
-            :class="{ 'disabled': isLoading && !isStreaming, 'stop-button': isStreaming, 'can-send': canSend }"
-            :title="isStreaming ? '답변 중지' : '메시지 전송'"
-          >
-            <div v-if="isStreaming" class="stop-icon">⏹</div>
-            <img 
-              v-else 
-              :src="canSend ? InputStateButtonCanSend : InputStateButtonSend" 
-              alt="메시지 전송" 
-              class="button-icon" 
-            />
-          </div>
-        </div>
+      <!-- Placeholder Text -->
+      <div class="placeholder-text-container">
+        <textarea
+          ref="textareaRef"
+          placeholder="무엇이든 물어보세요."
+          v-model="inputValue"
+          @keydown.enter.exact.prevent="onSend"
+          @input="autoGrow"
+          :disabled="isLoading"
+          rows="1"
+        ></textarea>
+      </div>
+
+      <!-- Button Container -->
+      <div class="button-row">
+        <button class="input-state-button" @click="triggerImageUpload" title="이미지 업로드">
+          <img :src="InputStateButtonExpand" alt="파일 업로드" class="button-icon expand-icon" />
+          <input
+            ref="imageInput"
+            type="file"
+            accept="image/*,.pdf"
+            @change="handleFileUpload"
+            style="display: none"
+            multiple
+          />
+        </button>
+        <button
+          class="input-state-button-send"
+          @click="isStreaming ? onStop() : onSend()"
+          :class="{ 'disabled': isLoading && !isStreaming, 'stop-button': isStreaming, 'can-send': canSend }"
+          :title="isStreaming ? '답변 중지' : '메시지 전송'"
+        >
+          <div v-if="isStreaming" class="stop-icon">⏹</div>
+          <img
+            v-else
+            :src="InputStateButtonSend"
+            alt="메시지 전송"
+            class="button-icon send-icon"
+          />
+        </button>
       </div>
     </div>
     <div class="disclaimer-text">
-      EULGPT도 실수할 수 있어요. EULGPT도 함께 배워 나갈게요.
+      개인정보 처리방침 | Copyright ⓒ EULGPT. All Rights Reserved
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, onMounted, nextTick, computed } from 'vue';
-import InputStateButtonImport from '../../assets/chat/InputStateButton_import.svg';
-import InputStateButtonSend from '../../assets/chat/InputStateButton_send.svg';
-import InputStateButtonCanSend from '../../assets/chat/InputStateButton_cansend.svg';
+import InputStateButtonExpand from '../../assets/cc0acd97f17fd3260d7ac3a32e5ec4c9e1920795.svg';
+import InputStateButtonSend from '../../assets/ca93ae547828bc0ceff64d80fb5daa58d62c8c7f.svg';
 
 const props = defineProps<{
   isLoading: boolean;
@@ -178,69 +176,65 @@ const removeImage = (index: number) => {
 </script>
 
 <style scoped>
+/* Chat Input Box - Figma 디자인 정확히 매칭 */
 .chat-input-box {
   display: flex;
-  justify-content: flex-start;
   flex-direction: column;
   align-items: flex-start;
   gap: 17px;
-  border: solid 1px rgb(243, 244, 246);
-  border-radius: 15px;
-  align-self: stretch;
+  max-width: 770px;
   width: 770px;
-  background-color: rgb(248, 251, 255);
-  box-sizing: border-box;
+  background-color: #F8FBFF;
+  border: 1px solid #F3F4F6;
+  border-radius: 15px;
   padding: 16px 10px;
+  box-sizing: border-box;
   flex-shrink: 0;
   position: relative;
+  overflow: hidden;
 }
 
-.input-content {
+/* Placeholder Text Container */
+.placeholder-text-container {
   display: flex;
-  justify-content: space-between;
-  flex-direction: row;
   align-items: center;
-  align-self: stretch;
+  justify-content: center;
+  gap: 4px;
+  max-width: 710px;
+  width: 100%;
+  padding: 0 4px;
   box-sizing: border-box;
   flex-shrink: 0;
 }
 
-.text-container {
-  display: flex;
-  justify-content: center;
-  flex-direction: row;
-  align-items: center;
-  flex: 1;
-  gap: 4px;
-  box-sizing: border-box;
-  padding: 0px 4px;
-}
-
-.textarea-wrapper {
+/* Textarea Styling */
+textarea {
   flex: 1;
   min-width: 0;
-}
-
-textarea {
   width: 100%;
   border: none;
   outline: none;
   background: transparent;
-  color: rgb(156, 163, 175);
-  text-overflow: ellipsis;
+  color: #9CA3AF;
+  font-family: 'Pretendard', sans-serif;
   font-size: 16px;
-  font-family: Pretendard, sans-serif;
   font-weight: 500;
   line-height: 25px;
-  text-align: left;
   resize: none;
   overflow-y: auto;
   max-height: 150px;
   box-sizing: border-box;
+  padding: 0;
+  margin: 0;
 }
 
 textarea:focus {
-  color: black;
+  color: #000000;
+  outline: none;
+}
+
+textarea::placeholder {
+  color: #9CA3AF;
 }
 
 textarea:disabled {
@@ -248,63 +242,121 @@ textarea:disabled {
   cursor: not-allowed;
 }
 
-.button-container {
+/* Button Row - justify-between으로 양쪽 끝 배치 */
+.button-row {
   display: flex;
-  flex-direction: row;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  width: 100%;
+  flex-shrink: 0;
+  position: relative;
 }
 
+/* Input State Button - Expand (+) 버튼 */
 .input-state-button {
   width: 34px;
   height: 34px;
+  min-width: 34px;
+  min-height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  background-color: white;
-  border: 1px solid rgb(229, 231, 235);
+  background-color: #FFFFFF;
+  border: 1px solid #E5E7EB;
   border-radius: 100px;
+  cursor: pointer;
   padding: 6px;
+  margin: 0;
   box-sizing: border-box;
+  flex-shrink: 0;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  transition: background-color 0.2s;
 }
 
+.input-state-button:hover {
+  background-color: #F3F4F6;
+}
+
+.input-state-button:focus {
+  outline: none;
+  border: 1px solid #E5E7EB;
+}
+
+.input-state-button:active {
+  background-color: #E5E7EB;
+}
+
+/* Send Button - 전송 버튼 */
 .input-state-button-send {
   width: 34px;
   height: 34px;
+  min-width: 34px;
+  min-height: 34px;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 4px;
+  background-color: #E5E7EB;
+  border: 1px solid #E5E7EB;
   border-radius: 100px;
-  border: 1px solid rgb(229, 231, 235);
-  background: rgb(229, 231, 235);
   cursor: pointer;
   padding: 6px;
+  margin: 0;
   box-sizing: border-box;
-}
-
-.button-icon {
-  width: 22px;
-  height: 22px;
-  object-fit: cover;
-}
-
-.input-state-button:hover {
-  background-color: rgb(243, 244, 246);
+  flex-shrink: 0;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  transition: all 0.2s;
 }
 
 .input-state-button-send:hover {
-  background: rgb(209, 213, 219);
+  background-color: #D1D5DB;
 }
 
+.input-state-button-send:focus {
+  outline: none;
+}
+
+/* Button Icon */
+.button-icon {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  pointer-events: none;
+  display: block;
+}
+
+/* Expand Icon (+ 버튼) - 검은색 */
+.expand-icon {
+  --stroke-0: #000000;
+  width: 14px;
+  height: 14px;
+}
+
+/* Send Icon (↑ 버튼) - 기본 회색 */
+.send-icon {
+  --fill-0: #9CA3AF;
+  width: 13px;
+  height: 16px;
+}
+
+/* Send Button States */
 .input-state-button-send.can-send {
-  border: 1px solid rgb(2, 71, 138);
-  background: rgb(2, 71, 138);
+  background-color: #02478A;
+  border: 1px solid #02478A;
+}
+
+.input-state-button-send.can-send .send-icon {
+  --fill-0: #FFFFFF;
 }
 
 .input-state-button-send.can-send:hover {
-  background: rgb(1, 60, 116);
+  background-color: #013C74;
 }
 
 .input-state-button-send.disabled {
@@ -313,24 +365,28 @@ textarea:disabled {
 }
 
 .input-state-button-send.stop-button {
-  border: 1px solid var(--Black, #000);
-  background: var(--Black, #000);
+  background-color: #000000;
+  border: 1px solid #000000;
+}
+
+.input-state-button-send.stop-button .send-icon {
+  --fill-0: #FFFFFF;
 }
 
 .input-state-button-send.stop-button:hover {
-  background: #374151;
+  background-color: #374151;
 }
 
 .stop-icon {
-  font-size: 16px;
-  color: white;
+  font-size: 14px;
+  color: #FFFFFF;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .disclaimer-text {
-  width: 278px;
+  max-width: 450px;
   color: var(--Gray-300, #9CA3AF);
   text-align: center;
   font-family: Pretendard;
@@ -426,12 +482,10 @@ textarea:disabled {
   .chat-input-box {
     max-width: 500px;
     width: 500px;
-    padding: 0 16px;
-    gap: 14px;
   }
-  
-  .frame-3 {
-    gap: 8px;
+
+  .placeholder-text-container {
+    max-width: 460px;
   }
 }
 
@@ -439,17 +493,21 @@ textarea:disabled {
   .chat-input-box {
     max-width: calc(100vw - 32px);
     width: calc(100vw - 32px);
-    padding: 0 16px;
-    border-radius: 12px;
+    padding: 14px 10px;
+    gap: 14px;
   }
-  
+
+  .placeholder-text-container {
+    max-width: calc(100% - 8px);
+  }
+
   .disclaimer-text {
-    width: auto;
-    max-width: 100%;
+    max-width: calc(100vw - 32px);
     margin: 12px auto;
     font-size: 9px;
+    padding: 0 8px;
   }
-  
+
   .file-preview {
     width: 90px;
     height: 90px;
@@ -460,32 +518,48 @@ textarea:disabled {
   .chat-input-box {
     max-width: calc(100vw - 24px);
     width: calc(100vw - 24px);
-    padding: 0 14px;
+    padding: 12px 8px;
     gap: 12px;
-    border-radius: 10px;
   }
-  
+
+  .placeholder-text-container {
+    padding: 0 2px;
+  }
+
   .input-state-button,
   .input-state-button-send {
     width: 30px;
     height: 30px;
+    min-width: 30px;
+    min-height: 30px;
+    padding: 5px;
   }
-  
+
   .button-icon {
-    width: 18px;
-    height: 18px;
+    width: 12px;
+    height: 12px;
   }
-  
+
+  .expand-icon {
+    width: 12px;
+    height: 12px;
+  }
+
+  .send-icon {
+    width: 11px;
+    height: 14px;
+  }
+
   textarea {
     font-size: 14px;
     line-height: 22px;
   }
-  
+
   .file-preview {
     width: 80px;
     height: 80px;
   }
-  
+
   .disclaimer-text {
     font-size: 8px;
     margin: 10px auto;
@@ -496,22 +570,30 @@ textarea:disabled {
   .chat-input-box {
     max-width: calc(100vw - 16px);
     width: calc(100vw - 16px);
-    padding: 0 12px;
+    padding: 10px 6px;
   }
-  
-  .frame-3 {
-    gap: 6px;
-  }
-  
+
   .input-state-button,
   .input-state-button-send {
     width: 28px;
     height: 28px;
+    min-width: 28px;
+    min-height: 28px;
   }
-  
+
   .button-icon {
-    width: 16px;
-    height: 16px;
+    width: 10px;
+    height: 10px;
+  }
+
+  .expand-icon {
+    width: 10px;
+    height: 10px;
+  }
+
+  .send-icon {
+    width: 9px;
+    height: 12px;
   }
 }
 

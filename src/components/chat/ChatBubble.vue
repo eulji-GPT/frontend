@@ -150,16 +150,18 @@ const handleRegenerate = (messageId) => {
   display: flex;
   flex-direction: column;
   width: fit-content;
-  max-width: 100%;
-  overflow: visible; /* 스크롤을 상위 컨테이너에 위임 */
+  max-width: calc(100% - 20px); /* 오른쪽 여유 공간 확보 */
+  overflow: visible;
 }
 
 .chat-bubble-wrapper.right {
   align-items: flex-end;
+  margin-right: 10px; /* 오른쪽 말풍선 꼬리를 위한 여유 공간 */
 }
 
 .chat-bubble-wrapper.left {
   align-items: flex-start;
+  margin-left: 0;
 }
 
 .feedback-container {

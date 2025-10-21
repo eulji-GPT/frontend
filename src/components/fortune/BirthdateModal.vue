@@ -170,9 +170,9 @@ const selectedGender = ref<string>('남자');
 const selectedBirthTime = ref<string>('모름');
 const isLunar = ref<boolean>(false);
 
-const isYearOpen = ref(true);
-const isMonthOpen = ref(true);
-const isDayOpen = ref(true);
+const isYearOpen = ref(false);
+const isMonthOpen = ref(false);
+const isDayOpen = ref(false);
 const isBirthTimeOpen = ref(false);
 
 // 생년월일 옵션들을 더 실용적으로 확장
@@ -625,30 +625,54 @@ const submitBirthdate = () => {
 @media (max-width: 480px) {
   .modal-overlay {
     align-items: flex-start;
-    padding: 15px;
+    padding: 10px;
+    padding-bottom: 40px;
     overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .modal-container {
     width: 100%;
     max-width: 100%;
-    margin: 0;
+    margin: 0 auto 20px;
+    overflow: visible;
   }
 
   .modal-content {
-    padding: 20px 20px;
-    gap: 20px;
+    padding: 16px;
+    gap: 14px;
+    width: 100%;
+  }
+
+  .content-section {
+    gap: 14px;
   }
 
   .modal-title {
-    font-size: 18px;
+    font-size: 17px;
     text-align: center;
+    line-height: 130%;
+  }
+
+  .section-label {
+    font-size: 13px;
+  }
+
+  .name-section,
+  .gender-section,
+  .birth-time-section {
+    gap: 8px;
+  }
+
+  .name-input {
+    padding: 10px 12px;
+    font-size: 15px;
   }
 
   .dropdowns-section {
     flex-direction: row;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 10px;
     justify-content: space-between;
     width: 100%;
   }
@@ -660,13 +684,39 @@ const submitBirthdate = () => {
 
   .month-dropdown,
   .day-dropdown {
-    width: calc(50% - 6px);
-    min-width: calc(50% - 6px);
+    width: calc(50% - 5px);
+    min-width: calc(50% - 5px);
+  }
+
+  .dropdown-header {
+    height: 40px;
+    padding: 8px 12px;
+  }
+
+  .dropdown-value {
+    font-size: 14px;
+  }
+
+  .dropdown-options {
+    max-height: 120px;
+  }
+
+  .dropdown-option {
+    height: 32px;
+    font-size: 14px;
+    padding: 6px 4px;
+  }
+
+  .gender-button {
+    padding: 10px 16px;
+    font-size: 15px;
   }
 
   .submit-button {
-    width: 160px;
-    padding: 12px 50px;
+    width: 100%;
+    max-width: 200px;
+    padding: 12px 20px;
+    margin-top: 6px;
   }
 
   .button-text {

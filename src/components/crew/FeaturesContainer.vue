@@ -475,6 +475,7 @@ onMounted(() => {
   top: 108px;
   width: 272px;
   z-index: 10;
+  background: transparent !important;
 }
 
 .box .text-wrapper {
@@ -511,6 +512,7 @@ onMounted(() => {
   top: 320px;
   width: 272px;
   z-index: 10;
+  background: transparent !important;
 }
 
 .box .frame-3 {
@@ -523,6 +525,7 @@ onMounted(() => {
   top: 10px;
   width: 285px;
   z-index: 10;
+  background: transparent !important;
 }
 
 .box .frame-4 {
@@ -537,6 +540,7 @@ onMounted(() => {
   width: 285px;
   z-index: 10;
   pointer-events: auto;
+  background: transparent !important;
 }
 
 .box .text-wrapper-2 {
@@ -555,13 +559,14 @@ onMounted(() => {
 /* Feature Cards Enhanced Styling */
 .feature-card {
   position: relative;
+  background: transparent !important;
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(71, 137, 238, 0.1);
+  border: none;
   border-radius: 20px;
   padding: 20px;
   transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   cursor: pointer;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .card-glow {

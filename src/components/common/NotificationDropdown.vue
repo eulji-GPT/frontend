@@ -80,7 +80,7 @@ onMounted(() => {
   border: solid 1px rgb(243, 244, 246);
   border-radius: 20px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 999999;
+  z-index: 1500; /* 모달보다 아래에 표시 */
   overflow-y: auto;
   padding: 20px;
   display: flex;
