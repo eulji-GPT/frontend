@@ -75,8 +75,8 @@
         </div>
       </div>
 
-      <!-- Mode selector - 전체 화면 기준 절대 위치 -->
-      <div v-if="currentView === 'chat'" class="mode-selector-container" :style="{ left: (sidebarWidth + 18) + 'px' }">
+      <!-- Mode selector - chat-content-col 기준 상대 위치 -->
+      <div v-if="currentView === 'chat'" class="mode-selector-container">
         <ChatModeSelector
           :currentMode="chatMode"
           :isProUser="isProUser"
@@ -84,7 +84,7 @@
         />
       </div>
 
-      <div class="chat-content-col">
+      <div class="chat-content-wrapper">
         <!-- 일반 채팅 화면 -->
         <div v-if="currentView === 'chat'" class="chat-main-area">
           <div class="rag-initializer-container">
@@ -185,20 +185,21 @@ const router = useRouter();
 const API_BASE_URL = import.meta.env.VITE_FASTAPI_URL || '/api';
 import "./index.css";
 
-const { 
-  messages, 
-  chatHistory, 
-  currentChatId, 
-  isLoading, 
+const {
+  messages,
+  chatHistory,
+  currentChatId,
+  isLoading,
   isStreaming,
   chatMode,
-  startNewChat, 
-  selectChat, 
-  deleteChat, 
+  startNewChat,
+  selectChat,
+  deleteChat,
   handleSend,
   stopResponse,
   updateChatTitle,
-  setChatMode
+  setChatMode,
+  saveChatHistory
 } = useChat();
 
 const handleSendMessage = (message: string, images?: File[]) => {
@@ -281,6 +282,7 @@ const handleMessageRegenerate = (messageId: string) => {
 // 아티팩트 열기 처리
 const handleOpenArtifact = (messageId: string) => {
   console.log('아티팩트 열기 요청:', messageId);
+  selectedArtifactMessageId.value = messageId;
   showArtifactPanel.value = true;
 };
 
@@ -300,6 +302,7 @@ const userProfileImage = ref<string | null>(null);
 const isProUser = ref(false);
 const showSourceSidebar = ref(true); // RAG 소스 사이드바 표시 여부
 const showArtifactPanel = ref(true); // 아티팩트 패널 표시 여부
+const selectedArtifactMessageId = ref<string | null>(null); // 선택된 아티팩트의 메시지 ID
 
 const showMobileOverlay = computed(() => isMobile.value && sidebarVisible.value);
 
@@ -317,9 +320,22 @@ const currentRagSources = computed(() => {
   return undefined;
 });
 
-// 최신 아티팩트 가져오기 (가장 마지막 봇 메시지의 아티팩트)
+// 선택된 아티팩트 가져오기
 const currentArtifact = computed(() => {
-  // 메시지를 역순으로 탐색하여 가장 최근의 아티팩트 찾기
+  // 선택된 메시지 ID가 있으면 해당 메시지의 아티팩트 찾기
+  if (selectedArtifactMessageId.value) {
+    // messageId는 "idx-timestamp" 형식으로 구성되어 있음
+    // ChatMessageArea.vue의 messageId 생성 로직과 동일하게 매칭
+    for (let idx = 0; idx < messages.value.length; idx++) {
+      const msg = messages.value[idx];
+      const msgId = `${idx}-${msg.timestamp instanceof Date ? msg.timestamp.getTime() : msg.timestamp}`;
+      if (msgId === selectedArtifactMessageId.value && msg.artifact) {
+        return msg.artifact;
+      }
+    }
+  }
+
+  // 선택된 ID가 없으면 가장 최근의 아티팩트 찾기
   for (let i = messages.value.length - 1; i >= 0; i--) {
     const msg = messages.value[i];
     if (!msg.isUser && msg.artifact) {
@@ -335,6 +351,7 @@ const handleCloseSidebar = () => {
 
 const handleCloseArtifact = () => {
   showArtifactPanel.value = false;
+  selectedArtifactMessageId.value = null;
 };
 
 const handleUpdateArtifact = (updatedArtifact: Artifact) => {
@@ -369,8 +386,24 @@ const handleRegenerateArtifact = async (artifact: Artifact) => {
 const handleImproveSelection = async (payload: { selectedText: string; fullContent: string }) => {
   console.log('🤖 텍스트 개선 요청:', payload.selectedText.substring(0, 50));
 
+  // 현재 채팅 정보 가져오기
+  const currentChat = chatHistory.value.find(c => c.id === currentChatId.value);
+
+  if (!currentChat) {
+    console.error('현재 채팅을 찾을 수 없습니다.');
+    alert('텍스트 개선에 실패했습니다. 다시 시도해주세요.');
+    return;
+  }
+
   // 개선 요청 메시지 생성
-  const improveMessage = `다음 텍스트를 개선해주세요:\n\n"${payload.selectedText}"\n\n전체 맥락:\n${payload.fullContent.substring(0, 500)}...`;
+  const improveMessage = `다음 텍스트를 개선해주세요. 설명이나 추가 코멘트 없이 개선된 텍스트만 출력하세요:
+
+선택된 텍스트: "${payload.selectedText}"
+
+전체 문서 맥락:
+${payload.fullContent.substring(0, 500)}...
+
+중요: 개선된 텍스트만 출력하고, "개선된 텍스트:", "주요 개선 사항:" 등의 설명이나 헤더는 포함하지 마세요.`;
 
   try {
     const response = await fetch(`${import.meta.env.VITE_GEMINI_FASTAPI_URL}/chat`, {
@@ -380,8 +413,8 @@ const handleImproveSelection = async (payload: { selectedText: string; fullConte
       },
       body: JSON.stringify({
         message: improveMessage,
-        context: [],
-        session_id: currentChat.sessionId
+        context: "",
+        session_id: currentChat.sessionId || null
       })
     });
 
@@ -389,35 +422,108 @@ const handleImproveSelection = async (payload: { selectedText: string; fullConte
       throw new Error('AI 개선 요청 실패');
     }
 
-    const data = await response.json();
-    const improvedText = data.response;
+    // 스트리밍 응답 처리
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder();
+    let improvedText = '';
+    let chunkCount = 0;
 
-    console.log('✅ 텍스트 개선 완료');
+    console.log('📥 스트리밍 응답 처리 시작...');
 
-    // 개선된 텍스트로 아티팩트 업데이트
+    // 아티팩트 메시지 찾기
+    let artifactMessage = null;
     for (let i = messages.value.length - 1; i >= 0; i--) {
       const msg = messages.value[i];
       if (!msg.isUser && msg.artifact) {
-        const newContent = msg.artifact.content.replace(payload.selectedText, improvedText);
-
-        const newVersion: ArtifactVersion = {
-          content: newContent,
-          timestamp: Date.now(),
-          description: 'AI 부분 개선'
-        };
-
-        msg.artifact = {
-          ...msg.artifact,
-          content: newContent,
-          versions: [...(msg.artifact.versions || []), newVersion],
-          currentVersion: (msg.artifact.versions?.length || 0)
-        };
-
-        saveChatHistory();
-        console.log('✅ 개선된 텍스트로 아티팩트 업데이트됨');
+        artifactMessage = msg;
         break;
       }
     }
+
+    if (!artifactMessage) {
+      throw new Error('아티팩트를 찾을 수 없습니다');
+    }
+
+    const originalContent = artifactMessage.artifact.content;
+    const selectedTextIndex = originalContent.indexOf(payload.selectedText);
+
+    if (selectedTextIndex === -1) {
+      console.warn('선택된 텍스트를 원본에서 찾을 수 없습니다');
+      // 대신 전체 텍스트를 사용
+    }
+
+    if (reader) {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          console.log('📥 스트리밍 완료, 총', chunkCount, '개 청크 수신');
+          break;
+        }
+
+        const chunk = decoder.decode(value, { stream: true });
+        chunkCount++;
+        console.log('📦 청크 #' + chunkCount + ':', chunk.substring(0, 100));
+
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.substring(6));
+              console.log('📄 파싱된 데이터:', data);
+              if (data.type === 'chunk' && data.content) {
+                improvedText += data.content;
+                console.log('✏️ 개선 텍스트 누적 길이:', improvedText.length);
+
+                // 실시간으로 아티팩트 업데이트
+                if (selectedTextIndex !== -1) {
+                  const beforeText = originalContent.substring(0, selectedTextIndex);
+                  const afterText = originalContent.substring(selectedTextIndex + payload.selectedText.length);
+                  const newContent = beforeText + improvedText + afterText;
+
+                  artifactMessage.artifact = {
+                    ...artifactMessage.artifact,
+                    content: newContent
+                  };
+                }
+              }
+            } catch (e) {
+              console.warn('⚠️ JSON 파싱 실패:', line, e);
+            }
+          }
+        }
+      }
+    }
+
+    console.log('📝 최종 개선된 텍스트 길이:', improvedText.length);
+    console.log('📝 최종 개선된 텍스트:', improvedText.substring(0, 200));
+
+    if (!improvedText) {
+      throw new Error('개선된 텍스트를 받지 못했습니다');
+    }
+
+    console.log('✅ 텍스트 개선 완료');
+
+    // 최종 버전 저장
+    const finalContent = selectedTextIndex !== -1
+      ? originalContent.substring(0, selectedTextIndex) + improvedText + originalContent.substring(selectedTextIndex + payload.selectedText.length)
+      : originalContent;
+
+    const newVersion: ArtifactVersion = {
+      content: finalContent,
+      timestamp: Date.now(),
+      description: 'AI 부분 개선'
+    };
+
+    artifactMessage.artifact = {
+      ...artifactMessage.artifact,
+      content: finalContent,
+      versions: [...(artifactMessage.artifact.versions || []), newVersion],
+      currentVersion: (artifactMessage.artifact.versions?.length || 0)
+    };
+
+    saveChatHistory();
+    console.log('✅ 개선된 텍스트로 아티팩트 업데이트됨');
   } catch (error) {
     console.error('텍스트 개선 실패:', error);
     alert('텍스트 개선에 실패했습니다. 다시 시도해주세요.');
@@ -1034,7 +1140,8 @@ const retryFortune = () => {
 /* Mode selector container */
 .mode-selector-container {
   position: absolute;
-  top: 20px;
+  top: 29px;
+  left: 35px;
   display: flex;
   justify-content: flex-start;
   flex-shrink: 0;

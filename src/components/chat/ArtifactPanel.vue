@@ -147,8 +147,49 @@ marked.use({
   breaks: true,
   gfm: true,
   headerIds: false,
-  mangle: false
+  mangle: false,
+  pedantic: false,
+  tables: true,
+  smartLists: true,
+  smartypants: false
 });
+
+// 코드 블록 렌더러 커스터마이징 - 복사 버튼 추가
+const renderer = new marked.Renderer();
+
+renderer.code = function(token) {
+  // marked.js 4.x+에서는 token 객체로 전달됨
+  const code = token.text || token;
+  const lang = token.lang || '';
+
+  // code가 문자열이 아닌 경우 문자열로 변환
+  const codeString = typeof code === 'string' ? code : String(code || '');
+  const codeId = 'code-' + Math.random().toString(36).substr(2, 9);
+  const escapedCode = codeString
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+
+  return `
+    <div class="code-block-wrapper">
+      <div class="code-header">
+        <span class="code-language">${lang || 'text'}</span>
+        <button class="code-copy-btn" onclick="
+          const code = this.closest('.code-block-wrapper').querySelector('code').textContent;
+          navigator.clipboard.writeText(code).then(() => {
+            this.textContent = '✓ 복사됨';
+            setTimeout(() => this.textContent = '복사', 2000);
+          });
+        ">복사</button>
+      </div>
+      <pre><code id="${codeId}" class="language-${lang || 'text'}">${escapedCode}</code></pre>
+    </div>
+  `;
+};
+
+marked.use({ renderer });
 
 interface ArtifactVersion {
   content: string;
@@ -262,26 +303,214 @@ const exportToPDF = async () => {
       throw new Error('콘텐츠를 찾을 수 없습니다.');
     }
 
+    // 임시 컨테이너 생성하여 스타일 적용
+    const container = document.createElement('div');
+    container.style.cssText = `
+      width: 180mm;
+      max-width: 180mm;
+      padding: 0;
+      background: white;
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      color: #1f2937;
+      line-height: 1.6;
+      box-sizing: border-box;
+      overflow: hidden;
+    `;
+
+    // 마크다운 콘텐츠 복제 및 스타일 적용
+    const clone = element.cloneNode(true) as HTMLElement;
+    clone.style.cssText = `
+      font-size: 11pt;
+      line-height: 1.6;
+      word-wrap: break-word;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+    `;
+
+    // 마크다운 스타일 적용
+    const style = document.createElement('style');
+    style.textContent = `
+      * { box-sizing: border-box; }
+      h1 {
+        font-size: 22pt;
+        font-weight: 700;
+        margin: 20px 0 14px 0;
+        color: #111827;
+        border-bottom: 2px solid #e5e7eb;
+        padding-bottom: 8px;
+        word-wrap: break-word;
+        word-break: keep-all;
+        overflow-wrap: break-word;
+      }
+      h2 {
+        font-size: 18pt;
+        font-weight: 600;
+        margin: 18px 0 10px 0;
+        color: #1f2937;
+        word-wrap: break-word;
+        word-break: keep-all;
+        overflow-wrap: break-word;
+      }
+      h3 {
+        font-size: 15pt;
+        font-weight: 600;
+        margin: 14px 0 8px 0;
+        color: #374151;
+        word-wrap: break-word;
+        word-break: keep-all;
+        overflow-wrap: break-word;
+      }
+      h4 {
+        font-size: 13pt;
+        font-weight: 600;
+        margin: 12px 0 6px 0;
+        color: #4b5563;
+        word-wrap: break-word;
+        word-break: keep-all;
+        overflow-wrap: break-word;
+      }
+      p {
+        margin: 8px 0;
+        font-size: 11pt;
+        color: #374151;
+        word-wrap: break-word;
+        word-break: keep-all;
+        overflow-wrap: break-word;
+        line-height: 1.7;
+      }
+      ul, ol {
+        margin: 8px 0;
+        padding-left: 20px;
+        word-wrap: break-word;
+        word-break: keep-all;
+        overflow-wrap: break-word;
+      }
+      li {
+        margin: 4px 0;
+        font-size: 11pt;
+        word-wrap: break-word;
+        word-break: keep-all;
+        overflow-wrap: break-word;
+        line-height: 1.6;
+      }
+      code {
+        background: #f3f4f6;
+        padding: 2px 4px;
+        border-radius: 3px;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 9pt;
+        word-wrap: break-word;
+        word-break: break-all;
+        white-space: pre-wrap;
+      }
+      pre {
+        background: #1f2937;
+        color: #f9fafb;
+        padding: 12px;
+        border-radius: 4px;
+        margin: 10px 0;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        word-break: break-all;
+        max-width: 100%;
+      }
+      pre code {
+        background: transparent;
+        padding: 0;
+        color: #f9fafb;
+        font-size: 9pt;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        word-break: break-all;
+      }
+      blockquote {
+        border-left: 4px solid #3b82f6;
+        padding-left: 12px;
+        margin: 10px 0;
+        color: #6b7280;
+        font-style: italic;
+        word-wrap: break-word;
+        word-break: keep-all;
+        overflow-wrap: break-word;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 10px 0;
+        table-layout: fixed;
+      }
+      th, td {
+        border: 1px solid #e5e7eb;
+        padding: 6px 8px;
+        text-align: left;
+        font-size: 10pt;
+        word-wrap: break-word;
+        word-break: keep-all;
+        overflow-wrap: break-word;
+      }
+      th {
+        background: #f9fafb;
+        font-weight: 600;
+      }
+      a {
+        color: #3b82f6;
+        text-decoration: none;
+        word-wrap: break-word;
+        word-break: break-all;
+      }
+      strong {
+        font-weight: 600;
+        color: #111827;
+      }
+      em {
+        font-style: italic;
+      }
+      hr {
+        border: none;
+        border-top: 1px solid #e5e7eb;
+        margin: 16px 0;
+      }
+    `;
+
+    container.appendChild(style);
+    container.appendChild(clone);
+    document.body.appendChild(container);
+
+    // 한글 제목을 영문 파일명으로 변환
     const title = props.artifact?.title || '상세_보고서';
-    const filename = `${title.replace(/\s+/g, '_')}.pdf`;
+    const now = new Date();
+    const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
+
+    // 한글이 포함되어 있으면 EulGPT_Report_날짜 형식으로, 아니면 원본 제목 사용
+    const hasKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(title);
+    const safeTitle = hasKorean ? `EulGPT_Report_${timestamp}` : title.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const filename = `${safeTitle}.pdf`;
 
     const opt = {
-      margin: [10, 10, 10, 10],
+      margin: [15, 15, 15, 15],
       filename: filename,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: {
         scale: 2,
         useCORS: true,
-        logging: false
+        logging: false,
+        letterRendering: true
       },
       jsPDF: {
         unit: 'mm',
         format: 'a4',
-        orientation: 'portrait'
-      }
+        orientation: 'portrait',
+        compress: true
+      },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
-    await html2pdf().set(opt).from(element).save();
+    await html2pdf().set(opt).from(container).save();
+
+    // 임시 컨테이너 제거
+    document.body.removeChild(container);
+
     console.log('✅ PDF 저장 완료:', filename);
   } catch (err) {
     console.error('PDF 저장 실패:', err);
@@ -339,10 +568,14 @@ const handleTextSelection = () => {
   const rect = range.getBoundingClientRect();
   const contentRect = contentRef.value?.getBoundingClientRect();
 
-  if (contentRect) {
+  if (contentRect && contentRef.value) {
+    // 스크롤 위치를 고려하여 정확한 위치 계산
+    const scrollTop = contentRef.value.scrollTop || 0;
+    const popoverHeight = 48; // 팝오버 높이 + 작은 간격
+
     popoverStyle.value = {
       position: 'absolute',
-      top: `${rect.top - contentRect.top - 45}px`,
+      top: `${rect.top - contentRect.top + scrollTop - popoverHeight}px`,
       left: `${rect.left - contentRect.left + (rect.width / 2) - 75}px`
     };
   }
@@ -482,7 +715,7 @@ const startResize = (e: MouseEvent | TouchEvent) => {
   overflow: hidden;
   box-sizing: border-box;
   position: relative;
-  transition: width 0.05s ease-out;
+  will-change: width;
 }
 
 /* 리사이즈 핸들 */
@@ -649,6 +882,7 @@ const startResize = (e: MouseEvent | TouchEvent) => {
   flex: 1;
   overflow-y: auto;
   padding: 24px 20px;
+  position: relative;
 }
 
 /* 마크다운 스타일링 */
@@ -748,6 +982,133 @@ const startResize = (e: MouseEvent | TouchEvent) => {
   margin: 8px 0;
   background: linear-gradient(to right, #02478a, #e5e7eb, #02478a);
   height: 1px;
+}
+
+/* 코드 블록 스타일 */
+:deep(.code-block-wrapper) {
+  margin: 12px 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+:deep(.code-header) {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f3f4f6;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+:deep(.code-language) {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  font-family: 'Courier New', monospace;
+}
+
+:deep(.code-copy-btn) {
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #374151;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+:deep(.code-copy-btn:hover) {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+:deep(.code-copy-btn:active) {
+  transform: scale(0.98);
+}
+
+:deep(.code-block-wrapper pre) {
+  margin: 0;
+  padding: 12px;
+  background: #1e293b;
+  overflow-x: auto;
+}
+
+:deep(.code-block-wrapper code) {
+  font-family: 'Courier New', Consolas, Monaco, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #e2e8f0;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+
+/* 인라인 코드 스타일 */
+:deep(.markdown-content code:not(.code-block-wrapper code)) {
+  background: #f3f4f6;
+  color: #d63384;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Courier New', Consolas, Monaco, monospace;
+  font-size: 0.9em;
+  border: 1px solid #e5e7eb;
+}
+
+/* 테이블 스타일 */
+:deep(.markdown-content table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 0.9em;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+:deep(.markdown-content thead) {
+  background: #f9fafb;
+  border-bottom: 2px solid #02478a;
+}
+
+:deep(.markdown-content th) {
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #02478a;
+  border-right: 1px solid #e5e7eb;
+}
+
+:deep(.markdown-content th:last-child) {
+  border-right: none;
+}
+
+:deep(.markdown-content td) {
+  padding: 8px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  border-right: 1px solid #e5e7eb;
+  color: #374151;
+}
+
+:deep(.markdown-content td:last-child) {
+  border-right: none;
+}
+
+:deep(.markdown-content tbody tr) {
+  transition: background-color 0.2s ease;
+}
+
+:deep(.markdown-content tbody tr:hover) {
+  background-color: #f9fafb;
+}
+
+:deep(.markdown-content tbody tr:last-child td) {
+  border-bottom: none;
 }
 
 /* 스크롤바 스타일링 */

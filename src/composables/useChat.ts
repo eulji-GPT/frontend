@@ -211,40 +211,12 @@ export function useChat() {
       return message;
     }
 
-    // 상세 답변이 필요한 질문인 경우 보고서 스타일 지침 추가
+    // 상세 답변이 필요한 질문인 경우 간결한 구조화 지침 추가
     if (requiresDetailedResponse(message)) {
-      const reportStyleInstruction = `<SYSTEM_INSTRUCTION>
-당신은 전문 보고서 작성 AI입니다. 다음 질문에 대해 반드시 아래 형식을 엄격히 준수하여 답변해야 합니다.
+      const reportStyleInstruction = `마크다운 제목(# ## ###)을 사용하여 체계적으로 답변하세요. 질문: ${message}`;
 
-[필수 준수 사항]
-1. **구조화된 제목 체계**: 반드시 마크다운 제목(# ## ###)을 사용하여 계층적으로 구조화
-2. **명확한 섹션 구분**: 최소 3개 이상의 주요 섹션으로 나누어 작성
-   - 서론/개요 섹션
-   - 본론/상세 내용 섹션들 (2개 이상)
-   - 결론/요약 섹션
-3. **전문적 작성 스타일**:
-   - 객관적이고 정확한 사실 중심
-   - "~인 것 같습니다", "아마도", "생각합니다" 등 불확실한 표현 금지
-   - 인사말, 감정 표현, 공감 표현 일체 금지
-4. **체계적 정보 제시**:
-   - 번호 목록(1. 2. 3.)이나 불릿 목록(-)을 적극 활용
-   - 각 항목은 구체적 정보와 상세 설명 포함
-   - 추상적 표현보다 구체적 사례와 데이터 제시
-5. **전문 문서 어조**: 논문, 공식 보고서, 기술 문서 수준의 격식있는 문체
-
-[금지 사항]
-- "안녕하세요", "도움이 되었으면 합니다" 등의 인사/맺음말
-- "~같아요", "~것 같습니다" 등 불확실한 표현
-- 짧고 간단한 답변 (최소 2000자 이상 작성)
-- 구조화되지 않은 연속된 문단
-
-질문: ${message}
-
-위 지침을 철저히 준수하여 전문 보고서 형식으로 답변하십시오.
-</SYSTEM_INSTRUCTION>`;
-
-      console.log("📋 [REPORT MODE] 보고서 스타일 지침이 추가되었습니다.");
-      console.log("🔍 [REPORT MODE] 원본 질문:", message);
+      console.log("📋 [STRUCTURED MODE] 구조화된 답변 요청");
+      console.log("🔍 [STRUCTURED MODE] 원본 질문:", message);
       return reportStyleInstruction;
     }
 
@@ -881,160 +853,118 @@ export function useChat() {
       });
 
       console.log("📥 응답 상태:", response.status, response.statusText);
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error("❌ HTTP 오류 응답:", errorText);
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const data = await response.json();
-      console.log("✅ FastAPI 응답 데이터:", data);
-      console.log("📊 응답 데이터 구조:", {
-        success: data.success,
-        hasResponse: !!data.response,
-        responseLength: data.response ? data.response.length : 0,
-        responseType: typeof data.response,
-        error: data.error
-      });
-      
+      // 스트리밍 응답 처리
       if (currentChat.messages[messageIndex]) {
         const existingMessage = currentChat.messages[messageIndex];
-        // 객체 속성만 변경하여 불필요한 리렌더링 방지
         existingMessage.text = '';
         existingMessage.isLoading = false;
         existingMessage.isStreaming = true;
         existingMessage.currentStep = undefined;
         existingMessage.hasError = false;
       }
-      
-      isStreaming.value = true; // 스트리밍 상태 시작
 
-      // 응답을 타이핑 효과로 표시 (최적화된 버전)
-      // 백엔드에서 받은 세션 ID 저장
-      if (data.session_id && !currentChat.sessionId) {
-        currentChat.sessionId = data.session_id;
-        console.log("새 세션 ID 저장됨:", data.session_id);
+      isStreaming.value = true;
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let fullResponseText = '';
+
+      if (!reader) {
+        throw new Error("응답 스트림을 읽을 수 없습니다.");
       }
 
-      if (data.success && data.response && data.response.trim()) {
-        const responseText = data.response;
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.trim() || !line.startsWith('data: ')) continue;
+
+          try {
+            const jsonStr = line.slice(6);
+            const data = JSON.parse(jsonStr);
+
+            if (data.type === 'start') {
+              // 세션 ID 저장
+              if (data.session_id && !currentChat.sessionId) {
+                currentChat.sessionId = data.session_id;
+                console.log("✅ 새 세션 ID 저장됨:", data.session_id);
+              }
+            } else if (data.type === 'chunk') {
+              // 실시간 스트리밍 청크 추가
+              fullResponseText += data.content;
+              if (currentChat.messages[messageIndex]) {
+                currentChat.messages[messageIndex].text = fullResponseText;
+              }
+              setTimeout(() => scrollToBottom(), 10);
+            } else if (data.type === 'done') {
+              console.log("✅ 스트리밍 완료");
+            } else if (data.type === 'error') {
+              throw new Error(data.error);
+            }
+          } catch (parseError) {
+            console.warn("JSON 파싱 실패:", line, parseError);
+          }
+        }
+      }
+
+      // 스트리밍 완료 후 처리
+      if (currentChat.messages[messageIndex]) {
+        const responseText = fullResponseText;
 
         // 긴 답변 체크: 아티팩트로 변환할지 판단
         if (shouldConvertToArtifact(responseText)) {
           // 아티팩트로 변환
           const artifactTitle = extractArtifactTitle(responseText);
 
-          if (currentChat.messages[messageIndex]) {
-            const initialVersion: ArtifactVersion = {
-              content: responseText,
-              timestamp: Date.now(),
-              description: '초기 생성'
-            };
+          const initialVersion: ArtifactVersion = {
+            content: responseText,
+            timestamp: Date.now(),
+            description: '초기 생성'
+          };
 
-            // 보고서 스타일 아티팩트임을 명확히 표시
-            const wordCount = Math.floor(responseText.length / 2); // 대략적인 한글 기준 글자 수
-            currentChat.messages[messageIndex].text = `📄 체계적인 보고서를 아티팩트로 생성하였습니다.\n\n**${artifactTitle}**\n\n오른쪽 패널에서 전문 보고서 형식의 상세 내용을 확인하실 수 있습니다. (약 ${wordCount.toLocaleString()}자)`;
-            currentChat.messages[messageIndex].artifact = {
-              title: artifactTitle,
-              content: responseText,
-              type: 'document',
-              versions: [initialVersion],
-              currentVersion: 0
-            };
-            currentChat.messages[messageIndex].isLoading = false;
-            currentChat.messages[messageIndex].isStreaming = false;
-            currentChat.messages[messageIndex].currentStep = undefined;
-          }
+          // 보고서 스타일 아티팩트임을 명확히 표시
+          const wordCount = Math.floor(responseText.length / 2);
+          currentChat.messages[messageIndex].text = `📄 체계적인 보고서를 아티팩트로 생성하였습니다.\n\n**${artifactTitle}**\n\n오른쪽 패널에서 전문 보고서 형식의 상세 내용을 확인하실 수 있습니다. (약 ${wordCount.toLocaleString()}자)`;
+          currentChat.messages[messageIndex].artifact = {
+            title: artifactTitle,
+            content: responseText,
+            type: 'document',
+            versions: [initialVersion],
+            currentVersion: 0
+          };
+          currentChat.messages[messageIndex].isLoading = false;
+          currentChat.messages[messageIndex].isStreaming = false;
+          currentChat.messages[messageIndex].currentStep = undefined;
 
           isStreaming.value = false;
           saveChatHistory();
-          console.log('📄 보고서 스타일 아티팩트 생성:', artifactTitle, `(${Math.floor(responseText.length / 2)}자)`);
-          return;
+          console.log('📄 보고서 스타일 아티팩트 생성:', artifactTitle, `(${wordCount}자)`);
+        } else {
+          // 일반 답변 완료
+          currentChat.messages[messageIndex].isStreaming = false;
+          currentChat.messages[messageIndex].currentStep = undefined;
+          isStreaming.value = false;
+          saveChatHistory();
         }
-
-        // 일반 답변: 타이핑 효과 적용
-        let currentIndex = 0;
-        let lastUpdateTime = 0;
-        const UPDATE_INTERVAL = 50; // 50ms마다 업데이트 (더 빠르게)
-
-        // 한글과 영어를 자연스럽게 처리하기 위한 청크 단위 계산
-        const getNextChunkIndex = (text: string, currentIndex: number) => {
-          if (currentIndex >= text.length) return text.length;
-
-          const char = text[currentIndex];
-
-          // 한글의 경우 음절 단위로, 영어의 경우 문자 단위로
-          if (char.match(/[가-힣]/)) {
-            return Math.min(currentIndex + 3, text.length); // 한글은 3글자씩 (더 빠르게)
-          } else if (char.match(/[a-zA-Z]/)) {
-            // 영어 단어는 공백이나 구두점까지 함께
-            let nextIndex = currentIndex + 1;
-            while (nextIndex < text.length && text[nextIndex].match(/[a-zA-Z]/)) {
-              nextIndex++;
-            }
-            return Math.min(nextIndex, currentIndex + 6); // 최대 6글자씩 (더 빠르게)
-          } else {
-            return currentIndex + 1; // 숫자, 기호 등은 1글자씩
-          }
-        };
-
-        const typeWriter = () => {
-          // 중지된 경우 타이핑 중단
-          if (!isStreaming.value || !currentChat.messages[messageIndex]) {
-            if (currentChat.messages[messageIndex]) {
-              currentChat.messages[messageIndex].isStreaming = false;
-              currentChat.messages[messageIndex].currentStep = undefined;
-              saveChatHistory();
-            }
-            return;
-          }
-
-          const now = Date.now();
-
-          if (currentIndex < responseText.length) {
-            // 다음 청크 인덱스 계산
-            const nextIndex = getNextChunkIndex(responseText, currentIndex);
-
-            // 텍스트 직접 업데이트 (객체 재생성 없이)
-            currentChat.messages[messageIndex].text = responseText.substring(0, nextIndex);
-
-            currentIndex = nextIndex;
-
-            // 디바운싱된 스크롤
-            if (now - lastUpdateTime > UPDATE_INTERVAL) {
-              setTimeout(() => {
-                scrollToBottom();
-              }, 10);
-              lastUpdateTime = now;
-            }
-
-            setTimeout(typeWriter, 30); // 30ms 간격으로 더 빠르게
-          } else {
-            // 타이핑 완료
-            currentChat.messages[messageIndex].isStreaming = false;
-            currentChat.messages[messageIndex].currentStep = undefined;
-            isStreaming.value = false;
-            saveChatHistory();
-          }
-        };
-
-        typeWriter();
       } else {
+        // 에러 처리
         if (currentChat.messages[messageIndex]) {
-          let errorMessage = '응답을 받지 못했습니다.';
-          if (data.error) {
-            errorMessage = data.error;
-          } else if (!data.success) {
-            errorMessage = 'API 호출이 실패했습니다.';
-          } else if (!data.response) {
-            errorMessage = '빈 응답을 받았습니다. 다시 시도해주세요.';
-          } else if (!data.response.trim()) {
-            errorMessage = '공백 응답을 받았습니다. 다시 시도해주세요.';
-          }
-          
-          // 직접 속성 업데이트
-          currentChat.messages[messageIndex].text = errorMessage;
+          currentChat.messages[messageIndex].text = '응답을 받지 못했습니다. 다시 시도해주세요.';
           currentChat.messages[messageIndex].isStreaming = false;
           currentChat.messages[messageIndex].currentStep = undefined;
           currentChat.messages[messageIndex].hasError = true;

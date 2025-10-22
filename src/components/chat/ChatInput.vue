@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="chat-input-wrapper">
     <div :class="['chat-input-box', className]">
       <!-- 파일 미리보기 -->
       <div v-if="selectedImages.length > 0" class="file-preview-container">
@@ -176,14 +176,22 @@ const removeImage = (index: number) => {
 </script>
 
 <style scoped>
+/* Chat Input Wrapper - 반응형 컨테이너 */
+.chat-input-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 /* Chat Input Box - Figma 디자인 정확히 매칭 */
 .chat-input-box {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 17px;
-  max-width: 770px;
-  width: 770px;
+  max-width: min(770px, 100%);
+  width: 100%;
   background-color: #F8FBFF;
   border: 1px solid #F3F4F6;
   border-radius: 15px;

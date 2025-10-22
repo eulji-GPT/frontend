@@ -38,7 +38,10 @@
         <div v-else-if="!displayContent || !displayContent.trim()">
           <slot />
         </div>
-        <span v-if="isStreaming" class="streaming-cursor">|</span>
+        <div v-if="isStreaming" class="loading-indicator">
+          <LottieLoader />
+          <span class="loading-text">Searching...</span>
+        </div>
       </div>
 
       <!-- 아티팩트 생성 알림 카드 (챗봇 메시지에 아티팩트가 있을 때) -->
@@ -83,14 +86,57 @@
 import { computed, useSlots } from 'vue';
 import { marked } from 'marked';
 import ChatFeedbackButtons from './ChatFeedbackButtons.vue';
+import LottieLoader from './LottieLoader.vue';
 
-// marked 설정 (최신 버전에 맞게)
+// marked 설정 강화 - 테이블, GFM, 코드 하이라이팅 지원
 marked.use({
   breaks: true,
   gfm: true,
   headerIds: false,
-  mangle: false
+  mangle: false,
+  pedantic: false,
+  tables: true,
+  smartLists: true,
+  smartypants: false
 });
+
+// 코드 블록 렌더러 커스터마이징 - 복사 버튼 추가
+const renderer = new marked.Renderer();
+const originalCodeRenderer = renderer.code.bind(renderer);
+
+renderer.code = function(token) {
+  // marked.js 4.x+에서는 token 객체로 전달됨
+  const code = token.text || token;
+  const lang = token.lang || '';
+
+  // code가 문자열이 아닌 경우 문자열로 변환
+  const codeString = typeof code === 'string' ? code : String(code || '');
+  const codeId = 'code-' + Math.random().toString(36).substr(2, 9);
+  const escapedCode = codeString
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+
+  return `
+    <div class="code-block-wrapper">
+      <div class="code-header">
+        <span class="code-language">${lang || 'text'}</span>
+        <button class="code-copy-btn" onclick="
+          const code = this.closest('.code-block-wrapper').querySelector('code').textContent;
+          navigator.clipboard.writeText(code).then(() => {
+            this.textContent = '✓ 복사됨';
+            setTimeout(() => this.textContent = '복사', 2000);
+          });
+        ">복사</button>
+      </div>
+      <pre><code id="${codeId}" class="language-${lang || 'text'}">${escapedCode}</code></pre>
+    </div>
+  `;
+};
+
+marked.use({ renderer });
 
 
 const props = defineProps({
@@ -224,9 +270,9 @@ const handleRegenerate = (messageId) => {
 };
 
 // 아티팩트 열기 처리 함수
-const handleOpenArtifact = (messageId) => {
-  console.log('아티팩트 열기 요청:', messageId);
-  emit('openArtifact', messageId);
+const handleOpenArtifact = () => {
+  console.log('아티팩트 열기 요청:', props.messageId);
+  emit('openArtifact', props.messageId);
 };
 </script>
 
@@ -341,11 +387,38 @@ const handleOpenArtifact = (messageId) => {
   display: none;
 }
 
-/* 스트리밍 커서 애니메이션 - 개선된 버전 */
+/* Lottie 로딩 애니메이션 - 스트리밍 중 */
+.loading-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 4px;
+}
+
+:deep(.lottie-container) {
+  display: inline-block;
+  width: 24px !important;
+  height: 24px !important;
+  vertical-align: middle;
+}
+
+.loading-text {
+  color: #02478a;
+  font-size: 14px;
+  font-weight: 500;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* 기존 스트리밍 커서 애니메이션 (폴백용) */
 .streaming-cursor {
   display: inline-block;
   margin-left: 2px;
-  color: #2563eb; /* 더 눈에 띄는 파란색 */
+  color: #2563eb;
   font-weight: bold;
   font-size: 1.1em;
   animation: blink 1s steps(1) infinite;
@@ -584,6 +657,108 @@ const handleOpenArtifact = (messageId) => {
   margin: 8px 0;
   background: linear-gradient(to right, #02478a, #e5e7eb, #02478a);
   height: 1px;
+}
+
+/* 코드 블록 래퍼 스타일 */
+:deep(.code-block-wrapper) {
+  margin: 10px 0;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #334155;
+}
+
+:deep(.code-header) {
+  background: #0f172a;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #334155;
+}
+
+:deep(.code-language) {
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: 'Courier New', monospace;
+}
+
+:deep(.code-copy-btn) {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: Pretendard, sans-serif;
+}
+
+:deep(.code-copy-btn:hover) {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+:deep(.code-copy-btn:active) {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+:deep(.code-block-wrapper pre) {
+  margin: 0;
+  background: #1e293b;
+  padding: 12px;
+  overflow-x: auto;
+}
+
+:deep(.code-block-wrapper pre code) {
+  background: none;
+  color: #e2e8f0;
+  padding: 0;
+  font-size: 0.85em;
+  line-height: 1.6;
+}
+
+/* 테이블 스타일 */
+:deep(.markdown-content table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 0.9em;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+:deep(.markdown-content table thead) {
+  background: #f8fafc;
+}
+
+:deep(.markdown-content table th) {
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #1e293b;
+  border-bottom: 2px solid #cbd5e1;
+}
+
+:deep(.markdown-content table td) {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  color: #334155;
+}
+
+:deep(.markdown-content table tbody tr:last-child td) {
+  border-bottom: none;
+}
+
+:deep(.markdown-content table tbody tr:hover) {
+  background: #f8fafc;
 }
 
 /* CoT 단계별 번호 스타일 */
