@@ -49,7 +49,6 @@ import { useRouter, useRoute } from 'vue-router'
 import eulLogo from '../../assets/eul_logo.svg'
 import { isAuthenticated, logout } from '../../utils/auth'
 
-const emit = defineEmits(['scrollToSection'])
 const router = useRouter()
 const route = useRoute()
 const API_BASE_URL = import.meta.env.VITE_FASTAPI_URL || '/api'
@@ -62,6 +61,18 @@ const fetchUserInfo = async () => {
   try {
     const token = localStorage.getItem('access_token')
     if (!token) return
+
+    // 개발 환경에서 Pro 계정 토큰인지 체크
+    if (import.meta.env.DEV && token.startsWith('dev-pro-token-')) {
+      console.log('🔓 개발 환경 Pro 계정 정보 로드 (Header)')
+      const devProfile = localStorage.getItem('dev_user_profile')
+      if (devProfile) {
+        const data = JSON.parse(devProfile)
+        userName.value = data.nickname || data.name || '사용자'
+        console.log('✅ 개발 환경 사용자명 설정:', userName.value)
+      }
+      return
+    }
 
     const response = await fetch(`${API_BASE_URL}/member/me`, {
       method: 'GET',
@@ -105,8 +116,14 @@ function scrollToSection(id: string) {
       }, 300)
     })
   } else {
-    // 이미 메인 페이지에 있으면 emit
-    emit('scrollToSection', id)
+    // 이미 메인 페이지에 있으면 직접 스크롤
+    const element = document.getElementById(id)
+    if (element) {
+      const headerHeight = 100
+      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
+      const targetPosition = elementPosition - headerHeight
+      window.scrollTo({ top: targetPosition, behavior: 'smooth' })
+    }
   }
 }
 
@@ -132,8 +149,14 @@ function scrollToMobileSection(id: string) {
       }, 300)
     })
   } else {
-    // 이미 메인 페이지에 있으면 emit
-    emit('scrollToSection', id)
+    // 이미 메인 페이지에 있으면 직접 스크롤
+    const element = document.getElementById(id)
+    if (element) {
+      const headerHeight = 100
+      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
+      const targetPosition = elementPosition - headerHeight
+      window.scrollTo({ top: targetPosition, behavior: 'smooth' })
+    }
   }
 }
 
@@ -146,7 +169,13 @@ function closeMobileMenu() {
 }
 
 function goToHome() {
-  router.push('/')
+  if (route.path === '/') {
+    // 이미 홈페이지에 있으면 페이지 최상단으로 스크롤
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  } else {
+    // 다른 페이지에 있으면 홈페이지로 이동
+    router.push('/')
+  }
 }
 </script>
 

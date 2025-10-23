@@ -323,6 +323,24 @@ const fetchUserInfo = async () => {
       return
     }
 
+    // 개발 환경에서 Pro 계정 토큰인지 체크
+    if (import.meta.env.DEV && token.startsWith('dev-pro-token-')) {
+      console.log('🔓 개발 환경 Pro 계정 정보 로드 (MyPage)')
+      const devProfile = localStorage.getItem('dev_user_profile')
+      if (devProfile) {
+        const data = JSON.parse(devProfile)
+        userInfo.value = data
+
+        // 프로필 이미지가 있으면 설정
+        if (data.profile_image_url) {
+          profileImage.value = data.profile_image_url
+        }
+
+        console.log('✅ 개발 환경 사용자 정보:', data)
+      }
+      return
+    }
+
     const response = await fetch(`${API_BASE_URL}/member/me`, {
       method: 'GET',
       headers: {

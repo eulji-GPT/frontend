@@ -1,4 +1,4 @@
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, nextTick } from 'vue';
 import { isAuthenticated, getAuthHeaders, apiRequest } from '../utils/auth';
 
 export interface RagSource {
@@ -53,7 +53,7 @@ export interface ChatSession {
   sessionId?: string; // 백엔드 세션 ID
 }
 
-export type ChatMode = 'general' | 'university' | 'study' | 'career' | 'cot' | 'rag';
+export type ChatMode = 'unified' | 'cot' | 'rag';
 
 export function useChat() {
   const messages = ref<ChatMessage[]>([]);
@@ -61,7 +61,7 @@ export function useChat() {
   const currentChatId = ref<string | null>(null);
   const isLoading = ref(false);
   const isStreaming = ref(false);
-  const chatMode = ref<ChatMode>('general');
+  const chatMode = ref<ChatMode>('unified');
   let currentController: AbortController | null = null;
   
   // RAG 시스템 상태
@@ -96,12 +96,9 @@ export function useChat() {
   const BACKEND_BASE_URL = import.meta.env.VITE_FASTAPI_URL || 'http://localhost:8000'; // 백엔드 API URL
   const getAPIUrl = (mode: ChatMode): string => {
     const endpoints = {
-      general: '/chat',
-      university: '/university',
-      study: '/study',
-      career: '/career',
-      cot: '/cot',
-      rag: '/rag/query'
+      unified: '/chat',  // 통합 챗봇 (Function Calling 기반)
+      cot: '/cot',       // Chain of Thought
+      rag: '/rag/query'  // RAG 시스템
     };
     return `${FASTAPI_BASE_URL}${endpoints[mode]}`;
   };
@@ -156,6 +153,41 @@ export function useChat() {
 
     // 제목을 찾지 못하면 첫 100자 사용
     return text.substring(0, 100).replace(/\n/g, ' ') + '...';
+  };
+
+  // AI 인삿말 제거하여 순수 보고서만 추출하는 함수
+  const extractReportContent = (text: string): string => {
+    // AI 인삿말 패턴들 (보고서 작성 전에 나오는 인사/확인 멘트)
+    const greetingPatterns = [
+      /^안녕하세요[!,.\s]*.{0,100}?(?=\n|$)/i,
+      /^네[!,.\s]*.{0,100}?(?=\n|$)/i,
+      /^알겠습니다[!,.\s]*.{0,100}?(?=\n|$)/i,
+      /^좋습니다[!,.\s]*.{0,100}?(?=\n|$)/i,
+      /^물론입니다[!,.\s]*.{0,100}?(?=\n|$)/i,
+      /^(작성|정리|분석|설명).{0,50}?드리겠습니다[!,.\s]*/i,
+      /^(보고서|레포트|자료).{0,50}?작성.{0,50}?(?=\n|$)/i,
+      /^.{0,50}?대해.{0,30}?(설명|정리|분석|작성).{0,30}?(?=\n|$)/i
+    ];
+
+    let cleanedText = text;
+
+    // 각 패턴을 순서대로 제거
+    for (const pattern of greetingPatterns) {
+      cleanedText = cleanedText.replace(pattern, '');
+    }
+
+    // 시작 부분의 공백 및 개행 제거
+    cleanedText = cleanedText.trim();
+
+    // 첫 번째 마크다운 제목(# 또는 ##)이 나오기 전까지의 내용 제거
+    // 보고서는 보통 제목으로 시작하므로
+    const firstHeadingMatch = cleanedText.match(/^(.*?)(^#+ .+$)/ms);
+    if (firstHeadingMatch && firstHeadingMatch[1].length < 200) {
+      // 제목 전 내용이 200자 미만이면 인삿말로 간주하고 제거
+      cleanedText = firstHeadingMatch[2] + cleanedText.substring(firstHeadingMatch[0].length);
+    }
+
+    return cleanedText.trim();
   };
 
   // 상세한 답변이 필요한 질문인지 감지하는 함수
@@ -476,17 +508,52 @@ export function useChat() {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.response) {
-          return data.response.trim().replace(/['"]/g, '').substring(0, 30);
+        // 스트리밍 응답 처리
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+        let fullText = '';
+        let buffer = '';
+
+        if (reader) {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+
+            for (const line of lines) {
+              if (!line.trim() || !line.startsWith('data: ')) continue;
+
+              try {
+                const jsonStr = line.slice(6);
+                const data = JSON.parse(jsonStr);
+
+                if (data.type === 'chunk') {
+                  fullText += data.content;
+                } else if (data.type === 'done') {
+                  // 스트리밍 완료
+                  break;
+                }
+              } catch (parseError) {
+                console.warn('제목 생성 JSON 파싱 실패:', line, parseError);
+              }
+            }
+          }
+        }
+
+        if (fullText.trim()) {
+          // 인용부호 제거, 최대 30자로 제한
+          return fullText.trim().replace(/['"]/g, '').substring(0, 30);
         }
       }
     } catch (error) {
       console.error('제목 생성 실패:', error);
     }
-    
-    // AI 요약 실패 시 기본값 반환
-    return message.substring(0, 20);
+
+    // AI 요약 실패 시 기본값 반환: 메시지의 첫 20자 사용
+    return message.substring(0, 20) + (message.length > 20 ? '...' : '');
   }
 
   async function callFastAPICotChat(message: string, messageIndex: number) {
@@ -641,47 +708,32 @@ export function useChat() {
                     isStreaming.value = true; // 전역 스트리밍 상태 활성화
                   }
                   else if (data.type === 'final_answer_chunk' && currentChat.messages[messageIndex]) {
-                    // 스트리밍 청크를 실시간으로 누적 (디바운싱 적용)
+                    // 스트리밍 청크를 실시간으로 누적
                     const chunk = data.final_answer_chunk;
-                    console.log(`📝 [STREAMING] 최종 답변 청크 수신:`, {
-                      chunk_index: data.chunk_index,
-                      chunk_length: chunk?.length || 0,
-                      chunk_preview: chunk?.substring(0, 30) || '(empty)',
-                      is_last: data.is_last_chunk,
-                      current_text_length: currentChat.messages[messageIndex].text.length
-                    });
-                    
-                    // 청크를 누적하여 텍스트 업데이트 (Vue 반응성 보장)
-                    if (chunk) {
-                      const beforeLength = currentChat.messages[messageIndex].text.length;
-                      
-                      // Vue 반응성을 보장하는 방식으로 청크 업데이트
-                      const currentText = currentChat.messages[messageIndex].text;
-                      updateMessage(currentChat.id, messageIndex, {
-                        text: currentText + chunk,
-                        isStreaming: true,
-                        currentStep: "최종 답변 출력 중..."
-                      });
-                      
-                      const afterLength = currentText.length + chunk.length;
-                      
-                      console.log(`📄 [STREAMING] 텍스트 누적 성공:`, {
+
+                    if (chunk && chunk.length > 0) {
+                      const currentMessage = currentChat.messages[messageIndex];
+                      const beforeLength = currentMessage.text.length;
+
+                      // 직접 메시지 객체를 수정하여 Vue 반응성 보장
+                      currentMessage.text = currentMessage.text + chunk;
+                      currentMessage.isStreaming = true;
+                      currentMessage.currentStep = "최종 답변 출력 중...";
+
+                      console.log(`📝 [STREAMING] 청크 누적:`, {
+                        chunk_length: chunk.length,
                         before: beforeLength,
-                        added: chunk.length,
-                        after: afterLength,
-                        preview: (currentText + chunk).substring(Math.max(0, afterLength - 50)),
-                        full_text_length: afterLength
+                        after: currentMessage.text.length,
+                        is_last: data.is_last_chunk
                       });
-                      
-                      // 디바운싱된 스크롤 (50ms마다 한 번만)
-                      setTimeout(() => {
-                        scrollToBottom();
-                      }, 50);
+
+                      // 스크롤
+                      nextTick(() => scrollToBottom());
                     }
-                    
+
                     // 마지막 청크인 경우
                     if (data.is_last_chunk) {
-                      console.log(`✅ [STREAMING] 마지막 청크 처리 완료, 스트리밍 종료 준비`);
+                      console.log(`✅ [STREAMING] 마지막 청크 처리 완료`);
                     }
                   }
                   else if (data.type === 'final_answer_complete' && currentChat.messages[messageIndex]) {
@@ -931,18 +983,21 @@ export function useChat() {
           // 아티팩트로 변환
           const artifactTitle = extractArtifactTitle(responseText);
 
+          // AI 인삿말 제거하고 순수 보고서 내용만 추출
+          const reportContent = extractReportContent(responseText);
+
           const initialVersion: ArtifactVersion = {
-            content: responseText,
+            content: reportContent,  // 인삿말 제거된 순수 보고서 내용
             timestamp: Date.now(),
             description: '초기 생성'
           };
 
           // 보고서 스타일 아티팩트임을 명확히 표시
-          const wordCount = Math.floor(responseText.length / 2);
+          const wordCount = Math.floor(reportContent.length / 2);
           currentChat.messages[messageIndex].text = `📄 체계적인 보고서를 아티팩트로 생성하였습니다.\n\n**${artifactTitle}**\n\n오른쪽 패널에서 전문 보고서 형식의 상세 내용을 확인하실 수 있습니다. (약 ${wordCount.toLocaleString()}자)`;
           currentChat.messages[messageIndex].artifact = {
             title: artifactTitle,
-            content: responseText,
+            content: reportContent,  // 인삿말 제거된 순수 보고서 내용
             type: 'document',
             versions: [initialVersion],
             currentVersion: 0
@@ -953,7 +1008,7 @@ export function useChat() {
 
           isStreaming.value = false;
           saveChatHistory();
-          console.log('📄 보고서 스타일 아티팩트 생성:', artifactTitle, `(${wordCount}자)`);
+          console.log('📄 보고서 스타일 아티팩트 생성:', artifactTitle, `(${wordCount}자, 인삿말 제거됨)`);
         } else {
           // 일반 답변 완료
           currentChat.messages[messageIndex].isStreaming = false;
@@ -1298,6 +1353,25 @@ export function useChat() {
       } else if (chatMode.value === 'cot') {
         await callFastAPICotChat(userMessageText, loadingMessageIndex);
       } else if (chatMode.value === 'rag') {
+        // RAG 모드: 초기화 상태 확인 및 필요시 자동 초기화
+        if (!ragStatus.value.initialized && !ragStatus.value.isInitializing) {
+          console.log('🔄 RAG 미초기화 감지 - 자동 초기화 시작');
+
+          // 사용자에게 초기화 중임을 알림
+          if (currentChat.messages[loadingMessageIndex]) {
+            currentChat.messages[loadingMessageIndex].text = '을지대 정보검색 시스템을 초기화하고 있습니다...\n최초 실행 시 몇 분이 소요될 수 있습니다.';
+            currentChat.messages[loadingMessageIndex].currentStep = 'RAG 시스템 초기화 중...';
+          }
+
+          const initSuccess = await initializeRag();
+
+          if (!initSuccess) {
+            throw new Error('RAG 시스템 초기화에 실패했습니다.\n\n현재 RAG 시스템이 올바르게 구성되지 않았습니다.\n관리자에게 문의하거나 다른 채팅 모드를 사용해주세요.');
+          }
+
+          console.log('✅ RAG 자동 초기화 완료');
+        }
+
         await callFastAPIRagChat(userMessageText, loadingMessageIndex);
       } else {
         await callFastAPIChat(userMessageText, loadingMessageIndex);
@@ -1308,10 +1382,21 @@ export function useChat() {
         try {
           const aiTitle = await generateChatTitle(userMessageText);
           currentChat.title = aiTitle;
+
+          // 로그인된 사용자인 경우 백엔드에도 업데이트
+          if (isAuthenticated() && currentChat.id) {
+            await updateChatTitle(currentChat.id, aiTitle);
+          }
+
           console.log('🏷️ AI가 생성한 대화 제목:', aiTitle);
         } catch (error) {
           console.error('제목 생성 실패, 기본 제목 사용:', error);
           currentChat.title = userMessageText.substring(0, 20);
+
+          // 로그인된 사용자인 경우 기본 제목도 백엔드에 업데이트
+          if (isAuthenticated() && currentChat.id) {
+            await updateChatTitle(currentChat.id, currentChat.title);
+          }
         }
       }
     } catch (error) {

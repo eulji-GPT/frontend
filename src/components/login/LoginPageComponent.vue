@@ -120,9 +120,9 @@ const handleLogin = async () => {
         'Content-Type': 'application/json',
       },
       credentials: 'include', // 쿠키 포함
-      body: JSON.stringify({ 
-        email: email.value, 
-        password: password.value 
+      body: JSON.stringify({
+        email: email.value,
+        password: password.value
       }),
     })
 
@@ -133,13 +133,14 @@ const handleLogin = async () => {
 
     const result = await response.json()
     console.log('로그인 성공:', result)
-    
+
     // 액세스 토큰을 localStorage에 저장
     setAccessToken(result.access_token)
-    
-    // 메인 페이지로 이동
-    router.push('/')
-    
+
+    // redirect 쿼리 파라미터가 있으면 그 경로로, 없으면 메인 페이지로 이동
+    const redirect = (router.currentRoute.value.query.redirect as string) || '/'
+    router.push(redirect)
+
   } catch (error: any) {
     console.error('로그인 오류:', error)
     if (error.message.includes('이메일 또는 비밀번호가 올바르지 않습니다')) {

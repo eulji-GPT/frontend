@@ -83,7 +83,7 @@
 </template>
 
 <script setup>
-import { computed, useSlots } from 'vue';
+import { computed, useSlots, onMounted, onUpdated, nextTick } from 'vue';
 import { marked } from 'marked';
 import ChatFeedbackButtons from './ChatFeedbackButtons.vue';
 import LottieLoader from './LottieLoader.vue';
@@ -102,7 +102,6 @@ marked.use({
 
 // 코드 블록 렌더러 커스터마이징 - 복사 버튼 추가
 const renderer = new marked.Renderer();
-const originalCodeRenderer = renderer.code.bind(renderer);
 
 renderer.code = function(token) {
   // marked.js 4.x+에서는 token 객체로 전달됨
@@ -274,6 +273,58 @@ const handleOpenArtifact = () => {
   console.log('아티팩트 열기 요청:', props.messageId);
   emit('openArtifact', props.messageId);
 };
+
+// 테이블에 복사 버튼 추가하는 함수
+const addTableCopyButtons = () => {
+  nextTick(() => {
+    const tables = document.querySelectorAll('.markdown-content table:not(.table-enhanced)');
+    tables.forEach(table => {
+      // 이미 처리된 테이블은 건너뛰기
+      table.classList.add('table-enhanced');
+
+      // 테이블을 래퍼로 감싸기
+      const wrapper = document.createElement('div');
+      wrapper.className = 'table-wrapper';
+
+      // 헤더 생성
+      const header = document.createElement('div');
+      header.className = 'table-header';
+      header.innerHTML = `
+        <span class="table-title">표</span>
+        <button class="table-copy-btn">복사</button>
+      `;
+
+      // 복사 버튼 클릭 이벤트
+      const copyBtn = header.querySelector('.table-copy-btn');
+      copyBtn.addEventListener('click', () => {
+        const rows = Array.from(table.querySelectorAll('tr'));
+        const text = rows.map(row => {
+          const cells = Array.from(row.querySelectorAll('th, td'));
+          return cells.map(cell => cell.textContent.trim()).join('\t');
+        }).join('\n');
+
+        navigator.clipboard.writeText(text).then(() => {
+          copyBtn.textContent = '✓ 복사됨';
+          setTimeout(() => copyBtn.textContent = '복사', 2000);
+        });
+      });
+
+      // 테이블을 래퍼로 감싸기
+      table.parentNode.insertBefore(wrapper, table);
+      wrapper.appendChild(header);
+      wrapper.appendChild(table);
+    });
+  });
+};
+
+// 컴포넌트 마운트 및 업데이트 시 테이블 복사 버튼 추가
+onMounted(() => {
+  addTableCopyButtons();
+});
+
+onUpdated(() => {
+  addTableCopyButtons();
+});
 </script>
 
 <style scoped>
@@ -564,25 +615,23 @@ const handleOpenArtifact = () => {
   font-weight: bold;
 }
 
-:deep(.markdown-content ol li) {
-  margin: 2px 0;
-  padding-left: 0.3em;
-}
-
 :deep(.markdown-content ol) {
   counter-reset: item;
+  padding-left: 2em;
 }
 
 :deep(.markdown-content ol li) {
   display: block;
   position: relative;
+  margin: 4px 0;
+  padding-left: 0.5em;
 }
 
 :deep(.markdown-content ol li::before) {
   content: counter(item) ".";
   counter-increment: item;
   position: absolute;
-  left: -1.5em;
+  left: -1.8em;
   color: #02478a;
   font-weight: bold;
   background: #f0f6ff;
@@ -591,6 +640,35 @@ const handleOpenArtifact = () => {
   font-size: 0.9em;
   min-width: 1.2em;
   text-align: center;
+}
+
+/* 중첩된 순서 있는 목록 스타일 */
+:deep(.markdown-content ol ol) {
+  counter-reset: subitem;
+  margin-top: 4px;
+  padding-left: 2.5em;
+}
+
+:deep(.markdown-content ol ol li::before) {
+  content: counter(item) "." counter(subitem);
+  counter-increment: subitem;
+  left: -2.5em;
+  background: #e0f2fe;
+  font-size: 0.85em;
+}
+
+/* 3단계 중첩 목록 */
+:deep(.markdown-content ol ol ol) {
+  counter-reset: subsubitem;
+  padding-left: 2.5em;
+}
+
+:deep(.markdown-content ol ol ol li::before) {
+  content: counter(item) "." counter(subitem) "." counter(subsubitem);
+  counter-increment: subsubitem;
+  left: -3em;
+  background: #dbeafe;
+  font-size: 0.8em;
 }
 
 :deep(.markdown-content blockquote) {
@@ -724,22 +802,70 @@ const handleOpenArtifact = () => {
   line-height: 1.6;
 }
 
-/* 테이블 스타일 */
-:deep(.markdown-content table) {
-  width: 100%;
-  border-collapse: collapse;
+/* 테이블 래퍼 스타일 (복사 버튼 포함) */
+:deep(.table-wrapper) {
   margin: 12px 0;
-  font-size: 0.9em;
-  border: 1px solid #e5e7eb;
   border-radius: 6px;
   overflow: hidden;
+  border: 1px solid #e5e7eb;
 }
 
-:deep(.markdown-content table thead) {
+:deep(.table-header) {
+  background: #f8fafc;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+:deep(.table-title) {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: 'Courier New', monospace;
+}
+
+:deep(.table-copy-btn) {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: Pretendard, sans-serif;
+}
+
+:deep(.table-copy-btn:hover) {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+:deep(.table-copy-btn:active) {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* 테이블 스타일 */
+:deep(.table-wrapper table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+  font-size: 0.9em;
+  border: none;
+}
+
+:deep(.table-wrapper table thead) {
   background: #f8fafc;
 }
 
-:deep(.markdown-content table th) {
+:deep(.table-wrapper table th) {
   padding: 10px 12px;
   text-align: left;
   font-weight: 600;
@@ -747,18 +873,29 @@ const handleOpenArtifact = () => {
   border-bottom: 2px solid #cbd5e1;
 }
 
-:deep(.markdown-content table td) {
+:deep(.table-wrapper table td) {
   padding: 10px 12px;
   border-bottom: 1px solid #e5e7eb;
   color: #334155;
 }
 
-:deep(.markdown-content table tbody tr:last-child td) {
+:deep(.table-wrapper table tbody tr:last-child td) {
   border-bottom: none;
 }
 
-:deep(.markdown-content table tbody tr:hover) {
+:deep(.table-wrapper table tbody tr:hover) {
   background: #f8fafc;
+}
+
+/* 기존 마크다운 테이블 스타일 (폴백용) */
+:deep(.markdown-content table:not(.table-wrapper table)) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 0.9em;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
 }
 
 /* CoT 단계별 번호 스타일 */

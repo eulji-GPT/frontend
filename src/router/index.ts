@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { isAuthenticated } from '../utils/auth'
 
 const routes = [
   {
@@ -35,7 +36,8 @@ const routes = [
   },
   {
     path: '/chat',
-    component: () => import('../components/chat/index.vue')
+    component: () => import('../components/chat/index.vue'),
+    meta: { requiresAuth: true }
   },
   // {
   //   path: '/fortune',
@@ -75,6 +77,27 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes
+})
+
+// 인증 가드 추가
+router.beforeEach((to, from, next) => {
+  // requiresAuth 메타 필드가 true인 경로 체크
+  if (to.meta.requiresAuth) {
+    if (isAuthenticated()) {
+      // 인증되어 있으면 진행
+      next()
+    } else {
+      // 인증되지 않았으면 로그인 페이지로 리다이렉트
+      console.log('인증되지 않은 사용자 - 로그인 페이지로 이동')
+      next({
+        path: '/login',
+        query: { redirect: to.fullPath } // 로그인 후 돌아갈 경로 저장
+      })
+    }
+  } else {
+    // 인증이 필요없는 경로는 그냥 진행
+    next()
+  }
 })
 
 export default router

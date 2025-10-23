@@ -616,6 +616,21 @@ const fetchUserProfile = async () => {
     const token = localStorage.getItem('access_token');
     if (!token) return;
 
+    // 개발 환경에서 Pro 계정 토큰인지 체크
+    if (import.meta.env.DEV && token.startsWith('dev-pro-token-')) {
+      console.log('🔓 개발 환경 Pro 계정 프로필 로드');
+      const devProfile = localStorage.getItem('dev_user_profile');
+      if (devProfile) {
+        const data = JSON.parse(devProfile);
+        if (data.profile_image_url) {
+          userProfileImage.value = data.profile_image_url;
+        }
+        isProUser.value = data.is_pro || false;
+        console.log('✅ Pro 라이센스 활성화:', isProUser.value);
+      }
+      return;
+    }
+
     const response = await fetch(`${API_BASE_URL}/member/me`, {
       method: 'GET',
       headers: {

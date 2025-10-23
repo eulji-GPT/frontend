@@ -97,17 +97,29 @@ const handleRefresh = async () => {
   await checkRagStatus()
 }
 
-// 컴포넌트 마운트 시 RAG 상태 확인
+// 컴포넌트 마운트 시 RAG 상태 확인 및 자동 초기화 시도
 onMounted(async () => {
   if (showRagInitializer.value) {
     await checkRagStatus()
+
+    // 초기화되지 않았으면 자동으로 초기화 시도
+    if (!ragStatus.value.initialized && !ragStatus.value.isInitializing) {
+      console.log('🔄 RAG 컴포넌트 마운트 - 자동 초기화 시작')
+      await initializeRag()
+    }
   }
 })
 
-// 을지대 정보검색 모드로 변경될 때마다 상태 확인
+// 을지대 정보검색 모드로 변경될 때마다 상태 확인 및 자동 초기화 시도
 watch(showRagInitializer, async (newValue) => {
   if (newValue) {
     await checkRagStatus()
+
+    // 초기화되지 않았으면 자동으로 초기화 시도
+    if (!ragStatus.value.initialized && !ragStatus.value.isInitializing) {
+      console.log('🔄 RAG 모드 진입 - 자동 초기화 시작')
+      await initializeRag()
+    }
   }
 })
 </script>

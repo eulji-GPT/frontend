@@ -87,39 +87,21 @@ const showProModal = ref(false)
 
 const availableModes = [
   {
-    key: 'general' as ChatMode,
-    name: '일반 대화',
-    description: 'AI와 자유로운 대화가 가능해요',
-    icon: '💬'
-  },
-  {
-    key: 'university' as ChatMode,
-    name: '대학생 챗봇',
-    description: '캠퍼스 생활에 특화된 도움을 드려요',
-    icon: '🎓'
-  },
-  {
-    key: 'study' as ChatMode,
-    name: '학습 도우미',
-    description: '공부 과정에서 설명과 보조를 제공해요',
-    icon: '📚'
-  },
-  {
-    key: 'career' as ChatMode,
-    name: '진로 상담',
-    description: '진로 관련 고민을 해결해 드릴게요',
-    icon: '💼'
+    key: 'unified' as ChatMode,
+    name: '통합 모델',
+    description: 'AI가 자동으로 최적의 답변 모드를 선택합니다\n(일반 대화, 대학 정보, 학습, 진로 등)',
+    icon: '🤖'
   },
   {
     key: 'cot' as ChatMode,
-    name: '단계별 추론',
-    description: 'Chain of Thought 방식으로\n심층 분석을 제공 해요',
+    name: 'COT 모델',
+    description: 'Chain of Thought 방식으로\n단계별 심층 분석을 제공해요',
     icon: '🧠'
   },
   {
     key: 'rag' as ChatMode,
-    name: '을지대 정보검색',
-    description: '을지대학교 공식 자료를 검색하여 정확한 정보 제공',
+    name: 'RAG 모델',
+    description: '을지대학교 공식 자료를 검색하여\n정확한 정보를 제공합니다',
     icon: '🔍'
   }
 ]
