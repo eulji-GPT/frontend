@@ -76,19 +76,13 @@ export function useChat() {
   const updateMessage = (chatId: string, messageIndex: number, updates: Partial<ChatMessage>) => {
     const chat = chatHistory.value.find(c => c.id === chatId);
     if (!chat || !chat.messages[messageIndex]) return;
-    
-    const updatedMessage = {
-      ...chat.messages[messageIndex],
-      ...updates
-    };
-    
-    const newMessages = [...chat.messages];
-    newMessages[messageIndex] = updatedMessage;
-    chat.messages = newMessages;
-    
-    // 현재 활성 채팅인 경우 messages ref도 업데이트
+
+    // 기존 메시지를 직접 업데이트
+    Object.assign(chat.messages[messageIndex], updates);
+
+    // 현재 활성 채팅인 경우 messages ref를 강제로 업데이트하여 Vue 반응성 트리거
     if (currentChatId.value === chatId) {
-      messages.value = newMessages;
+      messages.value = [...chat.messages];
     }
   };
 
@@ -720,6 +714,9 @@ export function useChat() {
                       currentMessage.isStreaming = true;
                       currentMessage.currentStep = "최종 답변 출력 중...";
 
+                      // 강제로 messages ref 업데이트하여 Vue 반응성 보장
+                      messages.value = [...currentChat.messages];
+
                       console.log(`📝 [STREAMING] 청크 누적:`, {
                         chunk_length: chunk.length,
                         before: beforeLength,
@@ -738,6 +735,8 @@ export function useChat() {
                   }
                   else if (data.type === 'final_answer_complete' && currentChat.messages[messageIndex]) {
                     // 최종 답변 스트리밍 완료
+                    const finalText = currentChat.messages[messageIndex].text;
+
                     updateMessage(currentChat.id, messageIndex, {
                       isStreaming: false,
                       currentStep: undefined,
@@ -747,14 +746,17 @@ export function useChat() {
                       totalSteps: undefined,
                       currentStepNumber: undefined
                     });
-                    
+
                     isStreaming.value = false;
-                    
+
                     console.log(`🏁 [STREAMING] CoT 스트리밍 완료:`, {
                       final_text_length: currentChat.messages[messageIndex].text.length,
                       is_streaming: currentChat.messages[messageIndex].isStreaming
                     });
-                    
+
+                    // AI 메시지를 노션에 저장
+                    await saveMessageToNotion(currentChat.id, false, finalText);
+
                     // 최종 스크롤
                     setTimeout(() => {
                       scrollToBottom();
@@ -960,7 +962,11 @@ export function useChat() {
               // 실시간 스트리밍 청크 추가
               fullResponseText += data.content;
               if (currentChat.messages[messageIndex]) {
-                currentChat.messages[messageIndex].text = fullResponseText;
+                // Vue 반응성을 보장하기 위해 직접 할당
+                const msg = currentChat.messages[messageIndex];
+                msg.text = fullResponseText;
+                // 강제로 messages ref 업데이트
+                messages.value = [...currentChat.messages];
               }
               setTimeout(() => scrollToBottom(), 10);
             } else if (data.type === 'done') {
@@ -994,7 +1000,8 @@ export function useChat() {
 
           // 보고서 스타일 아티팩트임을 명확히 표시
           const wordCount = Math.floor(reportContent.length / 2);
-          currentChat.messages[messageIndex].text = `📄 체계적인 보고서를 아티팩트로 생성하였습니다.\n\n**${artifactTitle}**\n\n오른쪽 패널에서 전문 보고서 형식의 상세 내용을 확인하실 수 있습니다. (약 ${wordCount.toLocaleString()}자)`;
+          const artifactMessage = `📄 체계적인 보고서를 아티팩트로 생성하였습니다.\n\n**${artifactTitle}**\n\n오른쪽 패널에서 전문 보고서 형식의 상세 내용을 확인하실 수 있습니다. (약 ${wordCount.toLocaleString()}자)`;
+          currentChat.messages[messageIndex].text = artifactMessage;
           currentChat.messages[messageIndex].artifact = {
             title: artifactTitle,
             content: reportContent,  // 인삿말 제거된 순수 보고서 내용
@@ -1006,6 +1013,9 @@ export function useChat() {
           currentChat.messages[messageIndex].isStreaming = false;
           currentChat.messages[messageIndex].currentStep = undefined;
 
+          // AI 메시지를 노션에 저장 (아티팩트 전체 내용 저장)
+          await saveMessageToNotion(currentChat.id, false, reportContent);
+
           isStreaming.value = false;
           saveChatHistory();
           console.log('📄 보고서 스타일 아티팩트 생성:', artifactTitle, `(${wordCount}자, 인삿말 제거됨)`);
@@ -1013,6 +1023,10 @@ export function useChat() {
           // 일반 답변 완료
           currentChat.messages[messageIndex].isStreaming = false;
           currentChat.messages[messageIndex].currentStep = undefined;
+
+          // AI 메시지를 노션에 저장
+          await saveMessageToNotion(currentChat.id, false, responseText);
+
           isStreaming.value = false;
           saveChatHistory();
         }
@@ -1134,11 +1148,14 @@ export function useChat() {
 
           // RAG 메타데이터 표시 (처리시간, 검색된 문서 수 등)
           console.log(`📊 RAG 성능: ${data.processing_time?.toFixed(2)}초, 검색문서: ${data.search_results_count}개, 프롬프트: ${data.prompt_type_used}`);
+
+          // AI 메시지를 노션에 저장
+          await saveMessageToNotion(currentChat.id, false, data.answer);
         }
       } else {
         throw new Error('RAG 응답에서 답변을 찾을 수 없습니다.');
       }
-      
+
       isStreaming.value = false;
     } catch (error: any) {
       console.error("❌ RAG FastAPI 호출 오류:", error);
@@ -1238,7 +1255,7 @@ export function useChat() {
       if (data.success && data.response && data.response.trim()) {
         const responseText = data.response.trim();
         let currentIndex = 0;
-        
+
         const typeWriter = () => {
           if (!isStreaming.value) {
             if (currentChat.messages[messageIndex]) {
@@ -1247,7 +1264,7 @@ export function useChat() {
             }
             return;
           }
-          
+
           if (currentIndex < responseText.length && currentChat.messages[messageIndex]) {
             currentChat.messages[messageIndex].text = responseText.substring(0, currentIndex + 1);
             currentIndex++;
@@ -1255,10 +1272,14 @@ export function useChat() {
           } else if (currentChat.messages[messageIndex]) {
             currentChat.messages[messageIndex].isStreaming = false;
             isStreaming.value = false;
+
+            // AI 메시지를 노션에 저장
+            saveMessageToNotion(currentChat.id, false, responseText);
+
             saveChatHistory();
           }
         };
-        
+
         typeWriter();
       } else {
         if (currentChat.messages[messageIndex]) {
@@ -1302,6 +1323,24 @@ export function useChat() {
     }
   }
 
+  // 노션에 메시지 저장 함수
+  async function saveMessageToNotion(chatHistoryId: string, isUser: boolean, message: string) {
+    if (!isAuthenticated()) return;
+
+    try {
+      await apiRequest(`${BACKEND_BASE_URL}/chat/history/${chatHistoryId}/message`, {
+        method: 'POST',
+        body: JSON.stringify({
+          is_user: isUser,
+          message: message
+        })
+      });
+      console.log('✅ 메시지 노션에 저장 완료:', isUser ? '사용자' : 'AI', message.substring(0, 50));
+    } catch (error) {
+      console.error('❌ 메시지 노션 저장 실패:', error);
+    }
+  }
+
   async function handleSend(inputValue: { value: string }, images?: File[]) {
     if ((!inputValue.value.trim() && !images?.length) || isLoading.value) return;
 
@@ -1321,6 +1360,9 @@ export function useChat() {
       isStreaming: false,
       hasError: false
     });
+
+    // 사용자 메시지를 노션에 즉시 저장
+    await saveMessageToNotion(currentChat.id, true, userMessageText);
 
     inputValue.value = '';
     // scrollToBottom will be called from the component

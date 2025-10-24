@@ -1,6 +1,6 @@
 <template>
   <div class="chat-input-wrapper">
-    <div :class="['chat-input-box', className]">
+    <div :class="['chat-input-box', className, { 'loading': isLoading }]">
       <!-- 파일 미리보기 -->
       <div v-if="selectedImages.length > 0" class="file-preview-container">
         <div 
@@ -45,10 +45,16 @@
         <button
           class="input-state-button-send"
           @click="isStreaming ? onStop() : onSend()"
-          :class="{ 'disabled': isLoading && !isStreaming, 'stop-button': isStreaming, 'can-send': canSend }"
-          :title="isStreaming ? '답변 중지' : '메시지 전송'"
+          :class="{ 'disabled': isLoading && !isStreaming, 'stop-button': isStreaming, 'can-send': canSend, 'loading': isLoading && !isStreaming }"
+          :title="isStreaming ? '답변 중지' : isLoading ? 'AI 처리 중...' : '메시지 전송'"
         >
+          <!-- 스트리밍 중단 아이콘 -->
           <div v-if="isStreaming" class="stop-icon">⏹</div>
+
+          <!-- 로딩 중 스피너 -->
+          <div v-else-if="isLoading" class="loading-spinner"></div>
+
+          <!-- 일반 전송 아이콘 -->
           <img
             v-else
             :src="InputStateButtonSend"
@@ -200,6 +206,14 @@ const removeImage = (index: number) => {
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+/* 로딩 중 입력창 스타일 */
+.chat-input-box.loading {
+  background-color: #f0f4f8;
+  border-color: #02478A;
+  box-shadow: 0 0 0 2px rgba(2, 71, 138, 0.1);
 }
 
 /* Placeholder Text Container */
@@ -246,8 +260,9 @@ textarea::placeholder {
 }
 
 textarea:disabled {
-  opacity: 0.7;
+  opacity: 0.6;
   cursor: not-allowed;
+  background-color: rgba(156, 163, 175, 0.05);
 }
 
 /* Button Row - justify-between으로 양쪽 끝 배치 */
@@ -370,6 +385,41 @@ textarea:disabled {
 .input-state-button-send.disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.input-state-button-send.loading {
+  background-color: #02478A;
+  border: 1px solid #02478A;
+  cursor: wait;
+  animation: pulse-button 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-button {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* 로딩 스피너 스타일 */
+.loading-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #FFFFFF;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .input-state-button-send.stop-button {

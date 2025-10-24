@@ -128,8 +128,20 @@ const scrollToBottom = () => {
 };
 
 // 메시지가 변경될 때마다 스크롤을 맨 아래로 이동
-watch(() => props.messages, () => {
-  scrollToBottom();
+watch(() => props.messages, (newMessages, oldMessages) => {
+  // 메시지 배열이 실제로 변경되었는지 확인
+  const messagesChanged = newMessages.length !== oldMessages?.length ||
+    newMessages.some((msg, idx) => {
+      const oldMsg = oldMessages?.[idx];
+      return !oldMsg ||
+        msg.text !== oldMsg.text ||
+        msg.isLoading !== oldMsg.isLoading ||
+        msg.isStreaming !== oldMsg.isStreaming;
+    });
+
+  if (messagesChanged) {
+    scrollToBottom();
+  }
 }, { deep: true, immediate: true });
 
 const getPhaseDisplayName = (phase: string): string => {
@@ -203,11 +215,35 @@ const handleOpenArtifact = (messageId: string) => {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 8px 16px;
+  padding: 12px 16px;
   margin-left: 20px;
   margin-top: -8px;
   max-width: calc(100% - 40px);
   overflow: visible;
+  background: linear-gradient(135deg, rgba(2, 71, 138, 0.05) 0%, rgba(240, 246, 255, 0.5) 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(2, 71, 138, 0.1);
+  animation: fadeInSlide 0.4s ease-out, pulse-indicator 2s ease-in-out infinite;
+}
+
+@keyframes fadeInSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-indicator {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(2, 71, 138, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(2, 71, 138, 0);
+  }
 }
 
 .loading-content {
@@ -235,6 +271,16 @@ const handleOpenArtifact = (messageId: string) => {
   min-width: 0;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  animation: text-shimmer 2s ease-in-out infinite;
+}
+
+@keyframes text-shimmer {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 .progress-info {
@@ -329,6 +375,7 @@ const handleOpenArtifact = (messageId: string) => {
 .loading-indicator.error-state {
   border-left: 4px solid #dc2626;
   background: rgba(220, 38, 38, 0.05);
+  animation: fadeInSlide 0.4s ease-out, shake 0.5s ease-in-out;
 }
 
 .loader-container {
