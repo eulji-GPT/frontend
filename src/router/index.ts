@@ -69,6 +69,11 @@ const routes = [
     component: () => import('../views/DevelopmentStatusView.vue')
   },
   {
+    path: '/pro-verification',
+    component: () => import('../views/ProVerificationView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/kakao/callback',
     component: () => import('../views/KakaoCallbackView.vue')
   },

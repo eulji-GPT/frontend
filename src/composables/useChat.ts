@@ -109,8 +109,8 @@ export function useChat() {
 
   // 긴 답변을 아티팩트로 변환할지 판단하는 함수
   const shouldConvertToArtifact = (text: string): boolean => {
-    // 조건 1: 3000자 이상
-    if (text.length < 3000) return false;
+    // 조건 1: 2000자 이상 (기존 3000자에서 완화)
+    if (text.length < 2000) return false;
 
     // 조건 2: 여러 섹션 포함 (## 또는 ### 또는 숫자. 로 시작하는 제목이 3개 이상)
     const sectionPatterns = [
@@ -253,11 +253,13 @@ export function useChat() {
   const FASTAPI_HEALTH_URL = `${FASTAPI_BASE_URL}/health`;
 
   onMounted(async () => {
-    loadChatHistory();
-    
+    // 채팅 히스토리 로드 완료 대기
+    await loadChatHistory();
+
     // FastAPI 서버 상태 확인
     await checkServerStatus();
-    
+
+    // 히스토리가 있으면 첫 번째 선택, 없으면 새 대화 시작
     if (chatHistory.value.length > 0) {
       selectChat(chatHistory.value[0].id);
     } else {
@@ -278,12 +280,12 @@ export function useChat() {
           const histories = await response.json();
           console.log('✅ 채팅 히스토리 로드 완료:', histories.length, '개');
 
-          // 백엔드 데이터를 프론트엔드 형식으로 변환
+          // 백엔드 데이터를 프론트엔드 형식으로 변환 (UUID는 이미 string)
           chatHistory.value = histories.map((h: any) => ({
-            id: String(h.id), // 백엔드 integer ID를 string으로 변환
+            id: h.id, // UUID (이미 string)
             title: h.title,
             messages: [], // 메시지는 개별 히스토리 조회 시 로드
-            sessionId: String(h.id)
+            sessionId: h.id // UUID 사용
           }));
           return;
         }
@@ -352,7 +354,7 @@ export function useChat() {
           const backendSessionId = await createBackendSession();
 
           const newChat: ChatSession = {
-            id: String(chatHistoryData.id),
+            id: chatHistoryData.id, // UUID (이미 string)
             title: chatHistoryData.title,
             messages: [],
             sessionId: backendSessionId || undefined
@@ -360,6 +362,7 @@ export function useChat() {
           chatHistory.value.unshift(newChat);
           currentChatId.value = newChat.id;
           messages.value = newChat.messages;
+          console.log('✅ 새 대화 생성 완료 (UUID):', newChat.id);
           return;
         }
       } catch (error) {
@@ -391,8 +394,8 @@ export function useChat() {
     if (chat) {
       currentChatId.value = id;
 
-      // 로그인된 사용자이고 메시지가 아직 로드되지 않은 경우 백엔드에서 로드
-      if (isAuthenticated() && chat.messages.length === 0) {
+      // 로그인된 사용자인 경우 항상 백엔드에서 최신 메시지 로드
+      if (isAuthenticated()) {
         try {
           console.log(`📥 채팅 메시지 로드 중... (ID: ${id})`);
           const response = await apiRequest(`${BACKEND_BASE_URL}/chat/history/${id}`, {
@@ -401,24 +404,32 @@ export function useChat() {
 
           if (response.ok) {
             const chatDetail = await response.json();
-            console.log('✅ 채팅 메시지 로드 완료:', chatDetail.messages.length, '개');
+            console.log('✅ 채팅 메시지 로드 완료:', chatDetail.chatmessage?.length || 0, '개');
 
             // 백엔드 메시지를 프론트엔드 형식으로 변환
-            chat.messages = chatDetail.messages.map((msg: any) => ({
+            chat.messages = (chatDetail.chatmessage || []).map((msg: any) => ({
               text: msg.message,
               isUser: msg.is_user,
-              timestamp: new Date(),
+              timestamp: new Date(msg.created_at),
               isLoading: false,
               isStreaming: false,
               hasError: false
             }));
+
+            // messages.value를 반드시 업데이트 (Vue 반응성)
+            messages.value = [...chat.messages];
+            console.log('✅ messages.value 업데이트 완료:', messages.value.length, '개');
           }
         } catch (error) {
           console.error('❌ 채팅 메시지 로드 실패:', error);
+          // 실패 시에도 빈 배열로 초기화
+          chat.messages = [];
+          messages.value = [];
         }
+      } else {
+        // 비로그인 사용자는 로컬 메시지 사용
+        messages.value = [...chat.messages];
       }
-
-      messages.value = chat.messages;
     }
   }
 
@@ -1351,6 +1362,7 @@ export function useChat() {
 
     const isFirstMessage = currentChat.messages.length === 0;
 
+    // 사용자 메시지 추가
     currentChat.messages.push({
       text: userMessageText,
       isUser: true,
@@ -1360,6 +1372,9 @@ export function useChat() {
       isStreaming: false,
       hasError: false
     });
+
+    // Vue 반응성을 위해 messages.value 즉시 업데이트 (사용자 메시지가 바로 보이도록)
+    messages.value = [...currentChat.messages];
 
     // 사용자 메시지를 노션에 즉시 저장
     await saveMessageToNotion(currentChat.id, true, userMessageText);
@@ -1379,6 +1394,7 @@ export function useChat() {
       rag: "을지대학교 정보 검색 중..."
     };
 
+    // AI 로딩 메시지 추가
     currentChat.messages.push({
       text: modeMessages[chatMode.value] || "답변을 생성하고 있습니다...",
       isUser: false,
@@ -1388,6 +1404,9 @@ export function useChat() {
       hasError: false,
       currentStep: modeMessages[chatMode.value] || "답변을 생성하고 있습니다...",
     });
+
+    // Vue 반응성을 위해 messages.value 즉시 업데이트 (로딩 메시지가 바로 보이도록)
+    messages.value = [...currentChat.messages];
 
     try {
       if (images && images.length > 0) {
@@ -1419,27 +1438,38 @@ export function useChat() {
         await callFastAPIChat(userMessageText, loadingMessageIndex);
       }
       
-      // 첫 번째 메시지인 경우 AI로 제목 생성
+      // 첫 번째 메시지인 경우 AI로 제목 생성 (비동기)
       if (isFirstMessage) {
-        try {
-          const aiTitle = await generateChatTitle(userMessageText);
-          currentChat.title = aiTitle;
+        // 즉시 기본 제목 설정 (UI 블로킹 방지)
+        const defaultTitle = userMessageText.substring(0, 20) + (userMessageText.length > 20 ? '...' : '');
+        currentChat.title = defaultTitle;
 
-          // 로그인된 사용자인 경우 백엔드에도 업데이트
-          if (isAuthenticated() && currentChat.id) {
-            await updateChatTitle(currentChat.id, aiTitle);
-          }
-
-          console.log('🏷️ AI가 생성한 대화 제목:', aiTitle);
-        } catch (error) {
-          console.error('제목 생성 실패, 기본 제목 사용:', error);
-          currentChat.title = userMessageText.substring(0, 20);
-
-          // 로그인된 사용자인 경우 기본 제목도 백엔드에 업데이트
-          if (isAuthenticated() && currentChat.id) {
-            await updateChatTitle(currentChat.id, currentChat.title);
-          }
+        // 로그인된 사용자인 경우 기본 제목을 백엔드에 즉시 업데이트
+        if (isAuthenticated() && currentChat.id) {
+          updateChatTitle(currentChat.id, defaultTitle).catch(error => {
+            console.error('기본 제목 업데이트 실패:', error);
+          });
         }
+
+        // 백그라운드에서 AI 제목 생성 (await 제거)
+        generateChatTitle(userMessageText)
+          .then(aiTitle => {
+            // AI 제목으로 업데이트
+            currentChat.title = aiTitle;
+
+            // 로그인된 사용자인 경우 백엔드에도 업데이트
+            if (isAuthenticated() && currentChat.id) {
+              return updateChatTitle(currentChat.id, aiTitle);
+            }
+          })
+          .then(() => {
+            console.log('🏷️ AI가 생성한 대화 제목 적용 완료:', currentChat.title);
+            saveChatHistory(); // AI 제목 적용 후 로컬 스토리지 업데이트
+          })
+          .catch(error => {
+            console.error('AI 제목 생성 실패, 기본 제목 유지:', error);
+            // 에러 발생 시 기본 제목 유지 (이미 설정됨)
+          });
       }
     } catch (error) {
       console.error('FastAPI 통신 오류:', error);

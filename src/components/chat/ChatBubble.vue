@@ -25,7 +25,7 @@
             </div>
             <div class="cot-step-text">
               <div class="cot-question">{{ step.question }}</div>
-              <div v-html="marked(step.answer)" class="cot-answer markdown-content"></div>
+              <div v-html="marked.parse(step.answer)" class="cot-answer markdown-content"></div>
             </div>
           </div>
         </div>
@@ -197,14 +197,14 @@ const getFilePreview = (file) => {
 // 마크다운 렌더링
 const renderedContent = computed(() => {
   if (props.content) {
-    const result = props.useMarkdown ? marked(props.content) : props.content;
+    const result = props.useMarkdown ? marked.parse(props.content) : props.content;
     // 마크다운 렌더링 결과에서 끝부분의 공백과 개행 제거
     return typeof result === 'string' ? result.trim() : result;
   }
   // slot 내용 처리 (기본 폴백)
   const slotContent = slots.default?.()?.[0]?.children || '';
   const textContent = slotContent.toString();
-  const result = props.useMarkdown ? marked(textContent) : textContent;
+  const result = props.useMarkdown ? marked.parse(textContent) : textContent;
   return typeof result === 'string' ? result.trim() : result;
 });
 
@@ -246,7 +246,7 @@ const streamingRenderedContent = computed(() => {
   const content = displayContent.value;
   if (content && props.useMarkdown) {
     try {
-      const result = marked(content);
+      const result = marked.parse(content);
       return typeof result === 'string' ? result.trim() : result;
     } catch (error) {
       console.error('마크다운 변환 오류:', error);

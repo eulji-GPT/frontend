@@ -235,7 +235,7 @@ const MAX_WIDTH = 900;
 // 렌더링된 콘텐츠
 const renderedContent = computed(() => {
   if (props.artifact?.content) {
-    const result = marked(props.artifact.content);
+    const result = marked.parse(props.artifact.content);
     return typeof result === 'string' ? result : result;
   }
   return '';
