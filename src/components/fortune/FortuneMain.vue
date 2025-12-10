@@ -134,6 +134,27 @@ import { ref, computed } from 'vue';
 import BirthdateModal from './BirthdateModal.vue';
 import FortuneResult from './FortuneResult.vue';
 import fortuneCharacter from '@/assets/fortune-character.svg';
+
+// Railway 내부 URL(.railway.internal)은 브라우저에서 접근 불가하므로 외부 URL로 대체
+const getGeminiApiBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_GEMINI_FASTAPI_URL;
+
+  // Railway 내부 URL 감지 및 외부 URL로 대체
+  if (envUrl && envUrl.includes('.railway.internal')) {
+    console.warn('Railway internal URL detected for AI-RAG, using public URL instead');
+    return 'https://ai-rag-production.up.railway.app';
+  }
+
+  // 프로덕션 환경에서 /gemini-api 프록시 경로 사용 시 외부 URL로 대체
+  if (!envUrl || envUrl === '/gemini-api') {
+    // 브라우저에서 Railway 호스트인지 확인
+    if (typeof window !== 'undefined' && window.location.hostname.includes('railway.app')) {
+      return 'https://ai-rag-production.up.railway.app';
+    }
+  }
+
+  return envUrl || '/gemini-api';
+};
 import fortuneCharacterEyeOff from '@/assets/fortune-character_eye_off.svg';
 import loveFortuneIcon from '@/assets/fortune/love-fortune.svg';
 import successFortuneIcon from '@/assets/fortune/success-fortune.svg';
@@ -264,7 +285,7 @@ const showFortuneResult = async () => {
     };
 
     const endpoint = fortuneTypeMap[selectedFortune.value];
-    const apiUrl = `${import.meta.env.VITE_GEMINI_FASTAPI_URL || '/gemini-api'}/fortune/${endpoint}`;
+    const apiUrl = `${getGeminiApiBaseUrl()}/fortune/${endpoint}`;
 
     console.log('[FORTUNE DEBUG] API request info:', {
       url: apiUrl,
