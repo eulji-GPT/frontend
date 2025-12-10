@@ -86,8 +86,49 @@ export function useChat() {
     }
   };
 
-  const FASTAPI_BASE_URL = import.meta.env.VITE_GEMINI_FASTAPI_URL || '/gemini-api'; // 환경 변수 또는 프록시 경로 사용
-  const BACKEND_BASE_URL = import.meta.env.VITE_FASTAPI_URL || 'http://localhost:8000'; // 백엔드 API URL
+  // Railway 내부 URL(.railway.internal)은 브라우저에서 접근 불가하므로 외부 URL로 대체
+  const getGeminiApiBaseUrl = () => {
+    const envUrl = import.meta.env.VITE_GEMINI_FASTAPI_URL;
+
+    // Railway 내부 URL 감지 및 외부 URL로 대체
+    if (envUrl && envUrl.includes('.railway.internal')) {
+      console.warn('Railway internal URL detected for AI-RAG, using public URL instead');
+      return 'https://ai-rag-production.up.railway.app';
+    }
+
+    // 프로덕션 환경에서 /gemini-api 프록시 경로 사용 시 외부 URL로 대체
+    if (!envUrl || envUrl === '/gemini-api') {
+      // 브라우저에서 Railway 호스트인지 확인
+      if (typeof window !== 'undefined' && window.location.hostname.includes('railway.app')) {
+        return 'https://ai-rag-production.up.railway.app';
+      }
+    }
+
+    return envUrl || '/gemini-api';
+  };
+
+  const getBackendApiBaseUrl = () => {
+    const envUrl = import.meta.env.VITE_FASTAPI_URL;
+
+    // Railway 내부 URL 감지 및 외부 URL로 대체
+    if (envUrl && envUrl.includes('.railway.internal')) {
+      console.warn('Railway internal URL detected, using public URL instead');
+      return 'https://fastapi-backend-production-2cd0.up.railway.app';
+    }
+
+    // 프로덕션 환경에서 /api 프록시 경로 사용 시 외부 URL로 대체
+    if (!envUrl || envUrl === '/api') {
+      // 브라우저에서 Railway 호스트인지 확인
+      if (typeof window !== 'undefined' && window.location.hostname.includes('railway.app')) {
+        return 'https://fastapi-backend-production-2cd0.up.railway.app';
+      }
+    }
+
+    return envUrl || 'http://localhost:8000';
+  };
+
+  const FASTAPI_BASE_URL = getGeminiApiBaseUrl(); // AI-RAG API URL
+  const BACKEND_BASE_URL = getBackendApiBaseUrl(); // 백엔드 API URL
   const getAPIUrl = (mode: ChatMode): string => {
     const endpoints = {
       unified: '/chat',  // 통합 챗봇 (Function Calling 기반)

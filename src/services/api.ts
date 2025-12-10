@@ -1,5 +1,26 @@
 // API 기본 설정 및 서비스
-const API_BASE_URL = import.meta.env.VITE_FASTAPI_URL || '/api'; // 환경 변수 또는 프록시 경로 사용
+// Railway 내부 URL(.railway.internal)은 브라우저에서 접근 불가하므로 외부 URL로 대체
+const getApiBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_FASTAPI_URL;
+
+  // Railway 내부 URL 감지 및 외부 URL로 대체
+  if (envUrl && envUrl.includes('.railway.internal')) {
+    console.warn('Railway internal URL detected, using public URL instead');
+    return 'https://fastapi-backend-production-2cd0.up.railway.app';
+  }
+
+  // 프로덕션 환경에서 /api 프록시 경로 사용 시 외부 URL로 대체
+  if (!envUrl || envUrl === '/api') {
+    // 브라우저에서 Railway 호스트인지 확인
+    if (typeof window !== 'undefined' && window.location.hostname.includes('railway.app')) {
+      return 'https://fastapi-backend-production-2cd0.up.railway.app';
+    }
+  }
+
+  return envUrl || '/api';
+};
+
+const API_BASE_URL = getApiBaseUrl(); // 환경 변수 또는 프록시 경로 사용
 
 // API 요청을 위한 기본 fetch 함수
 async function apiRequest<T>(
@@ -171,7 +192,28 @@ export const healthAPI = {
 };
 
 // 운세 API (AI-RAG 서버)
-const FORTUNE_API_BASE_URL = import.meta.env.VITE_GEMINI_FASTAPI_URL || 'http://localhost:8001';
+// Railway 내부 URL(.railway.internal)은 브라우저에서 접근 불가하므로 외부 URL로 대체
+const getFortuneApiBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_GEMINI_FASTAPI_URL;
+
+  // Railway 내부 URL 감지 및 외부 URL로 대체
+  if (envUrl && envUrl.includes('.railway.internal')) {
+    console.warn('Railway internal URL detected for AI-RAG, using public URL instead');
+    return 'https://ai-rag-production.up.railway.app';
+  }
+
+  // 프로덕션 환경에서 /gemini-api 프록시 경로 사용 시 외부 URL로 대체
+  if (!envUrl || envUrl === '/gemini-api') {
+    // 브라우저에서 Railway 호스트인지 확인
+    if (typeof window !== 'undefined' && window.location.hostname.includes('railway.app')) {
+      return 'https://ai-rag-production.up.railway.app';
+    }
+  }
+
+  return envUrl || 'http://localhost:8001';
+};
+
+const FORTUNE_API_BASE_URL = getFortuneApiBaseUrl();
 
 async function fortuneApiRequest<T>(
   endpoint: string,
