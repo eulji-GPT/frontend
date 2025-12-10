@@ -51,7 +51,29 @@ import { isAuthenticated, logout } from '../../utils/auth'
 
 const router = useRouter()
 const route = useRoute()
-const API_BASE_URL = import.meta.env.VITE_FASTAPI_URL || '/api'
+
+// Railway 내부 URL(.railway.internal)은 브라우저에서 접근 불가하므로 외부 URL로 대체
+const getApiBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_FASTAPI_URL;
+
+  // Railway 내부 URL 감지 및 외부 URL로 대체
+  if (envUrl && envUrl.includes('.railway.internal')) {
+    console.warn('Railway internal URL detected, using public URL instead');
+    return 'https://fastapi-backend-production-2cd0.up.railway.app';
+  }
+
+  // 프로덕션 환경에서 /api 프록시 경로 사용 시 외부 URL로 대체
+  if (!envUrl || envUrl === '/api') {
+    // 브라우저에서 Railway 호스트인지 확인
+    if (typeof window !== 'undefined' && window.location.hostname.includes('railway.app')) {
+      return 'https://fastapi-backend-production-2cd0.up.railway.app';
+    }
+  }
+
+  return envUrl || '/api';
+};
+
+const API_BASE_URL = getApiBaseUrl()
 const isMobileMenuOpen = ref(false)
 const isLoggedIn = ref(false)
 const userName = ref('')
