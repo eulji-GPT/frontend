@@ -23,16 +23,44 @@ interface NewsItem {
 
 const newsList = ref<NewsItem[]>([])
 
+// API Base URL 설정
+const getApiBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_FASTAPI_URL
+  if (envUrl && envUrl.includes('.railway.internal')) {
+    return 'https://fastapi-backend-production-2cd0.up.railway.app'
+  }
+  if (!envUrl || envUrl === '/api') {
+    if (typeof window !== 'undefined' && window.location.hostname.includes('railway.app')) {
+      return 'https://fastapi-backend-production-2cd0.up.railway.app'
+    }
+    if (typeof window !== 'undefined' && (window.location.hostname === 'euljigpt.com' || window.location.hostname === 'www.euljigpt.com')) {
+      return 'https://fastapi-backend-production-2cd0.up.railway.app'
+    }
+  }
+  return envUrl || '/api'
+}
+
+const API_BASE_URL = getApiBaseUrl()
+
 onMounted(async () => {
   try {
-    const res = await fetch('/news.json')
+    // 백엔드 API에서 뉴스 데이터 가져오기
+    const res = await fetch(`${API_BASE_URL}/news`)
     if (!res.ok) {
       throw new Error(`HTTP error! status: ${res.status}`)
     }
     newsList.value = await res.json()
   } catch (e) {
-    newsList.value = []
-    console.error("Could not fetch news data:", e)
+    console.error("Could not fetch news data from API:", e)
+    // API 실패 시 로컬 JSON 파일에서 가져오기 (폴백)
+    try {
+      const fallbackRes = await fetch('/news.json')
+      if (fallbackRes.ok) {
+        newsList.value = await fallbackRes.json()
+      }
+    } catch {
+      newsList.value = []
+    }
   }
 })
 </script>
