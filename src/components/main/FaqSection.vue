@@ -38,6 +38,25 @@ const openFaqIdx = ref<number|null>(null)
 const answerHeights = ref<Record<number, number>>({})
 const answerRefs = ref<Record<number, HTMLElement>>({})
 
+// API Base URL 설정
+const getApiBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_FASTAPI_URL
+  if (envUrl && envUrl.includes('.railway.internal')) {
+    return 'https://fastapi-backend-production-2cd0.up.railway.app'
+  }
+  if (!envUrl || envUrl === '/api') {
+    if (typeof window !== 'undefined' && window.location.hostname.includes('railway.app')) {
+      return 'https://fastapi-backend-production-2cd0.up.railway.app'
+    }
+    if (typeof window !== 'undefined' && (window.location.hostname === 'euljigpt.com' || window.location.hostname === 'www.euljigpt.com')) {
+      return 'https://fastapi-backend-production-2cd0.up.railway.app'
+    }
+  }
+  return envUrl || '/api'
+}
+
+const API_BASE_URL = getApiBaseUrl()
+
 function setAnswerRef(el: HTMLElement | Element | ComponentPublicInstance | null, idx: number) {
   if (el && el instanceof HTMLElement) {
     answerRefs.value[idx] = el
@@ -46,11 +65,11 @@ function setAnswerRef(el: HTMLElement | Element | ComponentPublicInstance | null
 
 async function toggleFaq(idx: number) {
   const isOpening = openFaqIdx.value !== idx
-  
+
   if (isOpening) {
     openFaqIdx.value = idx
     await nextTick()
-    
+
     // 실제 콘텐츠 높이 측정
     const answerEl = answerRefs.value[idx]
     if (answerEl) {
@@ -63,12 +82,13 @@ async function toggleFaq(idx: number) {
 
 onMounted(async () => {
   try {
-    const res = await fetch('/faq.json')
+    // 백엔드 API에서 FAQ 데이터 가져오기
+    const res = await fetch(`${API_BASE_URL}/faq`)
     if (!res.ok) {
       throw new Error(`HTTP error! status: ${res.status}`)
     }
     faqList.value = await res.json()
-    
+
     // 모든 답변의 높이를 미리 측정
     await nextTick()
     faqList.value.forEach((_, idx) => {
@@ -78,8 +98,23 @@ onMounted(async () => {
       }
     })
   } catch (e) {
-    faqList.value = []
-    console.error("Could not fetch FAQ data:", e)
+    console.error("Could not fetch FAQ data from API:", e)
+    // API 실패 시 로컬 JSON 파일에서 가져오기 (폴백)
+    try {
+      const fallbackRes = await fetch('/faq.json')
+      if (fallbackRes.ok) {
+        faqList.value = await fallbackRes.json()
+        await nextTick()
+        faqList.value.forEach((_, idx) => {
+          const answerEl = answerRefs.value[idx]
+          if (answerEl) {
+            answerHeights.value[idx] = answerEl.scrollHeight + 48
+          }
+        })
+      }
+    } catch {
+      faqList.value = []
+    }
   }
 })
 </script>
