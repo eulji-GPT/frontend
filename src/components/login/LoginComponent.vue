@@ -101,7 +101,8 @@ const authService = AuthService.getInstance();
 
 // 환경변수에서 카카오 설정 가져오기
 const KAKAO_REST_API_KEY = import.meta.env.VITE_KAKAO_REST_API_KEY || '6946f5fc07f24c4ab3e161bab6de3b4a';
-const REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI || 'http://localhost:3000/kakao/callback';
+// 프로덕션에서는 현재 도메인 사용, 개발환경에서는 환경변수 또는 localhost 사용
+const REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI || `${window.location.origin}/kakao/callback`;
 
 const isLoading = ref(false);
 const errorMessage = ref('');
