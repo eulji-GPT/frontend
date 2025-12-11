@@ -169,21 +169,50 @@ const formData = ref({
 
 const isSubmitting = ref(false)
 
+// API Base URL 설정
+const getApiBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_FASTAPI_URL
+  if (envUrl && envUrl.includes('.railway.internal')) {
+    return 'https://fastapi-backend-production-2cd0.up.railway.app'
+  }
+  if (!envUrl || envUrl === '/api') {
+    if (typeof window !== 'undefined' && window.location.hostname.includes('railway.app')) {
+      return 'https://fastapi-backend-production-2cd0.up.railway.app'
+    }
+    if (typeof window !== 'undefined' && (window.location.hostname === 'euljigpt.com' || window.location.hostname === 'www.euljigpt.com')) {
+      return 'https://fastapi-backend-production-2cd0.up.railway.app'
+    }
+  }
+  return envUrl || '/api'
+}
+
+const API_BASE_URL = getApiBaseUrl()
+
 const handleSubmit = async () => {
   isSubmitting.value = true
 
   try {
-    // TODO: 실제 API 연동
-    console.log('지원서 제출:', formData.value)
+    const response = await fetch(`${API_BASE_URL}/crew/apply`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData.value)
+    })
 
-    // 임시: 2초 대기 후 성공 메시지
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.detail || '지원서 제출에 실패했습니다.')
+    }
+
+    const result = await response.json()
+    console.log('지원서 제출 성공:', result)
 
     alert('지원서가 성공적으로 제출되었습니다!')
     router.push('/crew')
-  } catch (error) {
+  } catch (error: any) {
     console.error('지원서 제출 실패:', error)
-    alert('지원서 제출에 실패했습니다. 다시 시도해주세요.')
+    alert(error.message || '지원서 제출에 실패했습니다. 다시 시도해주세요.')
   } finally {
     isSubmitting.value = false
   }
