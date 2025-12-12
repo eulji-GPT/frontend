@@ -34,7 +34,7 @@ async function apiRequest<T>(
   };
 
   // 토큰이 있다면 Authorization 헤더 추가
-  const token = localStorage.getItem('accessToken');
+  const token = localStorage.getItem('access_token');
   if (token) {
     defaultHeaders['Authorization'] = `Bearer ${token}`;
   }
