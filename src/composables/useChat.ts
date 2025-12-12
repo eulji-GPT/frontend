@@ -1177,18 +1177,18 @@ export function useChat() {
           currentChat.messages[messageIndex].currentStep = undefined;
           currentChat.messages[messageIndex].hasError = false;
 
-          // RAG 소스 정보 추가 (임시 목 데이터 - 향후 백엔드에서 실제 데이터로 교체)
-          const mockSources: RagSource[] = [];
-          for (let i = 0; i < Math.min(data.search_results_count || 5, 6); i++) {
-            mockSources.push({
-              title: `을지대학교 관련 정보 ${i + 1}`,
-              content: `을지대학교에 대한 상세 정보와 관련 자료를 포함하고 있습니다. 해당 문서는 학교 공식 웹사이트 및 관련 자료에서 추출되었습니다.`,
-              domain: `eulji.ac.kr`,
-              category: '대학 정보',
-              score: 0.95 - (i * 0.1)
-            });
+          // RAG 소스 정보 추가 (백엔드에서 받은 실제 데이터 사용)
+          if (data.sources && Array.isArray(data.sources) && data.sources.length > 0) {
+            currentChat.messages[messageIndex].ragSources = data.sources.map((source: any) => ({
+              title: source.title || '제목 없음',
+              content: source.content || '',
+              domain: source.domain || 'eulji.ac.kr',
+              category: source.category || '기타',
+              score: source.score || 0
+            }));
+          } else {
+            currentChat.messages[messageIndex].ragSources = [];
           }
-          currentChat.messages[messageIndex].ragSources = mockSources;
 
           // RAG 디버그 정보 표시 (옵셔널)
           if (data.debug_info && data.debug_info.length > 0) {
