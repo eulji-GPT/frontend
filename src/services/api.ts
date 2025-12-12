@@ -102,6 +102,22 @@ export const memberAPI = {
       body: JSON.stringify({ refresh_token: refreshToken }),
     });
   },
+
+  // Pro 인증용 이메일 발송 (카카오 회원 등 기존 회원용)
+  sendProVerification: async (email: string) => {
+    return apiRequest<{ message: string }>('/members/send-pro-verification', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  },
+
+  // Pro 인증 코드 확인
+  verifyPro: async (email: string, code: number) => {
+    return apiRequest<{ message: string; is_pro: boolean; verified_email: string }>('/members/verify-pro', {
+      method: 'POST',
+      body: JSON.stringify({ email, code }),
+    });
+  },
 };
 
 // 강의실 예약 API
