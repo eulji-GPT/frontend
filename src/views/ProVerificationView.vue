@@ -136,10 +136,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
 import HeaderSection from '../components/main/HeaderSection.vue'
-
-const router = useRouter()
 
 // Railway 내부 URL(.railway.internal)은 브라우저에서 접근 불가하므로 외부 URL로 대체
 const getApiBaseUrl = () => {

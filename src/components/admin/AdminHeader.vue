@@ -2,7 +2,7 @@
   <header class="admin-header">
     <div class="header-left">
       <router-link to="/" class="logo-link">
-        <img src="/eulGPT_logo.png" alt="EulGPT" class="logo" />
+        <img :src="eulLogo" alt="EulGPT" class="logo" />
       </router-link>
       <span class="header-title">Admin</span>
     </div>
@@ -20,6 +20,8 @@
 </template>
 
 <script setup lang="ts">
+import eulLogo from '../../assets/eul_logo.svg';
+
 defineEmits<{
   (e: 'logout'): void
 }>()

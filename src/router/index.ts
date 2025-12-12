@@ -96,7 +96,7 @@ const router = createRouter({
 })
 
 // 인증 가드 추가
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
   // requiresAuth 메타 필드가 true인 경로 체크
   if (to.meta.requiresAuth) {
     if (!isAuthenticated()) {

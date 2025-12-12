@@ -178,7 +178,7 @@ import FortuneMain from '../fortune/FortuneMain.vue';
 import FortuneChat from '../fortune/FortuneChat.vue';
 import FortuneResult from '../fortune/FortuneResult.vue';
 import { useChat } from '../../composables/useChat';
-import type { ChatMode, RagSource, Artifact, ArtifactVersion } from '../../composables/useChat';
+import type { ChatMode, Artifact, ArtifactVersion } from '../../composables/useChat';
 import eulLogo from '../../assets/eul_logo.svg';
 
 const router = useRouter();
@@ -462,11 +462,13 @@ ${payload.fullContent.substring(0, 500)}...
       }
     }
 
-    if (!artifactMessage) {
+    if (!artifactMessage || !artifactMessage.artifact) {
       throw new Error('아티팩트를 찾을 수 없습니다');
     }
 
-    const originalContent = artifactMessage.artifact.content;
+    // 타입 narrowing을 위해 로컬 변수로 추출
+    const artifact = artifactMessage.artifact;
+    const originalContent = artifact.content;
     const selectedTextIndex = originalContent.indexOf(payload.selectedText);
 
     if (selectedTextIndex === -1) {
@@ -504,8 +506,11 @@ ${payload.fullContent.substring(0, 500)}...
                   const newContent = beforeText + improvedText + afterText;
 
                   artifactMessage.artifact = {
-                    ...artifactMessage.artifact,
-                    content: newContent
+                    title: artifact.title || '',
+                    type: artifact.type || 'document',
+                    content: newContent,
+                    versions: artifact.versions,
+                    currentVersion: artifact.currentVersion
                   };
                 }
               }
@@ -538,10 +543,11 @@ ${payload.fullContent.substring(0, 500)}...
     };
 
     artifactMessage.artifact = {
-      ...artifactMessage.artifact,
+      title: artifact.title || '',
+      type: artifact.type || 'document',
       content: finalContent,
-      versions: [...(artifactMessage.artifact.versions || []), newVersion],
-      currentVersion: (artifactMessage.artifact.versions?.length || 0)
+      versions: [...(artifact.versions || []), newVersion],
+      currentVersion: (artifact.versions?.length || 0)
     };
 
     saveChatHistory();

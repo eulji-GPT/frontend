@@ -1,5 +1,5 @@
 import { ref, onMounted, nextTick } from 'vue';
-import { isAuthenticated, getAuthHeaders, apiRequest } from '../utils/auth';
+import { isAuthenticated, apiRequest } from '../utils/auth';
 
 export interface RagSource {
   title: string;
@@ -888,7 +888,7 @@ export function useChat() {
         
         try {
           const originalMode = chatMode.value;
-          chatMode.value = 'general';
+          chatMode.value = 'unified';
           await callFastAPIChat(message, messageIndex);
           chatMode.value = originalMode;
           return;
@@ -950,10 +950,6 @@ export function useChat() {
         body: JSON.stringify(
           chatMode.value === 'cot'
             ? { question: preparedMessage, context: null, session_id: currentChat.sessionId }
-            : chatMode.value === 'study'
-            ? { question: preparedMessage, subject: null, session_id: currentChat.sessionId }
-            : chatMode.value === 'career'
-            ? { question: preparedMessage, major: null, session_id: currentChat.sessionId }
             : { message: preparedMessage, context: null, session_id: currentChat.sessionId }
         )
       });
@@ -1084,11 +1080,12 @@ export function useChat() {
         }
       } else {
         // 에러 처리
-        if (currentChat.messages[messageIndex]) {
-          currentChat.messages[messageIndex].text = '응답을 받지 못했습니다. 다시 시도해주세요.';
-          currentChat.messages[messageIndex].isStreaming = false;
-          currentChat.messages[messageIndex].currentStep = undefined;
-          currentChat.messages[messageIndex].hasError = true;
+        const errorMsg = currentChat.messages[messageIndex] as ChatMessage | undefined;
+        if (errorMsg) {
+          errorMsg.text = '응답을 받지 못했습니다. 다시 시도해주세요.';
+          errorMsg.isStreaming = false;
+          errorMsg.currentStep = undefined;
+          errorMsg.hasError = true;
           isStreaming.value = false;
           saveChatHistory();
         }
@@ -1426,11 +1423,8 @@ export function useChat() {
     isLoading.value = true;
 
     const loadingMessageIndex = currentChat.messages.length;
-    const modeMessages = {
-      general: "일반 대화 처리 중...",
-      university: "대학생 전용 정보 검색 중...",
-      study: "학습 도우미 분석 중...",
-      career: "진로 상담 정보 수집 중...",
+    const modeMessages: Record<ChatMode, string> = {
+      unified: "답변을 생성하고 있습니다...",
       cot: "단계별 추론 시작...",
       rag: "을지대학교 정보 검색 중..."
     };
@@ -1537,11 +1531,8 @@ export function useChat() {
   }
 
   function getChatModeInfo() {
-    const modeInfo = {
-      general: { name: '일반 채팅', description: '범용 AI 대화' },
-      university: { name: '대학생 챗봇', description: '대학생 전용 어시스턴트' },
-      study: { name: '학습 도우미', description: '학습을 도와주는 AI 튜터' },
-      career: { name: '진로 상담', description: '진로 상담 전문 AI' },
+    const modeInfo: Record<ChatMode, { name: string; description: string }> = {
+      unified: { name: '통합 채팅', description: '범용 AI 대화' },
       cot: { name: '단계별 추론', description: 'Chain of Thought 방식' },
       rag: { name: '을지대 정보검색', description: '을지대학교 공식 자료 기반 정보 검색' }
     };
