@@ -1,5 +1,14 @@
 // 인증 관련 유틸리티 함수들
 
+export interface UserInfo {
+  id: number
+  name: string
+  email: string
+  nickname: string
+  is_pro: boolean
+  is_admin: boolean
+}
+
 export const getAccessToken = (): string | null => {
   return localStorage.getItem('access_token')
 }
@@ -16,6 +25,26 @@ export const isAuthenticated = (): boolean => {
   return !!getAccessToken()
 }
 
+// 사용자 정보 저장/조회
+export const getUserInfo = (): UserInfo | null => {
+  const data = localStorage.getItem('user_info')
+  return data ? JSON.parse(data) : null
+}
+
+export const setUserInfo = (user: UserInfo): void => {
+  localStorage.setItem('user_info', JSON.stringify(user))
+}
+
+export const removeUserInfo = (): void => {
+  localStorage.removeItem('user_info')
+}
+
+// 관리자 여부 체크
+export const isAdmin = (): boolean => {
+  const user = getUserInfo()
+  return user?.is_admin === true
+}
+
 // API 요청 시 사용할 헤더
 export const getAuthHeaders = (): HeadersInit => {
   const token = getAccessToken()
@@ -30,6 +59,7 @@ export const getAuthHeaders = (): HeadersInit => {
 // 토큰 만료 등으로 인한 로그아웃
 export const logout = (): void => {
   removeAccessToken()
+  removeUserInfo()
   // 필요하면 여기서 리프레시 토큰도 삭제 (쿠키)
   window.location.href = '/login'
 }

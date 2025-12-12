@@ -87,7 +87,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import ToastNotification from '../common/ToastNotification.vue'
 import HeaderSection from '../main/HeaderSection.vue'
-import { setAccessToken } from '../../utils/auth'
+import { setAccessToken, setUserInfo } from '../../utils/auth'
 
 const router = useRouter()
 
@@ -158,6 +158,23 @@ const handleLogin = async () => {
 
     // 액세스 토큰을 localStorage에 저장
     setAccessToken(result.access_token)
+
+    // 사용자 정보 조회 및 저장
+    try {
+      const meResponse = await fetch(`${API_BASE_URL}/member/me`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${result.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+      if (meResponse.ok) {
+        const userInfo = await meResponse.json()
+        setUserInfo(userInfo)
+      }
+    } catch (e) {
+      console.error('사용자 정보 조회 실패:', e)
+    }
 
     // redirect 쿼리 파라미터가 있으면 그 경로로, 없으면 메인 페이지로 이동
     const redirect = (router.currentRoute.value.query.redirect as string) || '/'

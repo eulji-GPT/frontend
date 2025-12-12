@@ -53,6 +53,9 @@ const footerRef = ref<HTMLElement>()
 const scrollProgress = ref(0)
 const showFloatingActions = ref(false)
 
+// IntersectionObserver 인스턴스 (cleanup을 위해 컴포넌트 스코프에 저장)
+let intersectionObserver: IntersectionObserver | null = null
+
 const getParticleStyle = (_index: number) => ({
   left: `${Math.random() * 100}%`,
   top: `${Math.random() * 100}%`,
@@ -127,7 +130,7 @@ const setupIntersectionObserver = () => {
     rootMargin: '0px 0px -50px 0px'
   }
 
-  const observer = new IntersectionObserver((entries) => {
+  intersectionObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         entry.target.classList.add('animate-in')
@@ -138,7 +141,7 @@ const setupIntersectionObserver = () => {
   const sections = [heroRef, infoRef, featuresRef, recruitmentRef, faqRef, footerRef]
   sections.forEach(ref => {
     if (ref.value) {
-      observer.observe(ref.value)
+      intersectionObserver?.observe(ref.value)
     }
   })
 }
@@ -153,6 +156,12 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
+
+  // IntersectionObserver cleanup (메모리 누수 방지)
+  if (intersectionObserver) {
+    intersectionObserver.disconnect()
+    intersectionObserver = null
+  }
 })
 </script>
 

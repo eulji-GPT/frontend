@@ -48,32 +48,39 @@
             </div>
             
             <!-- 로그인 폼 -->
-            <div v-if="showLoginForm" class="login-form">
+            <form v-if="showLoginForm" class="login-form" @submit.prevent="submitLogin">
               <div class="form-group">
-                <input 
-                  v-model="loginForm.email" 
-                  type="email" 
+                <label for="login-email" class="visually-hidden">이메일</label>
+                <input
+                  id="login-email"
+                  v-model="loginForm.email"
+                  type="email"
                   placeholder="이메일 주소"
                   class="form-input"
+                  autocomplete="email"
+                  required
                 />
               </div>
               <div class="form-group">
-                <input 
-                  v-model="loginForm.password" 
-                  type="password" 
+                <label for="login-password" class="visually-hidden">비밀번호</label>
+                <input
+                  id="login-password"
+                  v-model="loginForm.password"
+                  type="password"
                   placeholder="비밀번호"
                   class="form-input"
-                  @keyup.enter="submitLogin"
+                  autocomplete="current-password"
+                  required
                 />
               </div>
-              <button 
-                @click="submitLogin" 
+              <button
+                type="submit"
                 :disabled="isLoading"
                 class="login-submit-btn"
               >
                 {{ isLoading ? '로그인 중...' : '로그인' }}
               </button>
-            </div>
+            </form>
           </div>
         </div>
       </div>
@@ -667,5 +674,18 @@ onMounted(() => {
   background-color: #9ca3af;
   cursor: not-allowed;
   transform: none;
+}
+
+/* 접근성을 위한 시각적으로 숨김 클래스 */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 </style>

@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { isAuthenticated } from '../utils/auth'
+import { isAuthenticated, isAdmin } from '../utils/auth'
 
 const routes = [
   {
@@ -77,6 +77,17 @@ const routes = [
     path: '/kakao/callback',
     component: () => import('../views/KakaoCallbackView.vue')
   },
+  {
+    path: '/admin',
+    component: () => import('../views/AdminView.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  // 404 페이지 - 모든 정의되지 않은 경로를 처리
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: () => import('../views/NotFoundView.vue')
+  },
 ]
 
 const router = createRouter({
@@ -88,17 +99,25 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   // requiresAuth 메타 필드가 true인 경로 체크
   if (to.meta.requiresAuth) {
-    if (isAuthenticated()) {
-      // 인증되어 있으면 진행
-      next()
-    } else {
+    if (!isAuthenticated()) {
       // 인증되지 않았으면 로그인 페이지로 리다이렉트
       console.log('인증되지 않은 사용자 - 로그인 페이지로 이동')
       next({
         path: '/login',
         query: { redirect: to.fullPath } // 로그인 후 돌아갈 경로 저장
       })
+      return
     }
+
+    // requiresAdmin 메타 필드가 true인 경로 체크
+    if (to.meta.requiresAdmin && !isAdmin()) {
+      console.log('관리자 권한이 없는 사용자 - 메인 페이지로 이동')
+      next({ path: '/' })
+      return
+    }
+
+    // 인증되어 있으면 진행
+    next()
   } else {
     // 인증이 필요없는 경로는 그냥 진행
     next()

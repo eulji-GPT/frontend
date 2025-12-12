@@ -310,3 +310,106 @@ export const fortuneAPI = {
     });
   },
 };
+
+// 관리자 API 타입
+export interface UserListItem {
+  id: number;
+  name: string;
+  email: string;
+  nickname: string;
+  is_pro: boolean;
+  is_admin: boolean;
+  oauth_provider: string | null;
+  created_at: string;
+}
+
+export interface UserDetail {
+  id: number;
+  name: string;
+  email: string;
+  nickname: string;
+  phone_number: string | null;
+  birth_date: string | null;
+  is_pro: boolean;
+  is_admin: boolean;
+  verified_email: string | null;
+  oauth_provider: string | null;
+  oauth_id: string | null;
+  profile_image_url: string | null;
+  created_at: string;
+  updated_at: string | null;
+}
+
+export interface PaginatedResponse {
+  items: UserListItem[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+}
+
+export interface PlatformStats {
+  total_users: number;
+  pro_users: number;
+  admin_users: number;
+  kakao_users: number;
+  today_signups: number;
+}
+
+// 관리자 API
+export const adminAPI = {
+  // 회원 목록 조회
+  getUsers: async (params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    filter_pro?: boolean;
+    filter_admin?: boolean;
+  } = {}): Promise<PaginatedResponse> => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.search) queryParams.append('search', params.search);
+    if (params.filter_pro !== undefined) queryParams.append('filter_pro', params.filter_pro.toString());
+    if (params.filter_admin !== undefined) queryParams.append('filter_admin', params.filter_admin.toString());
+
+    const queryString = queryParams.toString();
+    const endpoint = `/admin/users${queryString ? `?${queryString}` : ''}`;
+
+    return apiRequest<PaginatedResponse>(endpoint, {
+      method: 'GET',
+    });
+  },
+
+  // 회원 상세 정보 조회
+  getUserDetail: async (userId: number): Promise<UserDetail> => {
+    return apiRequest<UserDetail>(`/admin/users/${userId}`, {
+      method: 'GET',
+    });
+  },
+
+  // 회원 권한 수정
+  updateUser: async (userId: number, data: {
+    is_pro?: boolean;
+    is_admin?: boolean;
+  }): Promise<UserDetail> => {
+    return apiRequest<UserDetail>(`/admin/users/${userId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  // 회원 삭제
+  deleteUser: async (userId: number): Promise<{ message: string }> => {
+    return apiRequest<{ message: string }>(`/admin/users/${userId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // 플랫폼 통계 조회
+  getStats: async (): Promise<PlatformStats> => {
+    return apiRequest<PlatformStats>('/admin/stats', {
+      method: 'GET',
+    });
+  },
+};

@@ -160,7 +160,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 
 const faqContainer = ref<HTMLElement>()
 const notesSection = ref<HTMLElement>()
@@ -172,6 +172,9 @@ const faqListRef = ref<HTMLElement>()
 const faqCards = ref<HTMLElement[]>([])
 
 const expandedItems = ref<number[]>([])
+
+// IntersectionObserver 인스턴스 (cleanup을 위해 컴포넌트 스코프에 저장)
+let scrollObserver: IntersectionObserver | null = null
 
 // Animated title characters
 const notesTitleChars = '지원 시 참고사항'.split('')
@@ -231,22 +234,22 @@ const onCardLeave = (index: number) => {
 }
 
 const setupScrollAnimations = () => {
-  const observer = new IntersectionObserver((entries) => {
+  scrollObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         entry.target.classList.add('animate-in')
       }
     })
   }, { threshold: 0.1 })
-  
+
   // Observe elements for scroll animations
-  if (notesSection.value) observer.observe(notesSection.value)
-  if (faqSection.value) observer.observe(faqSection.value)
-  
+  if (notesSection.value) scrollObserver.observe(notesSection.value)
+  if (faqSection.value) scrollObserver.observe(faqSection.value)
+
   faqCards.value.forEach((card, index) => {
     if (card) {
       card.style.animationDelay = `${index * 0.1}s`
-      observer.observe(card)
+      scrollObserver?.observe(card)
     }
   })
 }
@@ -255,6 +258,14 @@ onMounted(() => {
   nextTick(() => {
     setupScrollAnimations()
   })
+})
+
+onUnmounted(() => {
+  // IntersectionObserver cleanup (메모리 누수 방지)
+  if (scrollObserver) {
+    scrollObserver.disconnect()
+    scrollObserver = null
+  }
 })
 </script>
 

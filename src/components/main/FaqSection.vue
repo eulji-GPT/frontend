@@ -2,7 +2,18 @@
   <div class="frame" id="faq">
     <div class="text-wrapper-4">자주 묻는 질문</div>
     <div class="div-2">
-      <div v-if="faqList.length === 0" class="faq-empty">자주 묻는 질문이 없습니다.</div>
+      <!-- 로딩 상태 -->
+      <div v-if="isLoading" class="faq-loading">
+        <SkeletonLoader :count="4" height="70px" gap="12px" :showSubline="false" />
+      </div>
+      <!-- 에러 상태 -->
+      <div v-else-if="error" class="faq-error">
+        <p class="error-message">{{ error }}</p>
+        <button class="retry-button" @click="fetchFaqData">다시 시도</button>
+      </div>
+      <!-- 빈 상태 -->
+      <div v-else-if="faqList.length === 0" class="faq-empty">자주 묻는 질문이 없습니다.</div>
+      <!-- FAQ 목록 -->
       <div v-for="(faq, idx) in faqList" :key="idx" class="faq-row">
         <div class="faq-question-row" @click="toggleFaq(idx)">
           <span class="faq-q-label">Q.</span>
@@ -27,6 +38,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, nextTick, type ComponentPublicInstance } from 'vue'
+import SkeletonLoader from '../common/SkeletonLoader.vue'
 
 interface FaqItem {
   q: string;
@@ -37,6 +49,8 @@ const faqList = ref<FaqItem[]>([])
 const openFaqIdx = ref<number|null>(null)
 const answerHeights = ref<Record<number, number>>({})
 const answerRefs = ref<Record<number, HTMLElement>>({})
+const isLoading = ref(true)
+const error = ref<string | null>(null)
 
 // API Base URL 설정
 const getApiBaseUrl = () => {
@@ -80,7 +94,10 @@ async function toggleFaq(idx: number) {
   }
 }
 
-onMounted(async () => {
+const fetchFaqData = async () => {
+  isLoading.value = true
+  error.value = null
+
   try {
     // 백엔드 API에서 FAQ 데이터 가져오기
     const res = await fetch(`${API_BASE_URL}/faq`)
@@ -111,11 +128,20 @@ onMounted(async () => {
             answerHeights.value[idx] = answerEl.scrollHeight + 48
           }
         })
+      } else {
+        error.value = 'FAQ 데이터를 불러올 수 없습니다.'
       }
     } catch {
+      error.value = 'FAQ 데이터를 불러올 수 없습니다.'
       faqList.value = []
     }
+  } finally {
+    isLoading.value = false
   }
+}
+
+onMounted(() => {
+  fetchFaqData()
 })
 </script>
 
@@ -282,6 +308,39 @@ onMounted(async () => {
   font-weight: 400;
   padding: 2rem 0;
   text-align: center;
+}
+
+.faq-loading {
+  width: 100%;
+  padding: 1rem 0;
+}
+
+.faq-error {
+  width: 100%;
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.faq-error .error-message {
+  color: #dc2626;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+.retry-button {
+  padding: 10px 24px;
+  background-color: #02478A;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.retry-button:hover {
+  background-color: #1e40af;
 }
 
 /* 반응형 디자인 */

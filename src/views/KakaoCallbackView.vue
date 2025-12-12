@@ -10,6 +10,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { setUserInfo } from '../utils/auth';
 
 const router = useRouter();
 
@@ -66,6 +67,23 @@ onMounted(async () => {
     if (data.status === 'success' && data.access_token) {
       localStorage.setItem('access_token', data.access_token);
       localStorage.setItem('user_id', data.user_id);
+
+      // 사용자 정보 조회 및 저장
+      try {
+        const meResponse = await fetch(`${API_BASE_URL}/member/me`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${data.access_token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        if (meResponse.ok) {
+          const userInfo = await meResponse.json();
+          setUserInfo(userInfo);
+        }
+      } catch (e) {
+        console.error('사용자 정보 조회 실패:', e);
+      }
 
       alert('카카오 로그인에 성공했습니다!');
       router.push('/chat');
