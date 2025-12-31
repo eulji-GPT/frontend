@@ -158,7 +158,7 @@
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                 <path d="M16.667 5L7.5 14.167L3.333 10" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
-              <span>기존 이메일 계정은 삭제됩니다</span>
+              <span>카카오 + 이메일 로그인 모두 가능해집니다</span>
             </div>
           </div>
 
