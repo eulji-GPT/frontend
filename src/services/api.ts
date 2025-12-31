@@ -5,7 +5,7 @@ const getApiBaseUrl = () => {
 
   // Railway 내부 URL 감지 및 외부 URL로 대체
   if (envUrl && envUrl.includes('.railway.internal')) {
-    console.warn('Railway internal URL detected, using public URL instead');
+    
     return 'https://fastapi-backend-production-2cd0.up.railway.app';
   }
 

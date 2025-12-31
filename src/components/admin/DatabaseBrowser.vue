@@ -255,7 +255,7 @@ const formatCellValue = (value: unknown): string => {
   return String(value)
 }
 
-const isProtectedRow = (row: Record<string, unknown>): boolean => {
+const isProtectedRow = (_row: Record<string, unknown>): boolean => {
   // member 테이블의 현재 사용자는 삭제 불가
   // (실제 체크는 백엔드에서 하지만 UI에서도 표시)
   return false
