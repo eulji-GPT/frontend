@@ -31,19 +31,6 @@
 
       <!-- Button Container -->
       <div class="button-row">
-        <!-- 파일 업로드 버튼 (임시 비활성화)
-        <button class="input-state-button" @click="triggerImageUpload" title="이미지 업로드">
-          <img :src="InputStateButtonExpand" alt="파일 업로드" class="button-icon expand-icon" />
-          <input
-            ref="imageInput"
-            type="file"
-            accept="image/*,.pdf"
-            @change="handleFileUpload"
-            style="display: none"
-            multiple
-          />
-        </button>
-        -->
         <button
           class="input-state-button-send"
           @click="isStreaming ? onStop() : onSend()"
