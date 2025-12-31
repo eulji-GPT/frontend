@@ -123,6 +123,109 @@
       </div>
     </div>
 
+    <!-- Merge Account Modal -->
+    <div v-if="showMergeModal" class="modal-overlay" @click.self="closeMergeModal">
+      <div class="merge-modal">
+        <!-- Step 1: Confirm Merge -->
+        <div v-if="mergeStep === 1" class="merge-content">
+          <div class="merge-icon">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <circle cx="24" cy="24" r="24" fill="#FEF3C7"/>
+              <path d="M24 16V26M24 32H24.02" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+
+          <h2 class="merge-title">이미 가입된 이메일입니다</h2>
+          <p class="merge-subtitle">
+            <strong>{{ email }}</strong> 로 가입된 계정이 있습니다.<br>
+            현재 카카오 계정과 병합하시겠습니까?
+          </p>
+
+          <div class="merge-info">
+            <div class="merge-info-item">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M16.667 5L7.5 14.167L3.333 10" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span>기존 채팅 기록이 현재 계정으로 이전됩니다</span>
+            </div>
+            <div class="merge-info-item">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M16.667 5L7.5 14.167L3.333 10" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span>Pro 라이선스가 현재 계정에 적용됩니다</span>
+            </div>
+            <div class="merge-info-item">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M16.667 5L7.5 14.167L3.333 10" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span>기존 이메일 계정은 삭제됩니다</span>
+            </div>
+          </div>
+
+          <div v-if="mergeErrorMessage" class="merge-error">
+            {{ mergeErrorMessage }}
+          </div>
+
+          <div class="merge-buttons">
+            <button class="merge-cancel-btn" @click="closeMergeModal">
+              취소
+            </button>
+            <button
+              class="merge-confirm-btn"
+              :disabled="isLoading"
+              @click="sendMergeCode"
+            >
+              {{ isLoading ? '처리 중...' : '계정 병합하기' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 2: Verification Code -->
+        <div v-if="mergeStep === 2" class="merge-content">
+          <h2 class="merge-title">이메일 인증</h2>
+          <p class="merge-subtitle">
+            <strong>{{ email }}</strong>로 전송된<br>
+            6자리 인증번호를 입력해주세요.
+          </p>
+
+          <div class="merge-code-wrapper">
+            <input
+              v-model="mergeVerificationCode"
+              type="text"
+              class="merge-code-input"
+              :class="{ error: mergeErrorMessage }"
+              placeholder="인증번호 6자리"
+              maxlength="6"
+              @input="validateMergeCode"
+            />
+            <div class="merge-timer">{{ formattedMergeTime }}</div>
+          </div>
+
+          <div v-if="mergeErrorMessage" class="merge-error">
+            {{ mergeErrorMessage }}
+          </div>
+
+          <div class="merge-buttons">
+            <button class="merge-cancel-btn" @click="closeMergeModal">
+              취소
+            </button>
+            <button
+              class="merge-confirm-btn"
+              :class="{ active: isMergeCodeValid }"
+              :disabled="!isMergeCodeValid || isLoading"
+              @click="executeMerge"
+            >
+              {{ isLoading ? '처리 중...' : '병합 완료' }}
+            </button>
+          </div>
+
+          <button class="merge-resend-link" :disabled="isLoading" @click="resendMergeCode">
+            {{ isLoading ? '전송 중...' : '인증번호 다시 받기' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Footer -->
     <div class="footer-wrapper">
       <div class="simple-footer">
@@ -174,10 +277,25 @@ const isLoading = ref(false)
 const timeLeft = ref(1200) // 20 minutes in seconds
 let timerInterval: number | null = null
 
+// Merge Account State
+const showMergeModal = ref(false)
+const mergeStep = ref(1) // 1: 확인, 2: 인증번호 입력
+const mergeVerificationCode = ref('')
+const isMergeCodeValid = ref(false)
+const mergeErrorMessage = ref('')
+const mergeTimeLeft = ref(1200)
+let mergeTimerInterval: number | null = null
+
 // Computed
 const formattedTime = computed(() => {
   const minutes = Math.floor(timeLeft.value / 60)
   const seconds = timeLeft.value % 60
+  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+})
+
+const formattedMergeTime = computed(() => {
+  const minutes = Math.floor(mergeTimeLeft.value / 60)
+  const seconds = mergeTimeLeft.value % 60
   return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
 })
 
@@ -230,6 +348,10 @@ const sendVerificationCode = async () => {
       setTimeout(() => {
         showToast.value = false
       }, 3000)
+    } else if (response.status === 409 && data.can_merge) {
+      // 409 Conflict: 기존 계정이 있어서 병합 가능
+      showMergeModal.value = true
+      mergeStep.value = 1
     } else {
       errorMessage.value = data.detail || '인증번호 전송에 실패했습니다.'
     }
@@ -380,9 +502,152 @@ const stopTimer = () => {
   }
 }
 
+// ========== Merge Account Functions ==========
+
+const validateMergeCode = () => {
+  isMergeCodeValid.value = /^\d{6}$/.test(mergeVerificationCode.value)
+  if (mergeErrorMessage.value) mergeErrorMessage.value = ''
+}
+
+const startMergeTimer = () => {
+  mergeTimerInterval = window.setInterval(() => {
+    if (mergeTimeLeft.value > 0) {
+      mergeTimeLeft.value--
+    } else {
+      stopMergeTimer()
+      mergeErrorMessage.value = '인증 시간이 만료되었습니다. 인증번호를 다시 받아주세요.'
+    }
+  }, 1000)
+}
+
+const stopMergeTimer = () => {
+  if (mergeTimerInterval) {
+    clearInterval(mergeTimerInterval)
+    mergeTimerInterval = null
+  }
+}
+
+const closeMergeModal = () => {
+  showMergeModal.value = false
+  mergeStep.value = 1
+  mergeVerificationCode.value = ''
+  mergeErrorMessage.value = ''
+  stopMergeTimer()
+}
+
+const sendMergeCode = async () => {
+  if (isLoading.value) return
+
+  isLoading.value = true
+  mergeErrorMessage.value = ''
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/member/send-merge-code`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ eulji_email: email.value })
+    })
+
+    const data = await response.json()
+
+    if (response.ok) {
+      mergeStep.value = 2
+      mergeTimeLeft.value = 1200
+      startMergeTimer()
+      showToast.value = true
+      setTimeout(() => {
+        showToast.value = false
+      }, 3000)
+    } else {
+      mergeErrorMessage.value = data.detail || '인증번호 전송에 실패했습니다.'
+    }
+  } catch (error) {
+    console.error('Error sending merge code:', error)
+    mergeErrorMessage.value = '네트워크 오류가 발생했습니다.'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const executeMerge = async () => {
+  if (!isMergeCodeValid.value || isLoading.value) return
+
+  isLoading.value = true
+  mergeErrorMessage.value = ''
+
+  try {
+    const codeAsInt = parseInt(mergeVerificationCode.value, 10)
+
+    const response = await fetch(`${API_BASE_URL}/member/merge-account`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        eulji_email: email.value,
+        code: codeAsInt
+      })
+    })
+
+    const data = await response.json()
+
+    if (response.ok) {
+      console.log('[DEBUG] 계정 병합 성공!')
+      stopMergeTimer()
+      closeMergeModal()
+
+      // 사용자 정보 갱신
+      await refreshUserInfo()
+
+      // 성공 단계로 이동
+      currentStep.value = 3
+    } else {
+      mergeErrorMessage.value = data.detail || '계정 병합에 실패했습니다.'
+    }
+  } catch (error) {
+    console.error('Error merging account:', error)
+    mergeErrorMessage.value = '네트워크 오류가 발생했습니다.'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const resendMergeCode = async () => {
+  if (isLoading.value) return
+
+  isLoading.value = true
+  mergeErrorMessage.value = ''
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/member/send-merge-code`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ eulji_email: email.value })
+    })
+
+    const data = await response.json()
+
+    if (response.ok) {
+      mergeTimeLeft.value = 1200
+      if (!mergeTimerInterval) startMergeTimer()
+
+      showToast.value = true
+      setTimeout(() => {
+        showToast.value = false
+      }, 3000)
+    } else {
+      mergeErrorMessage.value = data.detail || '인증번호 재전송에 실패했습니다.'
+    }
+  } catch (error) {
+    console.error('Error resending merge code:', error)
+    mergeErrorMessage.value = '네트워크 오류가 발생했습니다.'
+  } finally {
+    isLoading.value = false
+  }
+}
+
 // Cleanup
 onUnmounted(() => {
   stopTimer()
+  stopMergeTimer()
 })
 </script>
 
@@ -803,6 +1068,253 @@ onUnmounted(() => {
   .home-btn {
     width: 100%;
     font-size: 16px;
+  }
+}
+
+/* ========== Merge Account Modal ========== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.merge-modal {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  max-width: 450px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  animation: modalSlideUp 0.3s ease;
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.merge-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.merge-icon {
+  margin-bottom: 20px;
+}
+
+.merge-title {
+  font-family: 'Pretendard', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 12px 0;
+}
+
+.merge-subtitle {
+  font-family: 'Pretendard', sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  color: #6B7280;
+  line-height: 1.6;
+  margin: 0 0 24px 0;
+}
+
+.merge-subtitle strong {
+  color: #02478A;
+  font-weight: 600;
+}
+
+.merge-info {
+  width: 100%;
+  background: #F9FAFB;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+
+.merge-info-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  font-family: 'Pretendard', sans-serif;
+  font-size: 14px;
+  color: #374151;
+  text-align: left;
+}
+
+.merge-info-item svg {
+  flex-shrink: 0;
+}
+
+.merge-error {
+  color: #EF4444;
+  font-family: 'Pretendard', sans-serif;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.merge-buttons {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.merge-cancel-btn {
+  flex: 1;
+  padding: 14px 20px;
+  font-family: 'Pretendard', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #6B7280;
+  background: #F3F4F6;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.merge-cancel-btn:hover {
+  background: #E5E7EB;
+}
+
+.merge-confirm-btn {
+  flex: 1;
+  padding: 14px 20px;
+  font-family: 'Pretendard', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  background: #02478A;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.merge-confirm-btn:hover {
+  background: #013869;
+}
+
+.merge-confirm-btn:disabled {
+  background: #9CA3AF;
+  cursor: not-allowed;
+}
+
+.merge-confirm-btn.active {
+  background: #02478A;
+}
+
+.merge-code-wrapper {
+  position: relative;
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.merge-code-input {
+  width: 100%;
+  height: 50px;
+  padding: 12px 80px 12px 20px;
+  font-family: 'Pretendard', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  border: 1.5px solid #D1D5DB;
+  border-radius: 12px;
+  outline: none;
+  transition: all 0.2s;
+  box-sizing: border-box;
+  text-align: center;
+  letter-spacing: 8px;
+}
+
+.merge-code-input:focus {
+  border-color: #02478A;
+}
+
+.merge-code-input.error {
+  border-color: #EF4444;
+}
+
+.merge-code-input::placeholder {
+  letter-spacing: 0;
+  color: #9CA3AF;
+}
+
+.merge-timer {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Pretendard', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #EF4444;
+}
+
+.merge-resend-link {
+  margin-top: 16px;
+  background: none;
+  border: none;
+  color: #6B7280;
+  font-family: 'Pretendard', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.merge-resend-link:hover {
+  color: #4B5563;
+  text-decoration: underline;
+}
+
+.merge-resend-link:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Merge Modal Responsive */
+@media (max-width: 480px) {
+  .merge-modal {
+    padding: 30px 24px;
+    margin: 16px;
+  }
+
+  .merge-title {
+    font-size: 20px;
+  }
+
+  .merge-subtitle {
+    font-size: 14px;
+  }
+
+  .merge-info-item {
+    font-size: 13px;
+  }
+
+  .merge-buttons {
+    flex-direction: column;
+  }
+
+  .merge-cancel-btn,
+  .merge-confirm-btn {
+    font-size: 15px;
   }
 }
 </style>
