@@ -8,6 +8,7 @@
       />
       <main class="admin-main">
         <UserManagement v-if="activeMenu === 'users'" />
+        <DatabaseBrowser v-else-if="activeMenu === 'database'" />
         <div v-else-if="activeMenu === 'dashboard'" class="dashboard-content">
           <h2 class="section-title">대시보드</h2>
           <div class="stats-grid">
@@ -54,6 +55,7 @@ import { useRouter } from 'vue-router'
 import AdminHeader from '../components/admin/AdminHeader.vue'
 import AdminSidebar from '../components/admin/AdminSidebar.vue'
 import UserManagement from '../components/admin/UserManagement.vue'
+import DatabaseBrowser from '../components/admin/DatabaseBrowser.vue'
 import StatsCard from '../components/admin/StatsCard.vue'
 import { adminAPI, type PlatformStats } from '../services/api'
 import { removeAccessToken, removeUserInfo } from '../utils/auth'

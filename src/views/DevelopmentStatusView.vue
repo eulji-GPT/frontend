@@ -32,16 +32,6 @@
       <div class="progress-list">
         <div class="progress-item">
           <div class="progress-info">
-            <span class="feature-name">사주 ∙ 운세 챗봇</span>
-            <span class="progress-percentage">100%</span>
-          </div>
-          <div class="progress-bar">
-            <div class="progress-fill completed" :style="{width: '100%'}"></div>
-          </div>
-          <span class="progress-status completed">완료</span>
-        </div>
-        <div class="progress-item">
-          <div class="progress-info">
             <span class="feature-name">AI 챗봇 기본 기능</span>
             <span class="progress-percentage">100%</span>
           </div>
@@ -97,16 +87,6 @@
             <div class="action-arrow">→</div>
           </div>
         </div>
-        <div class="feature-card available" @click="goToFortune">
-          <div class="feature-status-badge available">이용 가능</div>
-          <div class="feature-icon">🔮</div>
-          <h3 class="feature-title">사주 ∙ 운세</h3>
-          <p class="feature-description">오늘의 운세를 확인해보세요</p>
-          <div class="feature-action">
-            <span class="action-text">바로 사용하기</span>
-            <div class="action-arrow">→</div>
-          </div>
-        </div>
         <div class="feature-card coming-soon">
           <div class="feature-status-badge coming-soon">준비 중</div>
           <div class="feature-icon">🏫</div>
@@ -144,10 +124,6 @@ const router = useRouter();
 
 const goToChat = () => {
   router.push('/');
-};
-
-const goToFortune = () => {
-  router.push('/fortune');
 };
 
 const goToCrew = () => {

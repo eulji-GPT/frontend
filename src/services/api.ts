@@ -207,126 +207,6 @@ export const healthAPI = {
   },
 };
 
-// 운세 API (AI-RAG 서버)
-// Railway 내부 URL(.railway.internal)은 브라우저에서 접근 불가하므로 외부 URL로 대체
-const getFortuneApiBaseUrl = () => {
-  const envUrl = import.meta.env.VITE_GEMINI_FASTAPI_URL;
-
-  // Railway 내부 URL 감지 및 외부 URL로 대체
-  if (envUrl && envUrl.includes('.railway.internal')) {
-    console.warn('Railway internal URL detected for AI-RAG, using public URL instead');
-    return 'https://ai-rag-production.up.railway.app';
-  }
-
-  // 프로덕션 환경에서 /gemini-api 프록시 경로 사용 시 외부 URL로 대체
-  if (!envUrl || envUrl === '/gemini-api') {
-    // 브라우저에서 Railway 호스트인지 확인
-    if (typeof window !== 'undefined' && window.location.hostname.includes('railway.app')) {
-      return 'https://ai-rag-production.up.railway.app';
-    }
-  }
-
-  return envUrl || 'http://localhost:8001';
-};
-
-const FORTUNE_API_BASE_URL = getFortuneApiBaseUrl();
-
-async function fortuneApiRequest<T>(
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<T> {
-  const url = `${FORTUNE_API_BASE_URL}${endpoint}`;
-
-  const defaultHeaders: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-
-  const config: RequestInit = {
-    ...options,
-    headers: {
-      ...defaultHeaders,
-      ...options.headers,
-    },
-  };
-
-  try {
-    const response = await fetch(url, config);
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Fortune API request failed:', error);
-    throw error;
-  }
-}
-
-export const fortuneAPI = {
-  // 애정운 조회
-  getLoveFortune: async (data: {
-    name: string;
-    birth_date: string;
-    gender: string;
-    birth_slot?: string;
-  }) => {
-    return fortuneApiRequest<{
-      fortune_type: string;
-      result: string;
-      processing_time: number;
-    }>('/fortune/love', {
-      method: 'POST',
-      body: JSON.stringify({
-        ...data,
-        birth_slot: data.birth_slot || '모름'
-      }),
-    });
-  },
-
-  // 성공운 조회
-  getSuccessFortune: async (data: {
-    name: string;
-    birth_date: string;
-    gender: string;
-    birth_slot?: string;
-  }) => {
-    return fortuneApiRequest<{
-      fortune_type: string;
-      title: string;
-      description: string;
-      processing_time: number;
-    }>('/fortune/success', {
-      method: 'POST',
-      body: JSON.stringify({
-        ...data,
-        birth_slot: data.birth_slot || '모름'
-      }),
-    });
-  },
-
-  // 재물운 조회
-  getWealthFortune: async (data: {
-    name: string;
-    birth_date: string;
-    gender: string;
-    birth_slot?: string;
-  }) => {
-    return fortuneApiRequest<{
-      fortune_type: string;
-      result: string;
-      processing_time: number;
-    }>('/fortune/wealth', {
-      method: 'POST',
-      body: JSON.stringify({
-        ...data,
-        birth_slot: data.birth_slot || '모름'
-      }),
-    });
-  },
-};
-
 // 관리자 API 타입
 export interface UserListItem {
   id: number;
@@ -370,6 +250,34 @@ export interface PlatformStats {
   admin_users: number;
   kakao_users: number;
   today_signups: number;
+}
+
+// DB 브라우저 관련 타입
+export interface TableInfo {
+  name: string;
+  display_name: string;
+  row_count: number;
+}
+
+export interface TableColumn {
+  name: string;
+  type: string;
+  nullable: boolean;
+  primary_key: boolean;
+}
+
+export interface TableDataResponse {
+  table_name: string;
+  columns: TableColumn[];
+  rows: Record<string, unknown>[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+}
+
+export interface TablesListResponse {
+  tables: TableInfo[];
 }
 
 // 관리자 API
@@ -426,6 +334,39 @@ export const adminAPI = {
   getStats: async (): Promise<PlatformStats> => {
     return apiRequest<PlatformStats>('/admin/stats', {
       method: 'GET',
+    });
+  },
+
+  // DB 브라우저 - 테이블 목록 조회
+  getTables: async (): Promise<TablesListResponse> => {
+    return apiRequest<TablesListResponse>('/admin/db/tables', {
+      method: 'GET',
+    });
+  },
+
+  // DB 브라우저 - 테이블 데이터 조회
+  getTableData: async (tableName: string, params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+  } = {}): Promise<TableDataResponse> => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.search) queryParams.append('search', params.search);
+
+    const queryString = queryParams.toString();
+    const endpoint = `/admin/db/tables/${tableName}${queryString ? `?${queryString}` : ''}`;
+
+    return apiRequest<TableDataResponse>(endpoint, {
+      method: 'GET',
+    });
+  },
+
+  // DB 브라우저 - 레코드 삭제
+  deleteTableRow: async (tableName: string, rowId: number): Promise<{ message: string }> => {
+    return apiRequest<{ message: string }>(`/admin/db/tables/${tableName}/${rowId}`, {
+      method: 'DELETE',
     });
   },
 };

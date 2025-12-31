@@ -58,7 +58,7 @@ No Vuex/Pinia - uses Vue 3 Composition API with reactive refs:
 
 ### Routing Structure
 
-- `/` - Main landing page with fortune popup
+- `/` - Main landing page
 - `/login` - Login page
 - `/signup*` - Multi-step signup flow (email → agreement → password → form → complete)
 - `/chat` - Main chat interface with mode selector
@@ -89,7 +89,6 @@ Each mode calls different backend endpoints with specific request formats:
 - `chatAPI`: Chat history CRUD operations
 - `classroomAPI`: Classroom reservation system
 - `cafeteriaAPI`: Cafeteria congestion monitoring
-- `fortuneAPI`: Fortune telling service (separate backend)
 
 ### Component Structure
 
@@ -97,7 +96,6 @@ Each mode calls different backend endpoints with specific request formats:
 - `components/login/` - Multi-step signup/login flow
 - `components/main/` - Landing page sections
 - `components/common/` - Reusable components (modals, notifications, footer)
-- `components/fortune/` - Fortune telling feature
 - `components/crew/` - Recruitment/team page sections
 
 ### Proxy Configuration

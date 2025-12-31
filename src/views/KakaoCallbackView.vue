@@ -38,21 +38,35 @@ const getApiBaseUrl = () => {
 const API_BASE_URL = getApiBaseUrl();
 
 onMounted(async () => {
+  // 연동 요청 여부를 try 블록 밖에서 선언 (catch에서도 접근 가능하도록)
+  let isLinkingRequest = false;
+
   try {
-    // URL에서 인가 코드 추출
+    // URL에서 인가 코드와 state 추출
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
+    const state = urlParams.get('state');
 
     if (!code) {
       throw new Error('인가 코드를 받지 못했습니다.');
     }
 
     console.log('카카오 인가 코드:', code);
+    console.log('카카오 state:', state);
 
-    // 백엔드로 인가 코드 전송
-    const response = await fetch(`${API_BASE_URL}/member/kakao/callback?code=${code}`, {
+    // 계정 연동 요청인 경우 (state가 'link:'로 시작)
+    isLinkingRequest = !!(state && state.startsWith('link:'));
+
+    // 백엔드로 인가 코드 전송 (state 포함)
+    let callbackUrl = `${API_BASE_URL}/member/kakao/callback?code=${code}`;
+    if (state) {
+      callbackUrl += `&state=${encodeURIComponent(state)}`;
+    }
+
+    const response = await fetch(callbackUrl, {
       method: 'GET',
       credentials: 'include', // 쿠키 포함
+      redirect: 'follow', // 리다이렉트 따라가기
     });
 
     if (!response.ok) {
@@ -61,7 +75,14 @@ onMounted(async () => {
     }
 
     const data = await response.json();
-    console.log('카카오 로그인 응답:', data);
+    console.log('카카오 응답:', data);
+
+    // 카카오 계정 연동 성공
+    if (data.status === 'link_success') {
+      alert('카카오 계정 연동이 완료되었습니다!');
+      router.push('/chat?kakao_link=success');
+      return;
+    }
 
     // 로그인 성공
     if (data.status === 'success' && data.access_token) {
@@ -96,7 +117,13 @@ onMounted(async () => {
     console.error('카카오 로그인 오류:', error);
     const errorMessage = error instanceof Error ? error.message : '카카오 로그인 중 오류가 발생했습니다.';
     alert(errorMessage);
-    router.push('/login');
+
+    // 연동 요청 실패 시 채팅 페이지로, 로그인 실패 시 로그인 페이지로
+    if (isLinkingRequest) {
+      router.push('/chat');
+    } else {
+      router.push('/login');
+    }
   }
 });
 </script>

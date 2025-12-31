@@ -85,9 +85,15 @@
               </div>
               <div class="kakao-section">
                 <span class="kakao-text">카카오 계정과 연동하기</span>
-                <button class="connect-button">
-                  <span class="button-text">연동</span>
+                <button
+                  v-if="!isKakaoLinked"
+                  class="connect-button"
+                  @click="handleKakaoLink"
+                  :disabled="isLinkingKakao"
+                >
+                  <span class="button-text">{{ isLinkingKakao ? '연동 중...' : '연동' }}</span>
                 </button>
+                <span v-else class="linked-badge">연동됨 ✓</span>
               </div>
             </div>
             <div class="premium-section" :class="{ 'verification-active': showProVerification }">
@@ -314,6 +320,10 @@ const proVerificationCode = ref('')
 const isProVerificationSent = ref(false)
 const proTimeLeft = ref(300) // 5분
 let proTimer: ReturnType<typeof setInterval> | null = null
+
+// 카카오 연동 관련 상태
+const isLinkingKakao = ref(false)
+const isKakaoLinked = computed(() => userInfo.value?.oauth_provider === 'kakao')
 
 // Pro 타이머 포맷
 const formattedProTime = computed(() => {
@@ -568,6 +578,46 @@ const handleCompleteProVerification = async () => {
 
 const handleOverlayClick = () => {
   emit('close')
+}
+
+// 카카오 계정 연동
+const handleKakaoLink = async () => {
+  try {
+    isLinkingKakao.value = true
+
+    const token = localStorage.getItem('access_token')
+    if (!token) {
+      alert('로그인이 필요합니다.')
+      return
+    }
+
+    // 카카오 연동 URL 요청
+    const response = await fetch(`${API_BASE_URL}/member/kakao/link`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.detail || '카카오 연동 요청에 실패했습니다.')
+    }
+
+    const data = await response.json()
+
+    // 카카오 인증 페이지로 이동 (팝업 또는 리다이렉트)
+    // 현재 페이지 URL을 저장하여 콜백 후 돌아올 수 있게 함
+    localStorage.setItem('kakao_link_return_url', window.location.href)
+    window.location.href = data.auth_url
+
+  } catch (error) {
+    console.error('카카오 연동 오류:', error)
+    const errorMessage = error instanceof Error ? error.message : '카카오 연동에 실패했습니다.'
+    alert(errorMessage)
+  } finally {
+    isLinkingKakao.value = false
+  }
 }
 
 // 컴포넌트 언마운트 시 타이머 정리
@@ -974,6 +1024,27 @@ onUnmounted(() => {
   padding: 0px 12px;
   cursor: pointer;
   white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.connect-button:hover:not(:disabled) {
+  background-color: #FEE500;
+  border-color: #FEE500;
+}
+
+.connect-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.linked-badge {
+  color: #22c55e;
+  font-size: 14px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 600;
+  padding: 6px 12px;
+  background-color: rgba(34, 197, 94, 0.1);
+  border-radius: 12px;
 }
 
 .premium-section {

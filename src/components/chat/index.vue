@@ -28,10 +28,6 @@
               <div class="group-a"></div>
               <span class="status">학식당 현황</span>
             </div>
-            <div class="frame-9-1" @click="goToFortuneMain">
-              <div class="group-b"></div>
-              <span class="status-fortune">사주 ∙ 운세 챗봇</span>
-            </div>
           </div>
           <ChatHistory 
             :chatHistory="chatHistory" 
@@ -114,25 +110,6 @@
           </div>
         </div>
 
-        <!-- 운세 메인 화면 -->
-        <FortuneMain 
-          v-else-if="currentView === 'fortune-main'"
-          @showFortuneResult="showFortuneResult"
-        />
-
-        <!-- 운세 채팅 화면 -->
-        <FortuneChat 
-          v-else-if="currentView === 'fortune-chat'"
-          @goBack="goBackToChat"
-        />
-
-        <!-- 운세 결과 화면 -->
-        <FortuneResult 
-          v-else-if="currentView === 'fortune-result' && fortuneResultData"
-          :fortuneData="fortuneResultData"
-          @goBack="goBackToFortuneMain"
-          @retry="retryFortune"
-        />
       </div>
     </div>
 
@@ -163,7 +140,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import ChatHistory from './ChatHistory.vue';
 import ChatMessageArea from './ChatMessageArea.vue';
 import ChatInput from './ChatInput.vue';
@@ -174,14 +151,12 @@ import ArtifactPanel from './ArtifactPanel.vue';
 import NotificationDropdown from '../common/NotificationDropdown.vue';
 import InfoPanel from '../common/InfoPanel.vue';
 import MyPageModal from '../common/MyPageModal.vue';
-import FortuneMain from '../fortune/FortuneMain.vue';
-import FortuneChat from '../fortune/FortuneChat.vue';
-import FortuneResult from '../fortune/FortuneResult.vue';
 import { useChat } from '../../composables/useChat';
 import type { ChatMode, Artifact, ArtifactVersion } from '../../composables/useChat';
 import eulLogo from '../../assets/eul_logo.svg';
 
 const router = useRouter();
+const route = useRoute();
 
 // Railway 내부 URL(.railway.internal)은 브라우저에서 접근 불가하므로 외부 URL로 대체
 const getApiBaseUrl = () => {
@@ -233,9 +208,8 @@ const handleModeChange = (mode: ChatMode) => {
   setChatMode(mode);
 };
 
-// 운세 화면 상태 관리
-const currentView = ref<'chat' | 'fortune-main' | 'fortune-chat' | 'fortune-result'>('chat');
-const fortuneResultData = ref(null);
+// 화면 상태 관리
+const currentView = ref<'chat'>('chat');
 
 // 피드백 처리
 const handleMessageFeedback = (type: 'good' | 'bad', messageId: string) => {
@@ -683,6 +657,21 @@ onMounted(() => {
   fetchUserProfile();
   window.addEventListener('resize', checkMobileSize);
   document.addEventListener('click', handleClickOutside);
+
+  // 카카오 계정 연동 결과 처리
+  const kakaoLinkResult = route.query.kakao_link as string;
+  if (kakaoLinkResult) {
+    if (kakaoLinkResult === 'success') {
+      alert('카카오 계정이 성공적으로 연동되었습니다!');
+      // 프로필 정보 다시 불러오기
+      fetchUserProfile();
+    } else if (kakaoLinkResult === 'error') {
+      const errorMessage = route.query.message as string || '카카오 연동에 실패했습니다.';
+      alert(errorMessage);
+    }
+    // URL에서 쿼리 파라미터 제거
+    router.replace({ path: '/chat', query: {} });
+  }
 });
 
 onUnmounted(() => {
@@ -703,25 +692,8 @@ const goToCrew = () => {
 //   router.push('/development-status');
 // };
 
-const goToFortuneMain = () => {
-  currentView.value = 'fortune-main';
-};
-
-const showFortuneResult = (data: any) => {
-  fortuneResultData.value = data;
-  currentView.value = 'fortune-result';
-};
-
 const goBackToChat = () => {
   currentView.value = 'chat';
-};
-
-const goBackToFortuneMain = () => {
-  currentView.value = 'fortune-main';
-};
-
-const retryFortune = () => {
-  currentView.value = 'fortune-main';
 };
 
 </script>
@@ -969,32 +941,6 @@ const retryFortune = () => {
 }
 .frame-9 {
   z-index: 28;
-}
-.frame-9-1 {
-  z-index: 30;
-}
-.group-b {
-  flex-shrink: 0;
-  position: relative;
-  width: 25px;
-  height: 25px;
-  background: url('./icon/사주.svg') no-repeat center;
-  background-size: cover;
-  z-index: 31;
-}
-.status-fortune {
-  flex-shrink: 0;
-  flex-basis: auto;
-  position: relative;
-  height: 23px;
-  color: #000000;
-  font-family: Pretendard, var(--default-font-family);
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 23px;
-  text-align: left;
-  white-space: nowrap;
-  z-index: 32;
 }
 .group-a {
   flex-shrink: 0;
@@ -1359,8 +1305,7 @@ const retryFortune = () => {
   
   .empty-classroom-check,
   .library-study-room-reservation,
-  .status,
-  .status-fortune {
+  .status {
     font-size: 13px;
   }
   
