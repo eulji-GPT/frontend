@@ -602,7 +602,7 @@ const sendMergeCode = async () => {
     const response = await fetch(`${API_BASE_URL}/member/send-merge-code`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ eulji_email: email.value })
+      body: JSON.stringify({ email: email.value })
     })
 
     const data = await response.json()
@@ -679,7 +679,7 @@ const resendMergeCode = async () => {
     const response = await fetch(`${API_BASE_URL}/member/send-merge-code`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ eulji_email: email.value })
+      body: JSON.stringify({ email: email.value })
     })
 
     const data = await response.json()
