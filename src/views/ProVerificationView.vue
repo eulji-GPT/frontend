@@ -331,9 +331,7 @@ const sendVerificationCode = async () => {
   try {
     const response = await fetch(`${API_BASE_URL}/member/send-verification`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ email: email.value })
     })
 
@@ -348,12 +346,14 @@ const sendVerificationCode = async () => {
       setTimeout(() => {
         showToast.value = false
       }, 3000)
-    } else if (response.status === 409 && data.can_merge) {
+    } else if (response.status === 409 && data.detail?.can_merge) {
       // 409 Conflict: 기존 계정이 있어서 병합 가능
       showMergeModal.value = true
       mergeStep.value = 1
     } else {
-      errorMessage.value = data.detail || '인증번호 전송에 실패했습니다.'
+      // detail이 객체인 경우 message 추출, 문자열이면 그대로 사용
+      const errorDetail = typeof data.detail === 'object' ? data.detail.message : data.detail
+      errorMessage.value = errorDetail || '인증번호 전송에 실패했습니다.'
     }
   } catch (error) {
     console.error('Error sending verification code:', error)
