@@ -21,7 +21,7 @@
             class="title-edit-input"
             maxlength="50"
           />
-          <span v-else class="chat-title">{{ chat.title }}</span>
+          <span v-else class="chat-title">{{ stripMarkdown(chat.title) }}</span>
           <button @click.stop="showDeleteModalForChat(chat.id)" class="delete-chat-button">x</button>
         </div>
       </div>
@@ -65,6 +65,39 @@ const contextMenuVisible = ref(false);
 const contextMenuPosition = ref({ top: '0px', left: '0px' });
 const contextMenuChatId = ref<string | null>(null);
 const deleteModalVisible = ref(false);
+
+// 마크다운 기호 제거 함수
+const stripMarkdown = (text: string): string => {
+  if (!text) return text;
+  return text
+    // 헤더 기호 제거 (# ## ### 등)
+    .replace(/^#{1,6}\s*/gm, '')
+    // 굵은 글씨 (**text** 또는 __text__)
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/__([^_]+)__/g, '$1')
+    // 기울임 (*text* 또는 _text_)
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/_([^_]+)_/g, '$1')
+    // 취소선 (~~text~~)
+    .replace(/~~([^~]+)~~/g, '$1')
+    // 인라인 코드 (`code`)
+    .replace(/`([^`]+)`/g, '$1')
+    // 링크 [text](url)
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    // 이미지 ![alt](url)
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
+    // 인용구 (> text)
+    .replace(/^>\s*/gm, '')
+    // 불릿 포인트 (- * +)
+    .replace(/^[\-\*\+]\s+/gm, '')
+    // 숫자 리스트 (1. 2. 등)
+    .replace(/^\d+\.\s+/gm, '')
+    // 남은 * 기호 정리
+    .replace(/\*+/g, '')
+    // 연속 공백 정리
+    .replace(/\s+/g, ' ')
+    .trim();
+};
 
 const startEditing = (chatId: string) => {
   const chat = props.chatHistory.find(c => c.id === chatId);

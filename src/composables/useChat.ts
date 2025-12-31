@@ -72,6 +72,23 @@ export function useChat() {
     systemInfo: null as any
   });
 
+  // 과도한 개행/공백 정규화 함수
+  const normalizeWhitespace = (text: string): string => {
+    if (!text) return text;
+    return text
+      // 3개 이상의 연속 개행을 2개로 축소
+      .replace(/\n{3,}/g, '\n\n')
+      // 줄 끝의 공백 제거
+      .replace(/[ \t]+$/gm, '')
+      // 줄 시작의 과도한 공백 제거 (4개 이상은 4개로 제한 - 코드 블록 제외)
+      .replace(/^[ \t]{4,}(?!```)/gm, (match) => {
+        // 코드 블록 내부가 아니면 공백 축소
+        return match.length > 8 ? '    ' : match;
+      })
+      // 앞뒤 공백 제거
+      .trim();
+  };
+
   // 메시지 업데이트를 위한 헬퍼 함수 (Vue 반응성 보장)
   const updateMessage = (chatId: string, messageIndex: number, updates: Partial<ChatMessage>) => {
     const chat = chatHistory.value.find(c => c.id === chatId);
@@ -760,19 +777,23 @@ export function useChat() {
                     if (chunk && chunk.length > 0) {
                       const currentMessage = currentChat.messages[messageIndex];
                       const beforeLength = currentMessage.text.length;
+                      const newText = currentMessage.text + chunk;
 
-                      // 직접 메시지 객체를 수정하여 Vue 반응성 보장
-                      currentMessage.text = currentMessage.text + chunk;
-                      currentMessage.isStreaming = true;
-                      currentMessage.currentStep = "최종 답변 출력 중...";
+                      // 새 메시지 객체를 생성하여 Vue 반응성 확실히 트리거
+                      currentChat.messages[messageIndex] = {
+                        ...currentMessage,
+                        text: newText,
+                        isStreaming: true,
+                        currentStep: "최종 답변 출력 중..."
+                      };
 
-                      // 강제로 messages ref 업데이트하여 Vue 반응성 보장
+                      // messages ref도 새 배열로 업데이트
                       messages.value = [...currentChat.messages];
 
                       console.log(`📝 [STREAMING] 청크 누적:`, {
                         chunk_length: chunk.length,
                         before: beforeLength,
-                        after: currentMessage.text.length,
+                        after: newText.length,
                         is_last: data.is_last_chunk
                       });
 
@@ -786,10 +807,12 @@ export function useChat() {
                     }
                   }
                   else if (data.type === 'final_answer_complete' && currentChat.messages[messageIndex]) {
-                    // 최종 답변 스트리밍 완료
-                    const finalText = currentChat.messages[messageIndex].text;
+                    // 최종 답변 스트리밍 완료 - 텍스트 정규화 적용
+                    const rawText = currentChat.messages[messageIndex].text;
+                    const finalText = normalizeWhitespace(rawText);
 
                     updateMessage(currentChat.id, messageIndex, {
+                      text: finalText,
                       isStreaming: false,
                       currentStep: undefined,
                       cotSteps: undefined,
@@ -1068,12 +1091,14 @@ export function useChat() {
           saveChatHistory();
           console.log('📄 보고서 스타일 아티팩트 생성:', artifactTitle, `(${wordCount}자, 인삿말 제거됨)`);
         } else {
-          // 일반 답변 완료
+          // 일반 답변 완료 - 텍스트 정규화 적용
+          const normalizedText = normalizeWhitespace(responseText);
+          currentChat.messages[messageIndex].text = normalizedText;
           currentChat.messages[messageIndex].isStreaming = false;
           currentChat.messages[messageIndex].currentStep = undefined;
 
           // AI 메시지를 노션에 저장
-          await saveMessageToNotion(currentChat.id, false, responseText);
+          await saveMessageToNotion(currentChat.id, false, normalizedText);
 
           isStreaming.value = false;
           saveChatHistory();
@@ -1171,7 +1196,9 @@ export function useChat() {
       
       if (data.answer) {
         if (currentChat.messages[messageIndex]) {
-          currentChat.messages[messageIndex].text = data.answer;
+          // 텍스트 정규화 적용
+          const normalizedAnswer = normalizeWhitespace(data.answer);
+          currentChat.messages[messageIndex].text = normalizedAnswer;
           currentChat.messages[messageIndex].isLoading = false;
           currentChat.messages[messageIndex].isStreaming = false;
           currentChat.messages[messageIndex].currentStep = undefined;
@@ -1199,7 +1226,7 @@ export function useChat() {
           console.log(`📊 RAG 성능: ${data.processing_time?.toFixed(2)}초, 검색문서: ${data.search_results_count}개, 프롬프트: ${data.prompt_type_used}`);
 
           // AI 메시지를 노션에 저장
-          await saveMessageToNotion(currentChat.id, false, data.answer);
+          await saveMessageToNotion(currentChat.id, false, normalizedAnswer);
         }
       } else {
         throw new Error('RAG 응답에서 답변을 찾을 수 없습니다.');
@@ -1307,7 +1334,8 @@ export function useChat() {
 
       // 응답을 타이핑 효과로 표시 (이미지 채팅)
       if (data.success && data.response && data.response.trim()) {
-        const responseText = data.response.trim();
+        // 텍스트 정규화 적용
+        const responseText = normalizeWhitespace(data.response.trim());
         let currentIndex = 0;
 
         const typeWriter = () => {
