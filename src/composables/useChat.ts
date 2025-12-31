@@ -1241,7 +1241,12 @@ export function useChat() {
   }
 
   async function callFastAPIChatWithImages(message: string, images: File[], messageIndex: number) {
-    console.log("🚀 이미지 포함 FastAPI 호출 시작:", message, "이미지 수:", images.length);
+    console.log("🚀 파일 포함 FastAPI 호출 시작:", message, "파일 수:", images.length);
+
+    // 파일 타입 확인 로그
+    images.forEach((file, idx) => {
+      console.log(`📎 파일 ${idx + 1}: ${file.name}, 타입: ${file.type}, 크기: ${(file.size / 1024).toFixed(1)}KB`);
+    });
 
     // 메시지 전처리: 상세 답변이 필요한 경우 보고서 스타일 지침 추가
     const preparedMessage = prepareMessageForAI(message, chatMode.value);
@@ -1352,11 +1357,13 @@ export function useChat() {
         console.error('🔌 서버 연결 실패: FastAPI 서버가 실행되지 않았을 수 있습니다.');
       } else if (error instanceof Error) {
         if (error.message.includes('413')) {
-          errorMessage = '이미지 파일이 너무 큽니다. 20MB 이하의 파일을 업로드해주세요.';
+          errorMessage = '파일이 너무 큽니다. 20MB 이하의 파일을 업로드해주세요.';
+        } else if (error.message.includes('400')) {
+          errorMessage = '지원하지 않는 파일 형식입니다. 이미지(jpg, png, gif, webp) 또는 PDF 파일만 업로드 가능합니다.';
         } else if (error.message.includes('500')) {
-          errorMessage = '이미지 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.';
+          errorMessage = '파일 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요.';
         } else {
-          errorMessage = '이미지 처리에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.';
+          errorMessage = '파일 처리에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.';
         }
       }
       
