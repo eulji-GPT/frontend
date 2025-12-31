@@ -299,9 +299,64 @@ const formattedMergeTime = computed(() => {
   return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
 })
 
-// Helper function to get auth headers
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('accessToken') || localStorage.getItem('access_token')
+// Helper function to check if JWT token is expired
+const isTokenExpired = (token: string): boolean => {
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 3) return true
+    const payload = JSON.parse(atob(parts[1]))
+    const now = Math.floor(Date.now() / 1000)
+    return payload.exp < now
+  } catch {
+    return true
+  }
+}
+
+// Helper function to refresh token
+const refreshAccessToken = async (): Promise<string | null> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/member/refresh`, {
+      method: 'POST',
+      credentials: 'include', // Include refresh token cookie
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+
+    if (response.ok) {
+      const data = await response.json()
+      const newToken = data.access_token
+      if (newToken) {
+        localStorage.setItem('access_token', newToken)
+        return newToken
+      }
+    }
+  } catch (error) {
+    console.error('Token refresh failed:', error)
+  }
+  return null
+}
+
+// Helper function to get valid auth headers (with auto-refresh)
+const getAuthHeaders = async (): Promise<Record<string, string>> => {
+  let token = localStorage.getItem('accessToken') || localStorage.getItem('access_token')
+
+  // Check if token is expired and try to refresh
+  if (token && isTokenExpired(token)) {
+    console.log('[DEBUG] Token expired, attempting refresh...')
+    const newToken = await refreshAccessToken()
+    if (newToken) {
+      token = newToken
+      console.log('[DEBUG] Token refreshed successfully')
+    } else {
+      console.log('[DEBUG] Token refresh failed, user may need to re-login')
+      // Clear expired token
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('accessToken')
+      token = null
+    }
+  }
+
   return {
     'Content-Type': 'application/json',
     ...(token ? { 'Authorization': `Bearer ${token}` } : {})
@@ -329,9 +384,10 @@ const sendVerificationCode = async () => {
   errorMessage.value = ''
 
   try {
+    const headers = await getAuthHeaders()
     const response = await fetch(`${API_BASE_URL}/member/send-verification`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers,
       body: JSON.stringify({ email: email.value })
     })
 
@@ -370,11 +426,10 @@ const resendCode = async () => {
   errorMessage.value = ''
 
   try {
+    const headers = await getAuthHeaders()
     const response = await fetch(`${API_BASE_URL}/member/send-verification`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({ email: email.value })
     })
 
@@ -417,11 +472,12 @@ const verifyCode = async () => {
       codeString: verificationCode.value
     })
 
+    const headers = await getAuthHeaders()
     const response = await fetch(
       `${API_BASE_URL}/member/verify-pro?email=${encodeURIComponent(email.value)}&code=${codeAsInt}`,
       {
         method: 'POST',
-        headers: getAuthHeaders()
+        headers
       }
     )
 
@@ -542,9 +598,10 @@ const sendMergeCode = async () => {
   mergeErrorMessage.value = ''
 
   try {
+    const headers = await getAuthHeaders()
     const response = await fetch(`${API_BASE_URL}/member/send-merge-code`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers,
       body: JSON.stringify({ eulji_email: email.value })
     })
 
@@ -578,9 +635,10 @@ const executeMerge = async () => {
   try {
     const codeAsInt = parseInt(mergeVerificationCode.value, 10)
 
+    const headers = await getAuthHeaders()
     const response = await fetch(`${API_BASE_URL}/member/merge-account`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers,
       body: JSON.stringify({
         eulji_email: email.value,
         code: codeAsInt
@@ -617,9 +675,10 @@ const resendMergeCode = async () => {
   mergeErrorMessage.value = ''
 
   try {
+    const headers = await getAuthHeaders()
     const response = await fetch(`${API_BASE_URL}/member/send-merge-code`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers,
       body: JSON.stringify({ eulji_email: email.value })
     })
 
