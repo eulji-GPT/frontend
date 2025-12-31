@@ -76,15 +76,14 @@ export function useChat() {
   const normalizeWhitespace = (text: string): string => {
     if (!text) return text;
     return text
-      // 3개 이상의 연속 개행을 2개로 축소
-      .replace(/\n{3,}/g, '\n\n')
+      // 2개 이상의 연속 개행을 1개로 축소 (문단 구분은 마크다운이 처리)
+      .replace(/\n{2,}/g, '\n')
       // 줄 끝의 공백 제거
       .replace(/[ \t]+$/gm, '')
-      // 줄 시작의 과도한 공백 제거 (4개 이상은 4개로 제한 - 코드 블록 제외)
-      .replace(/^[ \t]{4,}(?!```)/gm, (match) => {
-        // 코드 블록 내부가 아니면 공백 축소
-        return match.length > 8 ? '    ' : match;
-      })
+      // 리스트 항목/헤더 뒤의 불필요한 개행 제거
+      .replace(/^([-*#▶•]\s*.+)\n+(?=[-*#▶•])/gm, '$1\n')
+      // 코드 블록 외부의 과도한 빈 줄 제거
+      .replace(/\n\s*\n/g, '\n')
       // 앞뒤 공백 제거
       .trim();
   };

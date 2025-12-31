@@ -90,7 +90,7 @@ import LottieLoader from './LottieLoader.vue';
 
 // marked 설정 강화 - 테이블, GFM, 코드 하이라이팅 지원
 marked.use({
-  breaks: true,
+  breaks: false,  // 개행을 <br>로 변환하지 않음
   gfm: true,
   headerIds: false,
   mangle: false,
@@ -502,8 +502,8 @@ onUpdated(() => {
 
 /* 마크다운 스타일링 */
 :deep(.markdown-content) {
-  line-height: 1.6;
-  white-space: pre-line; /* 개행 문자를 실제 개행으로 처리 */
+  line-height: 1.5;
+  white-space: normal;
 }
 
 :deep(.markdown-content h1),
@@ -575,7 +575,11 @@ onUpdated(() => {
 }
 
 :deep(.markdown-content p) {
-  margin: 3px 0;
+  margin: 2px 0;
+}
+
+:deep(.markdown-content br) {
+  display: none;
 }
 
 :deep(.markdown-content strong) {
