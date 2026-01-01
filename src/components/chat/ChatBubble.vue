@@ -558,8 +558,6 @@ onUpdated(() => {
   font-size: 2em !important;
   font-weight: 800 !important;
   color: #02478a !important;
-  border-bottom: 3px solid #02478a !important;
-  padding-bottom: 4px !important;
   margin: 16px 0 8px 0 !important;
   display: block !important;
 }
@@ -569,8 +567,6 @@ onUpdated(() => {
   font-size: 1.6em !important;
   font-weight: 700 !important;
   color: #0c4a6e !important;
-  border-bottom: 2px solid #bae6fd !important;
-  padding-bottom: 3px !important;
   margin: 14px 0 6px 0 !important;
   display: block !important;
 }
