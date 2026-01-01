@@ -747,28 +747,17 @@ onUpdated(() => {
 :deep(.markdown-content blockquote) {
   border-left: 4px solid #02478a;
   background: linear-gradient(135deg, #f0f6ff 0%, #f8fafc 100%);
-  margin: 6px 0;
-  padding: 8px 12px;
+  margin: 12px 0;
+  padding: 12px 16px;
   font-style: normal;
-  border-radius: 0 6px 6px 0;
-  box-shadow: 0 1px 3px rgba(2, 71, 138, 0.1);
+  border-radius: 0 8px 8px 0;
+  box-shadow: 0 2px 6px rgba(2, 71, 138, 0.08);
   position: relative;
 }
 
+/* blockquote 앞의 아이콘 제거 - AI가 이미 💡 이모지를 포함함 */
 :deep(.markdown-content blockquote::before) {
-  content: '💡';
-  position: absolute;
-  left: -2px;
-  top: -2px;
-  background: #02478a;
-  color: white;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 9px;
+  display: none;
 }
 
 :deep(.markdown-content blockquote p) {
