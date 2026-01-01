@@ -103,29 +103,33 @@ onMounted(() => {
 })
 
 function scrollToSection(id: string) {
+  console.log('[HeaderSection] scrollToSection 호출:', id)
+
+  const performScroll = () => {
+    const element = document.getElementById(id)
+    console.log('[HeaderSection] 요소 찾기:', id, element ? '성공' : '실패')
+
+    if (element) {
+      // scrollIntoView 사용 (더 안정적인 방법)
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+
+      // 헤더 높이만큼 추가 오프셋 적용
+      setTimeout(() => {
+        const headerHeight = 100
+        window.scrollBy({ top: -headerHeight, behavior: 'smooth' })
+      }, 100)
+    }
+  }
+
   // 현재 메인 페이지가 아니면 메인 페이지로 이동
   if (route.path !== '/') {
     router.push('/').then(() => {
-      // 페이지 이동 후 스크롤
-      setTimeout(() => {
-        const element = document.getElementById(id)
-        if (element) {
-          const headerHeight = 100
-          const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
-          const targetPosition = elementPosition - headerHeight
-          window.scrollTo({ top: targetPosition, behavior: 'smooth' })
-        }
-      }, 300)
+      // 페이지 이동 후 스크롤 (더 긴 대기 시간)
+      setTimeout(performScroll, 500)
     })
   } else {
     // 이미 메인 페이지에 있으면 직접 스크롤
-    const element = document.getElementById(id)
-    if (element) {
-      const headerHeight = 100
-      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
-      const targetPosition = elementPosition - headerHeight
-      window.scrollTo({ top: targetPosition, behavior: 'smooth' })
-    }
+    performScroll()
   }
 }
 
@@ -135,30 +139,28 @@ function handleLogout() {
 }
 
 function scrollToMobileSection(id: string) {
+  console.log('[HeaderSection] scrollToMobileSection 호출:', id)
   closeMobileMenu()
-  // 현재 메인 페이지가 아니면 메인 페이지로 이동
+
+  const performScroll = () => {
+    const element = document.getElementById(id)
+    console.log('[HeaderSection] 모바일 요소 찾기:', id, element ? '성공' : '실패')
+
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      setTimeout(() => {
+        const headerHeight = 100
+        window.scrollBy({ top: -headerHeight, behavior: 'smooth' })
+      }, 100)
+    }
+  }
+
   if (route.path !== '/') {
     router.push('/').then(() => {
-      // 페이지 이동 후 스크롤
-      setTimeout(() => {
-        const element = document.getElementById(id)
-        if (element) {
-          const headerHeight = 100
-          const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
-          const targetPosition = elementPosition - headerHeight
-          window.scrollTo({ top: targetPosition, behavior: 'smooth' })
-        }
-      }, 300)
+      setTimeout(performScroll, 500)
     })
   } else {
-    // 이미 메인 페이지에 있으면 직접 스크롤
-    const element = document.getElementById(id)
-    if (element) {
-      const headerHeight = 100
-      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
-      const targetPosition = elementPosition - headerHeight
-      window.scrollTo({ top: targetPosition, behavior: 'smooth' })
-    }
+    performScroll()
   }
 }
 
