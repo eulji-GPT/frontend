@@ -48,30 +48,10 @@ import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import eulLogo from '../../assets/eul_logo.svg'
 import { isAuthenticated, logout } from '../../utils/auth'
+import { getApiBaseUrl } from '../../utils/ports-config'
 
 const router = useRouter()
 const route = useRoute()
-
-// Railway 내부 URL(.railway.internal)은 브라우저에서 접근 불가하므로 외부 URL로 대체
-const getApiBaseUrl = () => {
-  const envUrl = import.meta.env.VITE_FASTAPI_URL;
-
-  // Railway 내부 URL 감지 및 외부 URL로 대체
-  if (envUrl && envUrl.includes('.railway.internal')) {
-    
-    return 'https://fastapi-backend-production-2cd0.up.railway.app';
-  }
-
-  // 프로덕션 환경에서 /api 프록시 경로 사용 시 외부 URL로 대체
-  if (!envUrl || envUrl === '/api') {
-    // 브라우저에서 Railway 호스트인지 확인
-    if (typeof window !== 'undefined' && window.location.hostname.includes('railway.app')) {
-      return 'https://fastapi-backend-production-2cd0.up.railway.app';
-    }
-  }
-
-  return envUrl || '/api';
-};
 
 const API_BASE_URL = getApiBaseUrl()
 const isMobileMenuOpen = ref(false)
@@ -81,7 +61,7 @@ const userName = ref('')
 // 사용자 정보 가져오기
 const fetchUserInfo = async () => {
   try {
-    const token = localStorage.getItem('access_token')
+    const token = localStorage.getItem('accessToken')
     if (!token) return
 
     // 개발 환경에서 Pro 계정 토큰인지 체크

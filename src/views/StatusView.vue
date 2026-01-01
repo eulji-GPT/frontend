@@ -192,6 +192,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { getApiBaseUrl } from '@/utils/ports-config';
 
 const router = useRouter();
 
@@ -207,31 +208,23 @@ const backendStatus = ref<ServiceStatus>('loading');
 const backendResponseTime = ref(0);
 const backendInfo = ref<any>(null);
 
-// AI-RAG
-const aiRagStatus = ref<ServiceStatus>('loading');
+// [DISABLED] AI-RAG - Gemini AI 비활성화
+const aiRagStatus = ref<ServiceStatus>('offline');
 const aiRagResponseTime = ref(0);
-const aiRagInfo = ref<any>(null);
+const aiRagInfo = ref<any>({ disabled: true, message: 'Gemini AI 서비스가 비활성화되었습니다.' });
 
-// RAG System
-const ragSystemStatus = ref<ServiceStatus>('loading');
-const ragSystemInfo = ref<any>(null);
+// [DISABLED] RAG System - Gemini AI 비활성화
+const ragSystemStatus = ref<ServiceStatus>('offline');
+const ragSystemInfo = ref<any>({ disabled: true, message: 'RAG 시스템이 비활성화되었습니다.' });
 
-// URL 헬퍼
-const getBackendUrl = () => {
-  const envUrl = import.meta.env.VITE_FASTAPI_URL;
-  if (envUrl?.includes('.railway.internal')) {
-    return 'https://fastapi-backend-production-2cd0.up.railway.app';
-  }
-  if (!envUrl || envUrl === '/api') {
-    if (typeof window !== 'undefined' &&
-        (window.location.hostname.includes('railway.app') || window.location.hostname === 'euljigpt.com')) {
-      return 'https://fastapi-backend-production-2cd0.up.railway.app';
-    }
-  }
-  return envUrl || '/api';
-};
+// URL 헬퍼 (중앙화된 ports-config에서 가져옴)
+const getBackendUrl = getApiBaseUrl;
 
+// [DISABLED] Gemini AI URL 함수 - 비활성화됨
 const getAiRagUrl = () => {
+  console.warn('[DISABLED] Gemini AI service is not available');
+  return '';
+  /* [DISABLED] 기존 Gemini AI URL 코드 시작
   const envUrl = import.meta.env.VITE_GEMINI_FASTAPI_URL;
   if (envUrl?.includes('.railway.internal')) {
     return 'https://ai-rag-production.up.railway.app';
@@ -243,6 +236,7 @@ const getAiRagUrl = () => {
     }
   }
   return envUrl || 'http://localhost:8001';
+  [DISABLED] 기존 Gemini AI URL 코드 끝 */
 };
 
 const backendUrl = computed(() => getBackendUrl());
@@ -322,7 +316,13 @@ const checkBackendStatus = async () => {
   }
 };
 
+// [DISABLED] Gemini AI 상태 확인 - 비활성화됨
 const checkAiRagStatus = async () => {
+  console.warn('[DISABLED] Gemini AI status check is not available');
+  aiRagStatus.value = 'offline';
+  aiRagInfo.value = { disabled: true, message: 'Gemini AI 서비스가 비활성화되었습니다.' };
+  return;
+  /* [DISABLED] 기존 Gemini AI 상태 확인 코드 시작
   aiRagStatus.value = 'loading';
   const start = performance.now();
   try {
@@ -341,9 +341,16 @@ const checkAiRagStatus = async () => {
     aiRagResponseTime.value = Math.round(performance.now() - start);
     aiRagStatus.value = 'offline';
   }
+  [DISABLED] 기존 Gemini AI 상태 확인 코드 끝 */
 };
 
+// [DISABLED] RAG 시스템 상태 확인 - 비활성화됨
 const checkRagSystemStatus = async () => {
+  console.warn('[DISABLED] RAG system status check is not available');
+  ragSystemStatus.value = 'offline';
+  ragSystemInfo.value = { disabled: true, message: 'RAG 시스템이 비활성화되었습니다.' };
+  return;
+  /* [DISABLED] 기존 RAG 시스템 상태 확인 코드 시작
   ragSystemStatus.value = 'loading';
   try {
     const res = await fetch(`${getAiRagUrl()}/rag/status`, {
@@ -359,6 +366,7 @@ const checkRagSystemStatus = async () => {
   } catch {
     ragSystemStatus.value = 'offline';
   }
+  [DISABLED] 기존 RAG 시스템 상태 확인 코드 끝 */
 };
 
 const refreshAll = async () => {

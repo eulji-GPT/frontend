@@ -11,30 +11,9 @@
 import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { setUserInfo } from '../utils/auth';
+import { getApiBaseUrl } from '../utils/ports-config';
 
 const router = useRouter();
-
-// Railway 내부 URL(.railway.internal)은 브라우저에서 접근 불가하므로 외부 URL로 대체
-const getApiBaseUrl = () => {
-  const envUrl = import.meta.env.VITE_FASTAPI_URL;
-
-  // Railway 내부 URL 감지 및 외부 URL로 대체
-  if (envUrl && envUrl.includes('.railway.internal')) {
-    
-    return 'https://fastapi-backend-production-2cd0.up.railway.app';
-  }
-
-  // 프로덕션 환경에서 /api 프록시 경로 사용 시 외부 URL로 대체
-  if (!envUrl || envUrl === '/api') {
-    // 브라우저에서 Railway 호스트인지 확인
-    if (typeof window !== 'undefined' && window.location.hostname.includes('railway.app')) {
-      return 'https://fastapi-backend-production-2cd0.up.railway.app';
-    }
-  }
-
-  return envUrl || '/api';
-};
-
 const API_BASE_URL = getApiBaseUrl();
 
 onMounted(async () => {
@@ -86,7 +65,7 @@ onMounted(async () => {
 
     // 로그인 성공
     if (data.status === 'success' && data.access_token) {
-      localStorage.setItem('access_token', data.access_token);
+      localStorage.setItem('accessToken', data.access_token);
       localStorage.setItem('user_id', data.user_id);
 
       // 사용자 정보 조회 및 저장

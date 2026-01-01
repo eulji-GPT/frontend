@@ -4,6 +4,8 @@ import App from './App.vue'
 import router from './router'
 import './assets/pretendard.css'
 import './assets/tailwind.css'
+import './assets/syntax-highlight.css'
+import 'katex/dist/katex.min.css'
 
 const app = createApp(App)
 app.use(router)

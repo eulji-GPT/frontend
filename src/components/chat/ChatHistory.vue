@@ -270,11 +270,24 @@ onUnmounted(() => {
   flex: none;
   gap: 4px;
   border-radius: 10px;
-  width: 216px;
-  height: 37px;
+  width: 100%;
+  height: auto;
+  min-height: 37px;
   background-color: rgb(240, 246, 255);
   box-sizing: border-box;
   padding: 10px 15px;
+  /* 개선: 왼쪽 테두리 강조 */
+  border-left: 3px solid #02478a;
+  /* 개선: 미세한 그림자 효과 */
+  box-shadow: 0 1px 3px rgba(2, 71, 138, 0.1);
+  /* 개선: 더 진한 테두리 */
+  border: 1px solid rgba(2, 71, 138, 0.2);
+  border-left: 3px solid #02478a;
+}
+
+.chat-history-item.active .chat-title {
+  color: #02478a;
+  font-weight: 600;
 }
 
 .chat-title {
@@ -384,9 +397,137 @@ onUnmounted(() => {
   .frame-10 {
     padding: 0 12px;
   }
-  
+
   .chat-history-item {
     padding: 8px 12px;
+  }
+}
+
+/* 모바일 드로어 스타일 (640px 이하) */
+@media (max-width: 640px) {
+  .frame-10 {
+    padding: 0 16px;
+    height: auto;
+    flex: 1;
+    overflow-y: auto;
+    /* iOS 스크롤 부드럽게 */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .chat-list-link {
+    position: sticky;
+    top: 0;
+    background: #ffffff;
+    padding: 8px 0;
+    z-index: 10;
+  }
+
+  .conversation-list {
+    font-size: 15px;
+  }
+
+  .new-chat-button {
+    padding: 8px 16px;
+    font-size: 13px;
+    /* 터치 친화적 크기 (최소 44px) */
+    min-height: 36px;
+  }
+
+  .chat-list-container-history {
+    gap: 8px;
+    overflow-y: auto;
+    padding-bottom: 20px;
+  }
+
+  .chat-history-item {
+    /* 터치 친화적 높이 */
+    min-height: 48px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: #f9fafb;
+  }
+
+  .chat-history-item:active {
+    background-color: #e5e7eb;
+  }
+
+  .chat-history-item.active {
+    width: 100%;
+    height: auto;
+    min-height: 48px;
+    background-color: rgb(240, 246, 255);
+    border: 1px solid rgba(2, 71, 138, 0.2);
+    border-left: 3px solid #02478a;
+    box-shadow: 0 1px 3px rgba(2, 71, 138, 0.1);
+  }
+
+  .chat-history-item.active .chat-title {
+    color: #02478a;
+    font-weight: 600;
+  }
+
+  .chat-title {
+    font-size: 14px;
+    line-height: 20px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: calc(100% - 30px);
+  }
+
+  .delete-chat-button {
+    /* 모바일에서 항상 표시 */
+    visibility: visible;
+    width: 28px;
+    height: 28px;
+    font-size: 18px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 50%;
+  }
+
+  .delete-chat-button:active {
+    background: rgba(0, 0, 0, 0.1);
+  }
+
+  .title-edit-input {
+    font-size: 14px;
+    padding: 8px 12px;
+    min-height: 40px;
+  }
+
+  .frame-11 {
+    gap: 8px;
+  }
+
+  .chat-list-container {
+    padding: 16px;
+  }
+
+  .start-chat {
+    font-size: 14px;
+    line-height: 20px;
+  }
+}
+
+/* 초소형 모바일 (480px 이하) */
+@media (max-width: 480px) {
+  .frame-10 {
+    padding: 0 12px;
+  }
+
+  .chat-history-item {
+    padding: 10px 12px;
+    min-height: 44px;
+  }
+
+  .chat-title {
+    font-size: 13px;
+  }
+
+  .delete-chat-button {
+    width: 24px;
+    height: 24px;
+    font-size: 16px;
   }
 }
 </style>

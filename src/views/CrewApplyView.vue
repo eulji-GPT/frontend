@@ -151,6 +151,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import HeaderSection from '../components/main/HeaderSection_Desktop21.vue'
 import FooterContainer from '../components/crew/FooterContainer.vue'
+import { getApiBaseUrl } from '@/utils/ports-config'
 
 const router = useRouter()
 
@@ -168,23 +169,6 @@ const formData = ref({
 })
 
 const isSubmitting = ref(false)
-
-// API Base URL 설정
-const getApiBaseUrl = () => {
-  const envUrl = import.meta.env.VITE_FASTAPI_URL
-  if (envUrl && envUrl.includes('.railway.internal')) {
-    return 'https://fastapi-backend-production-2cd0.up.railway.app'
-  }
-  if (!envUrl || envUrl === '/api') {
-    if (typeof window !== 'undefined' && window.location.hostname.includes('railway.app')) {
-      return 'https://fastapi-backend-production-2cd0.up.railway.app'
-    }
-    if (typeof window !== 'undefined' && (window.location.hostname === 'euljigpt.com' || window.location.hostname === 'www.euljigpt.com')) {
-      return 'https://fastapi-backend-production-2cd0.up.railway.app'
-    }
-  }
-  return envUrl || '/api'
-}
 
 const API_BASE_URL = getApiBaseUrl()
 

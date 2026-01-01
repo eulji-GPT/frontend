@@ -1,47 +1,66 @@
 <template>
   <div class="feedback-buttons" v-if="showButtons">
-    <button 
-      class="feedback-btn copy-btn" 
+    <button
+      class="feedback-btn copy-btn"
       @click="copyToClipboard"
       :title="copySuccess ? '복사됨!' : '복사'"
+      :aria-label="copySuccess ? '복사됨' : '응답 복사'"
     >
-      <svg v-if="!copySuccess" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg v-if="!copySuccess" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
         <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
       </svg>
-      <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <polyline points="20,6 9,17 4,12"></polyline>
       </svg>
     </button>
-    
-    <button 
-      class="feedback-btn good-btn" 
+
+    <button
+      class="feedback-btn good-btn"
       @click="sendFeedback('good')"
       :class="{ active: feedback === 'good' }"
       title="좋아요"
+      aria-label="좋아요"
+      :aria-pressed="feedback === 'good'"
     >
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
       </svg>
     </button>
-    
-    <button 
-      class="feedback-btn bad-btn" 
-      @click="sendFeedback('bad')"
+
+    <button
+      class="feedback-btn bad-btn"
+      @click="handleBadFeedback"
       :class="{ active: feedback === 'bad' }"
-      title="싫어요"
+      title="싫어요 (상세 피드백)"
+      aria-label="싫어요 - 상세 피드백 남기기"
+      :aria-pressed="feedback === 'bad'"
     >
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path>
       </svg>
     </button>
-    
+
+    <button
+      class="feedback-btn bookmark-btn"
+      @click="toggleBookmark"
+      :class="{ active: isBookmarked }"
+      :title="isBookmarked ? '북마크 해제' : '북마크 추가'"
+      :aria-label="isBookmarked ? '북마크 해제' : '북마크 추가'"
+      :aria-pressed="isBookmarked"
+    >
+      <svg width="15" height="15" viewBox="0 0 24 24" :fill="isBookmarked ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+      </svg>
+    </button>
+
     <button
       class="feedback-btn regenerate-btn"
       @click="regenerateAnswer"
       title="다시 생성"
+      aria-label="답변 다시 생성"
     >
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <polyline points="23,4 23,10 17,10"></polyline>
         <polyline points="1,20 1,14 7,14"></polyline>
         <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path>
@@ -53,8 +72,9 @@
       class="feedback-btn artifact-btn"
       @click="openArtifact"
       title="아티팩트 보기"
+      aria-label="아티팩트 보기"
     >
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
         <polyline points="14,2 14,8 20,8"></polyline>
         <line x1="12" y1="18" x2="12" y2="12"></line>
@@ -74,21 +94,27 @@ const props = defineProps<{
   hasArtifact?: boolean;
 }>();
 
-const emit = defineEmits(['feedback', 'regenerate', 'openArtifact']);
+const emit = defineEmits(['feedback', 'regenerate', 'openArtifact', 'bookmark', 'openDetailedFeedback']);
 
 const feedback = ref<'good' | 'bad' | null>(null);
 const copySuccess = ref(false);
+const isBookmarked = ref(false);
 
-// 컴포넌트 로드 시 기존 피드백 불러오기
+// 컴포넌트 로드 시 기존 피드백 및 북마크 불러오기
 onMounted(() => {
   try {
+    // 피드백 불러오기
     const feedbackData = JSON.parse(localStorage.getItem('messageFeedback') || '{}');
     const existingFeedback = feedbackData[props.messageId || ''];
     if (existingFeedback) {
       feedback.value = existingFeedback.type;
     }
+
+    // 북마크 불러오기
+    const bookmarks = JSON.parse(localStorage.getItem('messageBookmarks') || '[]');
+    isBookmarked.value = bookmarks.includes(props.messageId);
   } catch (error) {
-    console.error('피드백 불러오기 실패:', error);
+    console.error('피드백/북마크 불러오기 실패:', error);
   }
 });
 
@@ -174,6 +200,43 @@ const openArtifact = () => {
   emit('openArtifact', props.messageId);
   console.log('아티팩트 열기 요청:', props.messageId);
 };
+
+// 북마크 토글
+const toggleBookmark = () => {
+  try {
+    const bookmarks = JSON.parse(localStorage.getItem('messageBookmarks') || '[]');
+    const messageId = props.messageId || '';
+
+    if (isBookmarked.value) {
+      // 북마크 해제
+      const index = bookmarks.indexOf(messageId);
+      if (index > -1) {
+        bookmarks.splice(index, 1);
+      }
+      isBookmarked.value = false;
+      console.log('🔖 북마크 해제:', messageId);
+    } else {
+      // 북마크 추가
+      if (!bookmarks.includes(messageId)) {
+        bookmarks.push(messageId);
+      }
+      isBookmarked.value = true;
+      console.log('🔖 북마크 추가:', messageId);
+    }
+
+    localStorage.setItem('messageBookmarks', JSON.stringify(bookmarks));
+    emit('bookmark', messageId, isBookmarked.value);
+  } catch (error) {
+    console.error('북마크 저장 실패:', error);
+  }
+};
+
+// 싫어요 피드백 - 상세 피드백 모달 열기
+const handleBadFeedback = () => {
+  sendFeedback('bad');
+  // 상세 피드백 모달 열기 이벤트 발생
+  emit('openDetailedFeedback', props.messageId);
+};
 </script>
 
 <style scoped>
@@ -246,8 +309,28 @@ const openArtifact = () => {
   color: #f59e0b;
 }
 
+.bookmark-btn:hover {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.bookmark-btn.active {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
 .feedback-btn svg {
   flex-shrink: 0;
+}
+
+/* 접근성: 포커스 스타일 */
+.feedback-btn:focus {
+  outline: none;
+}
+
+.feedback-btn:focus-visible {
+  outline: 2px solid #02478A;
+  outline-offset: 2px;
 }
 
 /* 다크모드 대응 */

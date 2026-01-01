@@ -22,7 +22,7 @@
           ref="textareaRef"
           placeholder="무엇이든 물어보세요."
           v-model="inputValue"
-          @keydown.enter.exact.prevent="onSend"
+          @keydown="handleKeydown"
           @input="autoGrow"
           :disabled="isLoading"
           rows="1"
@@ -80,16 +80,70 @@ const selectedImages = ref<Array<{ file: File; preview: string; type: 'image' | 
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
 const imageInput = ref<HTMLInputElement | null>(null);
 
+// 포커스 관리 - 외부에서 접근 가능하도록 expose
+const focusInput = () => {
+  if (textareaRef.value) {
+    textareaRef.value.focus();
+  }
+};
+
+const blurInput = () => {
+  if (textareaRef.value) {
+    textareaRef.value.blur();
+  }
+};
+
+// 컴포넌트 외부에서 접근 가능하도록 노출
+defineExpose({
+  focusInput,
+  blurInput,
+  textareaRef
+});
+
 // 전송 가능 상태 계산
 const canSend = computed(() => {
   return (inputValue.value.trim().length > 0 || selectedImages.value.length > 0) && !props.isLoading && !props.isStreaming;
 });
 
+// 최대 5줄까지 자동 확장 (line-height 기반 계산)
+const MAX_LINES = 5;
+const getMaxHeight = () => {
+  // 모바일 브레이크포인트에 따른 line-height 계산
+  const width = window.innerWidth;
+  if (width <= 480) return 20 * MAX_LINES; // 100px (소형 모바일)
+  if (width <= 640) return 22 * MAX_LINES; // 110px (모바일)
+  return 25 * MAX_LINES; // 125px (데스크톱/태블릿)
+};
+
 const autoGrow = () => {
   if (textareaRef.value) {
-    // Temporarily shrink to get the correct scrollHeight
-    textareaRef.value.style.height = '1px';
-    textareaRef.value.style.height = `${textareaRef.value.scrollHeight}px`;
+    const maxHeight = getMaxHeight();
+
+    // 일시적으로 높이를 초기화하여 정확한 scrollHeight 측정
+    textareaRef.value.style.height = 'auto';
+
+    // 최대 높이 제한 적용
+    const newHeight = Math.min(textareaRef.value.scrollHeight, maxHeight);
+    textareaRef.value.style.height = `${newHeight}px`;
+
+    // 최대 높이 초과 시 스크롤 활성화
+    textareaRef.value.style.overflowY =
+      textareaRef.value.scrollHeight > maxHeight ? 'auto' : 'hidden';
+  }
+};
+
+// 키보드 이벤트 처리 (Shift+Enter: 줄바꿈, Enter: 전송)
+const handleKeydown = (event: KeyboardEvent) => {
+  if (event.key === 'Enter') {
+    // Shift+Enter 또는 모바일에서 줄바꿈 키: 줄바꿈 허용
+    if (event.shiftKey) {
+      // 기본 동작 유지 (줄바꿈)
+      return;
+    }
+
+    // Enter만 누르면 전송
+    event.preventDefault();
+    onSend();
   }
 };
 
@@ -179,18 +233,18 @@ const removeImage = (index: number) => {
   align-items: center;
 }
 
-/* Chat Input Box - Figma 디자인 정확히 매칭 */
+/* Chat Input Box - textarea와 버튼이 같은 줄에 배치 */
 .chat-input-box {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 17px;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
   max-width: min(770px, 100%);
   width: 100%;
   background-color: #F8FBFF;
   border: 1px solid #F3F4F6;
   border-radius: 15px;
-  padding: 16px 10px;
+  padding: 12px 16px;
   box-sizing: border-box;
   flex-shrink: 0;
   position: relative;
@@ -211,11 +265,10 @@ const removeImage = (index: number) => {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  max-width: 710px;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: 0 4px;
   box-sizing: border-box;
-  flex-shrink: 0;
 }
 
 /* Textarea Styling */
@@ -232,8 +285,9 @@ textarea {
   font-weight: 500;
   line-height: 25px;
   resize: none;
-  overflow-y: auto;
-  max-height: 150px;
+  overflow-y: hidden; /* JavaScript에서 동적으로 제어 */
+  max-height: 125px; /* 5줄 = 25px * 5 */
+  min-height: 25px; /* 최소 1줄 */
   box-sizing: border-box;
   padding: 0;
   margin: 0;
@@ -254,12 +308,11 @@ textarea:disabled {
   background-color: rgba(156, 163, 175, 0.05);
 }
 
-/* Button Row - justify-between으로 양쪽 끝 배치 */
+/* Button Row - 오른쪽에 전송 버튼만 배치 */
 .button-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
+  justify-content: flex-end;
   flex-shrink: 0;
   position: relative;
 }
@@ -297,8 +350,10 @@ textarea:disabled {
   border: 1px solid #E5E7EB;
 }
 
+/* FR-031: 터치 피드백 */
 .input-state-button:active {
   background-color: #E5E7EB;
+  transform: scale(0.95);
 }
 
 /* Send Button - 전송 버튼 */
@@ -330,8 +385,20 @@ textarea:disabled {
   background-color: #D1D5DB;
 }
 
+/* FR-031: 터치 피드백 */
+.input-state-button-send:active {
+  background-color: #9CA3AF;
+  transform: scale(0.95);
+}
+
 .input-state-button-send:focus {
   outline: none;
+}
+
+/* FR-035: 키보드 포커스 표시 */
+.input-state-button-send:focus-visible {
+  outline: 2px solid #02478a;
+  outline-offset: 2px;
 }
 
 /* Button Icon */
@@ -524,8 +591,15 @@ textarea:disabled {
 }
 
 
-/* 반응형 설정 */
-@media (max-width: 1024px) {
+/* ===========================================
+   반응형 설정 (PRD Breakpoints)
+   - Mobile: ~640px
+   - Tablet: 641-1024px
+   - Desktop: 1025px+
+   =========================================== */
+
+/* 태블릿 (641px - 1024px) */
+@media (min-width: 641px) and (max-width: 1024px) {
   .chat-input-box {
     max-width: 500px;
     width: 500px;
@@ -536,12 +610,14 @@ textarea:disabled {
   }
 }
 
-@media (max-width: 768px) {
+/* 모바일 (640px 이하) */
+@media (max-width: 640px) {
   .chat-input-box {
-    max-width: calc(100vw - 32px);
-    width: calc(100vw - 32px);
+    max-width: calc(100vw - 24px);
+    width: calc(100vw - 24px);
     padding: 14px 10px;
     gap: 14px;
+    border-radius: 12px;
   }
 
   .placeholder-text-container {
@@ -549,22 +625,51 @@ textarea:disabled {
   }
 
   .disclaimer-text {
-    max-width: calc(100vw - 32px);
+    max-width: calc(100vw - 24px);
     margin: 12px auto;
     font-size: 9px;
     padding: 0 8px;
   }
 
   .file-preview {
-    width: 90px;
-    height: 90px;
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+  }
+
+  textarea {
+    font-size: 15px;
+    line-height: 22px;
+    max-height: 110px; /* 5줄 = 22px * 5 */
+    min-height: 22px;
+  }
+
+  /* 터치 친화적 버튼 크기 (FR-029: 최소 44px) */
+  .input-state-button,
+  .input-state-button-send {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 10px;
+  }
+
+  .button-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .send-icon {
+    width: 13px;
+    height: 16px;
   }
 }
 
+/* 초소형 모바일 (480px 이하) */
 @media (max-width: 480px) {
   .chat-input-box {
-    max-width: calc(100vw - 24px);
-    width: calc(100vw - 24px);
+    max-width: calc(100vw - 20px);
+    width: calc(100vw - 20px);
     padding: 12px 8px;
     gap: 12px;
   }
@@ -575,11 +680,11 @@ textarea:disabled {
 
   .input-state-button,
   .input-state-button-send {
-    width: 30px;
-    height: 30px;
-    min-width: 30px;
-    min-height: 30px;
-    padding: 5px;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    padding: 6px;
   }
 
   .button-icon {
@@ -599,12 +704,14 @@ textarea:disabled {
 
   textarea {
     font-size: 14px;
-    line-height: 22px;
+    line-height: 20px;
+    max-height: 100px; /* 5줄 = 20px * 5 */
+    min-height: 20px;
   }
 
   .file-preview {
-    width: 80px;
-    height: 80px;
+    width: 70px;
+    height: 70px;
   }
 
   .disclaimer-text {
@@ -613,6 +720,7 @@ textarea:disabled {
   }
 }
 
+/* 극소형 모바일 (320px 이하) */
 @media (max-width: 320px) {
   .chat-input-box {
     max-width: calc(100vw - 16px);
@@ -620,27 +728,33 @@ textarea:disabled {
     padding: 10px 6px;
   }
 
+  /* FR-029: 초소형 모바일에서도 최소 44px 유지 */
   .input-state-button,
   .input-state-button-send {
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
-    min-height: 28px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .button-icon {
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
   }
 
   .expand-icon {
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
   }
 
   .send-icon {
-    width: 9px;
-    height: 12px;
+    width: 11px;
+    height: 14px;
+  }
+
+  .file-preview {
+    width: 60px;
+    height: 60px;
   }
 }
 

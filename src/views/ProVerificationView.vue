@@ -240,27 +240,7 @@
 <script setup lang="ts">
 import { ref, computed, onUnmounted } from 'vue'
 import HeaderSection from '../components/main/HeaderSection.vue'
-
-// Railway 내부 URL(.railway.internal)은 브라우저에서 접근 불가하므로 외부 URL로 대체
-const getApiBaseUrl = () => {
-  const envUrl = import.meta.env.VITE_FASTAPI_URL;
-
-  // Railway 내부 URL 감지 및 외부 URL로 대체
-  if (envUrl && envUrl.includes('.railway.internal')) {
-    
-    return 'https://fastapi-backend-production-2cd0.up.railway.app';
-  }
-
-  // 프로덕션 환경에서 /api 프록시 경로 사용 시 외부 URL로 대체
-  if (!envUrl || envUrl === '/api') {
-    // 브라우저에서 Railway 호스트인지 확인
-    if (typeof window !== 'undefined' && window.location.hostname.includes('railway.app')) {
-      return 'https://fastapi-backend-production-2cd0.up.railway.app';
-    }
-  }
-
-  return envUrl || '/api';
-};
+import { getApiBaseUrl } from '@/utils/ports-config'
 
 const API_BASE_URL = getApiBaseUrl()
 
@@ -327,7 +307,7 @@ const refreshAccessToken = async (): Promise<string | null> => {
       const data = await response.json()
       const newToken = data.access_token
       if (newToken) {
-        localStorage.setItem('access_token', newToken)
+        localStorage.setItem('accessToken', newToken)
         return newToken
       }
     }
@@ -339,7 +319,7 @@ const refreshAccessToken = async (): Promise<string | null> => {
 
 // Helper function to get valid auth headers (with auto-refresh)
 const getAuthHeaders = async (): Promise<Record<string, string>> => {
-  let token = localStorage.getItem('accessToken') || localStorage.getItem('access_token')
+  let token = localStorage.getItem('accessToken')
 
   // Check if token is expired and try to refresh
   if (token && isTokenExpired(token)) {
@@ -351,7 +331,6 @@ const getAuthHeaders = async (): Promise<Record<string, string>> => {
     } else {
       console.log('[DEBUG] Token refresh failed, user may need to re-login')
       // Clear expired token
-      localStorage.removeItem('access_token')
       localStorage.removeItem('accessToken')
       token = null
     }
@@ -507,7 +486,7 @@ const verifyCode = async () => {
 // 사용자 정보 갱신 함수
 const refreshUserInfo = async () => {
   try {
-    const token = localStorage.getItem('accessToken') || localStorage.getItem('access_token')
+    const token = localStorage.getItem('accessToken')
     if (!token) return
 
     const response = await fetch(`${API_BASE_URL}/member/me`, {

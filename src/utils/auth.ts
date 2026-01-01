@@ -10,15 +10,15 @@ export interface UserInfo {
 }
 
 export const getAccessToken = (): string | null => {
-  return localStorage.getItem('access_token')
+  return localStorage.getItem('accessToken')
 }
 
 export const setAccessToken = (token: string): void => {
-  localStorage.setItem('access_token', token)
+  localStorage.setItem('accessToken', token)
 }
 
 export const removeAccessToken = (): void => {
-  localStorage.removeItem('access_token')
+  localStorage.removeItem('accessToken')
 }
 
 export const isAuthenticated = (): boolean => {

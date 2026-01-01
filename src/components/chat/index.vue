@@ -32,7 +32,7 @@
           <ChatHistory 
             :chatHistory="chatHistory" 
             :currentChatId="currentChatId" 
-            @selectChat="selectChat"
+            @selectChat="handleSelectChat"
             @startNewChat="startNewChat"
             @deleteChat="deleteChat"
             @updateChatTitle="updateChatTitle"
@@ -40,8 +40,9 @@
         </div>
       </div>
       <div class="side-footer" @click="toggleMyPageModal">
-        <div class="ellipse">
+        <div class="ellipse" :class="{ 'has-initial': !userProfileImage }">
           <img v-if="userProfileImage" :src="userProfileImage" alt="프로필" class="profile-image" />
+          <span v-else class="user-initial">{{ userInitial }}</span>
         </div>
         <div class="frame-12">
           <div class="notification-container" @click="toggleNotificationDropdown">
@@ -69,6 +70,12 @@
         <div class="mobile-logo">
           <span class="eulgpt-mobile">EULGPT</span>
         </div>
+        <!-- FR-028: 모바일에서 새 대화 버튼 빠른 접근 -->
+        <button class="mobile-new-chat-button" @click="startNewChat" title="새 대화">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
       </div>
 
       <!-- Mode selector - chat-content-col 기준 상대 위치 -->
@@ -82,7 +89,7 @@
 
       <div class="chat-content-wrapper">
         <!-- 일반 채팅 화면 -->
-        <div v-if="currentView === 'chat'" class="chat-main-area">
+        <div v-if="currentView === 'chat'" class="chat-main-area" @click="handleMessageAreaClick">
           <div class="rag-initializer-container">
             <RagInitializer />
           </div>
@@ -92,21 +99,33 @@
               @feedback="handleMessageFeedback"
               @regenerate="handleMessageRegenerate"
               @openArtifact="handleOpenArtifact"
+              @retry="handleRetryMessage"
             />
           </div>
           <div class="chat-input-area">
             <ChatInput
+              ref="chatInputRef"
               :isLoading="isLoading"
               :isStreaming="isStreaming"
               @sendMessage="handleSendMessage"
               @stopResponse="stopResponse"
             />
-            <button class="help-button" @click="toggleInfoPanel" title="도움말">
-              <svg width="8" height="15" viewBox="0 0 8 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="4" cy="11.5" r="0.5" fill="black"/>
-                <path d="M4 1C2.34315 1 1 2.34315 1 4H2C2 2.89543 2.89543 2 4 2C5.10457 2 6 2.89543 6 4C6 5.10457 5.10457 6 4 6V9H5V6C6.65685 6 8 4.65685 8 3C8 1.34315 6.65685 0 5 0H4V1Z" fill="black"/>
-              </svg>
-            </button>
+            <div class="help-button-container">
+              <div v-if="showHelpPanel" class="help-panel">
+                <div class="help-panel-item">
+                  <span class="help-panel-text">자주 묻는 질문</span>
+                </div>
+                <div class="help-panel-item">
+                  <span class="help-panel-text">가이드</span>
+                </div>
+              </div>
+              <button class="help-button" @click="toggleHelpPanel" title="도움말">
+                <svg width="8" height="15" viewBox="0 0 8 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="4" cy="11.5" r="0.5" fill="black"/>
+                  <path d="M4 1C2.34315 1 1 2.34315 1 4H2C2 2.89543 2.89543 2 4 2C5.10457 2 6 2.89543 6 4C6 5.10457 5.10457 6 4 6V9H5V6C6.65685 6 8 4.65685 8 3C8 1.34315 6.65685 0 5 0H4V1Z" fill="black"/>
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -139,7 +158,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import ChatHistory from './ChatHistory.vue';
 import ChatMessageArea from './ChatMessageArea.vue';
@@ -154,30 +173,10 @@ import MyPageModal from '../common/MyPageModal.vue';
 import { useChat } from '../../composables/useChat';
 import type { ChatMode, Artifact, ArtifactVersion } from '../../composables/useChat';
 import eulLogo from '../../assets/eul_logo.svg';
+import { getApiBaseUrl } from '@/utils/ports-config';
 
 const router = useRouter();
 const route = useRoute();
-
-// Railway 내부 URL(.railway.internal)은 브라우저에서 접근 불가하므로 외부 URL로 대체
-const getApiBaseUrl = () => {
-  const envUrl = import.meta.env.VITE_FASTAPI_URL;
-
-  // Railway 내부 URL 감지 및 외부 URL로 대체
-  if (envUrl && envUrl.includes('.railway.internal')) {
-    
-    return 'https://fastapi-backend-production-2cd0.up.railway.app';
-  }
-
-  // 프로덕션 환경에서 /api 프록시 경로 사용 시 외부 URL로 대체
-  if (!envUrl || envUrl === '/api') {
-    // 브라우저에서 Railway 호스트인지 확인
-    if (typeof window !== 'undefined' && window.location.hostname.includes('railway.app')) {
-      return 'https://fastapi-backend-production-2cd0.up.railway.app';
-    }
-  }
-
-  return envUrl || '/api';
-};
 
 const API_BASE_URL = getApiBaseUrl();
 import "./index.css";
@@ -202,6 +201,22 @@ const {
 const handleSendMessage = (message: string, images?: File[]) => {
   const inputValue = { value: message };
   handleSend(inputValue, images);
+
+  // 전송 후 입력창 포커스 유지 (FR-019) - 모바일에서는 키보드 유지
+  if (isMobile.value && chatInputRef.value) {
+    nextTick(() => {
+      chatInputRef.value?.focusInput();
+    });
+  }
+};
+
+// 채팅 선택 핸들러 - 모바일에서는 드로어 자동 닫기 (FR-025)
+const handleSelectChat = (chatId: string) => {
+  selectChat(chatId);
+  // 모바일에서 채팅 선택 후 드로어 닫기
+  if (isMobile.value) {
+    sidebarVisible.value = false;
+  }
 };
 
 const handleModeChange = (mode: ChatMode) => {
@@ -282,20 +297,149 @@ const handleOpenArtifact = (messageId: string) => {
   showArtifactPanel.value = true;
 };
 
+// 메시지 재시도 처리 (에러 발생 시)
+const handleRetryMessage = (messageIndex: number) => {
+  console.log('메시지 재시도 요청:', messageIndex);
+
+  try {
+    const currentChat = chatHistory.value.find(c => c.id === currentChatId.value);
+
+    if (!currentChat || !currentChat.messages[messageIndex]) {
+      console.error('재시도할 메시지를 찾을 수 없습니다.');
+      return;
+    }
+
+    // 해당 메시지 이전의 사용자 메시지 찾기
+    let userMessage = '';
+    let userMessageIndex = -1;
+    for (let i = messageIndex - 1; i >= 0; i--) {
+      if (currentChat.messages[i].isUser) {
+        userMessage = currentChat.messages[i].text;
+        userMessageIndex = i;
+        break;
+      }
+    }
+
+    if (!userMessage) {
+      console.error('재시도를 위한 사용자 메시지를 찾을 수 없습니다.');
+      return;
+    }
+
+    console.log('🔄 메시지 재시도 시작:', userMessage.substring(0, 50) + '...');
+
+    // 에러 상태의 봇 메시지를 로딩 상태로 변경
+    currentChat.messages[messageIndex] = {
+      ...currentChat.messages[messageIndex],
+      text: '다시 시도하고 있습니다...',
+      isLoading: true,
+      isStreaming: false,
+      currentStep: '재시도 중...',
+      hasError: false,
+      errorDetails: undefined
+    };
+
+    // 에러 메시지 제거하고 다시 전송
+    currentChat.messages.splice(messageIndex, 1);
+
+    // handleSend를 사용하여 재시도
+    const inputValue = { value: userMessage };
+    handleSend(inputValue);
+
+  } catch (error) {
+    console.error('메시지 재시도 오류:', error);
+  }
+};
+
 // 디버깅을 위한 messages 로그
 console.log('현재 메시지들:', messages.value);
 
 const isMobile = ref(false);
 const sidebarVisible = ref(true);
 const sidebarWidth = ref(Number(localStorage.getItem('sidebarWidth')) || 270);
+
+// 키보드 오버레이 대응을 위한 상태
+const keyboardHeight = ref(0);
+const isKeyboardOpen = ref(false);
+
+// ChatInput 컴포넌트 ref
+const chatInputRef = ref<InstanceType<typeof ChatInput> | null>(null);
+
+// 메시지 영역 ref (자동 스크롤용)
+const messagesContainerRef = ref<HTMLElement | null>(null);
+
+// visualViewport를 사용한 키보드 높이 감지 (iOS/Android)
+const handleVisualViewportResize = () => {
+  if (!window.visualViewport) return;
+
+  const viewport = window.visualViewport;
+  // 뷰포트 높이와 실제 윈도우 높이의 차이가 키보드 높이
+  const heightDiff = window.innerHeight - viewport.height;
+
+  // 50px 이상 차이나면 키보드가 열린 것으로 간주
+  if (heightDiff > 50) {
+    const wasKeyboardOpen = isKeyboardOpen.value;
+    keyboardHeight.value = heightDiff;
+    isKeyboardOpen.value = true;
+    // CSS 변수로 키보드 높이 전달
+    document.documentElement.style.setProperty('--keyboard-height', `${heightDiff}px`);
+
+    // 키보드가 처음 열릴 때 메시지 영역 스크롤 (FR-020)
+    if (!wasKeyboardOpen) {
+      scrollToBottom();
+    }
+  } else {
+    keyboardHeight.value = 0;
+    isKeyboardOpen.value = false;
+    document.documentElement.style.setProperty('--keyboard-height', '0px');
+  }
+};
+
+// 메시지 영역을 맨 아래로 스크롤
+const scrollToBottom = () => {
+  nextTick(() => {
+    const container = document.querySelector('.chat-messages-container');
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
+  });
+};
+
+// 외부 영역 클릭 시 키보드 닫기 (FR-018)
+const handleMessageAreaClick = (event: Event) => {
+  // 모바일에서만 적용
+  if (!isMobile.value) return;
+
+  const target = event.target as HTMLElement;
+  // 입력 영역이 아닌 곳을 클릭하면 키보드 닫기
+  if (!target.closest('.chat-input-area') && chatInputRef.value) {
+    chatInputRef.value.blurInput();
+  }
+};
+
 const isResizing = ref(false);
 const minSidebarWidth = 200;
 const maxSidebarWidth = 500;
 const showNotificationDropdown = ref(false);
 const showInfoPanel = ref(false);
+const showHelpPanel = ref(false);
 const showMyPageModal = ref(false);
 const userProfileImage = ref<string | null>(null);
+const userName = ref<string>('');
+const userEmail = ref<string>('');
 const isProUser = ref(false);
+
+// 사용자 이니셜 생성 (프로필 이미지 없을 때 표시)
+const userInitial = computed(() => {
+  if (userName.value) {
+    // 이름의 첫 글자 (한글/영문 모두 지원)
+    return userName.value.charAt(0).toUpperCase();
+  }
+  if (userEmail.value) {
+    // 이메일의 첫 글자
+    return userEmail.value.charAt(0).toUpperCase();
+  }
+  return 'U'; // 기본값
+});
 const showSourceSidebar = ref(true); // RAG 소스 사이드바 표시 여부
 const showArtifactPanel = ref(true); // 아티팩트 패널 표시 여부
 const selectedArtifactMessageId = ref<string | null>(null); // 선택된 아티팩트의 메시지 ID
@@ -379,8 +523,14 @@ const handleRegenerateArtifact = async (artifact: Artifact) => {
   handleSend(inputValue);
 };
 
-const handleImproveSelection = async (payload: { selectedText: string; fullContent: string }) => {
-  console.log('🤖 텍스트 개선 요청:', payload.selectedText.substring(0, 50));
+// [DISABLED] Gemini AI 텍스트 개선 기능 - 비활성화됨
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const handleImproveSelection = async (_payload: { selectedText: string; fullContent: string }) => {
+  console.warn('[DISABLED] Gemini AI text improvement is not available');
+  alert('AI 텍스트 개선 기능이 현재 비활성화되어 있습니다.');
+  return;
+  /* [DISABLED] 기존 Gemini AI 텍스트 개선 코드 시작
+  console.log('🤖 텍스트 개선 요청:', _payload.selectedText.substring(0, 50));
 
   // 현재 채팅 정보 가져오기
   const currentChat = chatHistory.value.find(c => c.id === currentChatId.value);
@@ -530,13 +680,26 @@ ${payload.fullContent.substring(0, 500)}...
     console.error('텍스트 개선 실패:', error);
     alert('텍스트 개선에 실패했습니다. 다시 시도해주세요.');
   }
+  [DISABLED] 기존 Gemini AI 텍스트 개선 코드 끝 */
 };
 
+// PRD Breakpoints: Mobile ~640px, Tablet 641-1024px, Desktop 1025px+
+const MOBILE_BREAKPOINT = 640;
+const TABLET_BREAKPOINT = 1024;
+
 const checkMobileSize = () => {
-  isMobile.value = window.innerWidth <= 768;
+  const width = window.innerWidth;
+  isMobile.value = width <= MOBILE_BREAKPOINT;
+
   if (isMobile.value) {
+    // 모바일: 사이드바 기본 숨김
     sidebarVisible.value = false;
+  } else if (width <= TABLET_BREAKPOINT) {
+    // 태블릿: 사이드바 표시 (축소된 상태)
+    sidebarVisible.value = true;
+    sidebarWidth.value = 220;
   } else {
+    // 데스크톱: 사이드바 표시
     sidebarVisible.value = true;
   }
 };
@@ -560,7 +723,18 @@ const toggleInfoPanel = (event: Event) => {
   console.log('Info icon clicked!');
   showInfoPanel.value = !showInfoPanel.value;
   showNotificationDropdown.value = false; // 다른 패널 닫기
+  showHelpPanel.value = false; // 다른 패널 닫기
   console.log('Info panel toggled:', showInfoPanel.value);
+};
+
+const toggleHelpPanel = (event: Event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  console.log('Help button clicked!');
+  showHelpPanel.value = !showHelpPanel.value;
+  showNotificationDropdown.value = false; // 다른 패널 닫기
+  showInfoPanel.value = false; // 다른 패널 닫기
+  console.log('Help panel toggled:', showHelpPanel.value);
 };
 
 const toggleMyPageModal = () => {
@@ -615,7 +789,7 @@ const handleClickOutside = (event: Event) => {
 // 사용자 프로필 정보 가져오기
 const fetchUserProfile = async () => {
   try {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('accessToken');
     if (!token) return;
 
     // 개발 환경에서 Pro 계정 토큰인지 체크
@@ -627,6 +801,8 @@ const fetchUserProfile = async () => {
         if (data.profile_image_url) {
           userProfileImage.value = data.profile_image_url;
         }
+        userName.value = data.name || data.nickname || '';
+        userEmail.value = data.email || '';
         isProUser.value = data.is_pro || false;
         console.log('✅ Pro 라이센스 활성화:', isProUser.value);
       }
@@ -645,6 +821,8 @@ const fetchUserProfile = async () => {
       if (data.profile_image_url) {
         userProfileImage.value = data.profile_image_url;
       }
+      userName.value = data.name || data.nickname || '';
+      userEmail.value = data.email || '';
       isProUser.value = data.is_pro || false;
     }
   } catch (error) {
@@ -657,6 +835,12 @@ onMounted(() => {
   fetchUserProfile();
   window.addEventListener('resize', checkMobileSize);
   document.addEventListener('click', handleClickOutside);
+
+  // visualViewport API를 사용한 키보드 높이 감지 (모바일)
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', handleVisualViewportResize);
+    window.visualViewport.addEventListener('scroll', handleVisualViewportResize);
+  }
 
   // 카카오 계정 연동 결과 처리
   const kakaoLinkResult = route.query.kakao_link as string;
@@ -677,6 +861,12 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('resize', checkMobileSize);
   document.removeEventListener('click', handleClickOutside);
+
+  // visualViewport 이벤트 리스너 정리
+  if (window.visualViewport) {
+    window.visualViewport.removeEventListener('resize', handleVisualViewportResize);
+    window.visualViewport.removeEventListener('scroll', handleVisualViewportResize);
+  }
 });
 
 const goToHome = () => {
@@ -1006,6 +1196,19 @@ const goToCrew = () => {
   object-fit: cover;
   border-radius: 50%;
 }
+
+.ellipse.has-initial {
+  background: linear-gradient(135deg, #02478a 0%, #0369a1 100%);
+}
+
+.user-initial {
+  color: #ffffff;
+  font-family: Pretendard, var(--default-font-family);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  text-transform: uppercase;
+}
 .frame-12 {
   display: flex;
   align-items: flex-end;
@@ -1055,7 +1258,7 @@ const goToCrew = () => {
 }
 
 
-/* Mobile overlay */
+/* Mobile overlay - v-if로 렌더링 제어, CSS로는 표시만 담당 */
 .mobile-overlay {
   position: fixed;
   top: 0;
@@ -1064,7 +1267,7 @@ const goToCrew = () => {
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
   z-index: 999;
-  display: none;
+  /* display는 v-if로 제어되므로 기본값 유지 */
 }
 
 /* Mobile header */
@@ -1080,17 +1283,35 @@ const goToCrew = () => {
   z-index: 100;
 }
 
+/* FR-029: 터치 타겟 최소 44px */
 .mobile-menu-toggle {
   background: none;
   border: none;
-  padding: 8px;
+  padding: 12px;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 8px;
   transition: background-color 0.2s;
 }
 
 .mobile-menu-toggle:hover {
   background: #f3f4f6;
+}
+
+/* FR-031: 터치 피드백 */
+.mobile-menu-toggle:active {
+  background: #e5e7eb;
+  transform: scale(0.95);
+}
+
+/* FR-035: 키보드 포커스 표시 */
+.mobile-menu-toggle:focus-visible {
+  outline: 2px solid #02478a;
+  outline-offset: 2px;
 }
 
 .hamburger-icon {
@@ -1124,6 +1345,35 @@ const goToCrew = () => {
   font-size: 20px;
   font-weight: 700;
   letter-spacing: 0.4px;
+}
+
+/* FR-028: 모바일 새 대화 버튼, FR-029: 터치 타겟 최소 44px */
+.mobile-new-chat-button {
+  display: none; /* 기본적으로 숨김, 모바일에서만 표시 */
+  background: none;
+  border: none;
+  padding: 12px;
+  min-width: 44px;
+  min-height: 44px;
+  cursor: pointer;
+  border-radius: 8px;
+  color: #02478a;
+  transition: background-color 0.2s;
+}
+
+.mobile-new-chat-button:hover {
+  background: #f0f6ff;
+}
+
+.mobile-new-chat-button:active {
+  background: #e0eeff;
+  transform: scale(0.95);
+}
+
+/* FR-035: 키보드 포커스 표시 */
+.mobile-new-chat-button:focus-visible {
+  outline: 2px solid #02478a;
+  outline-offset: 2px;
 }
 
 /* Mode selector container */
@@ -1188,6 +1438,57 @@ const goToCrew = () => {
   display: block;
 }
 
+.help-button-container {
+  position: absolute;
+  bottom: 30px;
+  right: 30px;
+  z-index: 101;
+}
+
+.help-button-container .help-button {
+  position: relative;
+  bottom: auto;
+  right: auto;
+}
+
+.help-panel {
+  position: absolute;
+  bottom: 44px;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background-color: white;
+  border: 1px solid #F3F4F6;
+  border-radius: 15px;
+  box-shadow: 1px 1px 4px 0px rgb(217, 217, 217);
+  padding: 15px;
+  width: 200px;
+  z-index: 2000;
+}
+
+.help-panel-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.help-panel-item:hover {
+  background-color: rgb(240, 246, 255);
+}
+
+.help-panel-text {
+  color: black;
+  font-size: 14px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 500;
+  line-height: 23px;
+}
+
 /* Sidebar resizer */
 .sidebar-resizer {
   position: absolute;
@@ -1228,20 +1529,40 @@ const goToCrew = () => {
   opacity: 1;
 }
 
-/* Responsive styles */
-@media (max-width: 768px) {
+/* ========================================
+   Keyboard Overlay Support (Story 2.1)
+   - CSS 변수를 통해 키보드 높이 대응
+   - visualViewport API와 연동
+   ======================================== */
+:root {
+  --keyboard-height: 0px;
+}
+
+/* ========================================
+   Responsive Breakpoints (PRD Spec):
+   - Mobile: ~640px
+   - Tablet: 641px ~ 1024px
+   - Desktop: 1025px+
+   ======================================== */
+
+/* Mobile styles (640px and below) */
+@media (max-width: 640px) {
   .main-container {
     position: relative;
   }
-  
-  .mobile-overlay {
-    display: block;
-  }
-  
+
+  /* .mobile-overlay는 v-if로 제어됨 */
+
   .mobile-header {
     display: flex;
   }
-  
+
+  .mobile-new-chat-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   .chatbot-sidebar-wrapper {
     position: fixed;
     top: 0;
@@ -1254,131 +1575,156 @@ const goToCrew = () => {
     transform: translateX(0);
     transition: transform 0.3s ease-in-out;
   }
-  
+
   .chatbot-sidebar-wrapper.mobile-hidden {
     transform: translateX(-100%);
   }
-  
+
   .sidebar-resizer {
     display: none;
   }
-  
+
   .chat-content-col {
     width: 100%;
     margin-left: 0;
     padding: 0;
   }
+
+  .mode-selector-container {
+    position: relative;
+    top: 0;
+    left: 0;
+    padding: 12px 16px;
+  }
+
+  .help-button {
+    bottom: 20px;
+    right: 16px;
+  }
+
+  /* 키보드 오버레이 대응 */
+  .chat-input-area {
+    position: sticky;
+    bottom: 0;
+    background: #ffffff;
+    padding-bottom: max(env(safe-area-inset-bottom), var(--keyboard-height, 0px));
+    transition: padding-bottom 0.15s ease-out;
+    z-index: 100;
+  }
+
+  /* 키보드가 열렸을 때 메시지 영역 조정 + FR-032: 부드러운 스크롤 */
+  .chat-messages-container {
+    padding-bottom: calc(var(--keyboard-height, 0px) + 16px);
+    transition: padding-bottom 0.15s ease-out;
+    -webkit-overflow-scrolling: touch; /* iOS 부드러운 스크롤 */
+    scroll-behavior: smooth;
+    overscroll-behavior: contain; /* 스크롤 체이닝 방지 */
+  }
+
+  /* 키보드가 열렸을 때 도움말 버튼 위치 조정 */
+  .help-button {
+    bottom: calc(20px + var(--keyboard-height, 0px));
+    transition: bottom 0.15s ease-out;
+  }
 }
 
+/* Small mobile (480px and below) */
 @media (max-width: 480px) {
   .chatbot-sidebar-wrapper {
     width: 100% !important;
   }
-  
+
   .chatbot-logo-header {
     padding: 0 12px;
     height: auto;
     min-height: 36px;
   }
-  
+
   .eulgpt-logo-svg {
     height: 30px;
   }
-  
+
   .logo-icon {
     width: 20px;
     height: 20px;
   }
-  
+
   .edit-icon {
     width: 20px;
     height: 20px;
   }
-  
+
   .chatbot-menu-item {
     padding: 0 12px;
   }
-  
-  .mode-selector-container {
-    padding: 12px 0 0 16px;
-  }
-  
+
   .empty-classroom-check,
   .library-study-room-reservation,
   .status {
     font-size: 13px;
   }
-  
+
   .mobile-logo .eulgpt-mobile {
     font-size: 18px;
   }
-  
+
   .chat-content-col {
     padding: 0;
   }
+
+  /* 480px 이하에서도 키보드 대응 유지 */
+  .chat-input-area {
+    padding-bottom: max(env(safe-area-inset-bottom), var(--keyboard-height, 0px));
+  }
 }
 
-/* Small mobile additional breakpoint */
+/* Extra small mobile (320px and below) */
 @media (max-width: 320px) {
   .chatbot-logo-header {
     padding: 0 8px;
   }
-  
+
   .eulgpt-logo-svg {
     height: 26px;
   }
-  
+
   .logo-icon {
     width: 18px;
     height: 18px;
   }
-  
+
   .edit-icon {
     width: 18px;
     height: 18px;
   }
-  
+
   .chat-content-col {
     padding: 0;
   }
 }
 
-/* Medium screens */
-@media (max-width: 640px) and (min-width: 481px) {
-  .chatbot-logo-header {
-    padding: 0 16px;
-  }
-  
-  .eulgpt-logo-svg {
-    height: 32px;
-  }
-  
-  .logo-icon {
-    width: 22px;
-    height: 22px;
-  }
-  
-  .chat-content-col {
-    padding: 0;
-  }
-}
-
-/* Tablet styles */
-@media (min-width: 769px) and (max-width: 1024px) {
+/* Tablet styles (641px ~ 1024px) */
+@media (min-width: 641px) and (max-width: 1024px) {
   .chatbot-sidebar-wrapper {
-    width: 240px;
+    width: 220px;
+    min-width: 200px;
+    max-width: 260px;
   }
-  
+
   .chatbot-logo-header {
     padding: 0 16px;
   }
-  
+
   .chatbot-menu-item {
     padding: 0 16px;
   }
-  
+
   .chat-content-col {
     padding: 0;
+  }
+
+  .mode-selector-container {
+    left: 20px;
   }
 }
 

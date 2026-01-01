@@ -277,6 +277,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import './MyPageModal_settings.css'
+import { getApiBaseUrl } from '../../utils/ports-config'
 
 defineProps<{
   isVisible: boolean
@@ -285,27 +286,6 @@ defineProps<{
 const emit = defineEmits<{
   (e: 'close'): void
 }>()
-
-// Railway 내부 URL(.railway.internal)은 브라우저에서 접근 불가하므로 외부 URL로 대체
-const getApiBaseUrl = () => {
-  const envUrl = import.meta.env.VITE_FASTAPI_URL;
-
-  // Railway 내부 URL 감지 및 외부 URL로 대체
-  if (envUrl && envUrl.includes('.railway.internal')) {
-    
-    return 'https://fastapi-backend-production-2cd0.up.railway.app';
-  }
-
-  // 프로덕션 환경에서 /api 프록시 경로 사용 시 외부 URL로 대체
-  if (!envUrl || envUrl === '/api') {
-    // 브라우저에서 Railway 호스트인지 확인
-    if (typeof window !== 'undefined' && window.location.hostname.includes('railway.app')) {
-      return 'https://fastapi-backend-production-2cd0.up.railway.app';
-    }
-  }
-
-  return envUrl || '/api';
-};
 
 const API_BASE_URL = getApiBaseUrl()
 const activeTab = ref<'mypage' | 'settings'>('mypage')
@@ -348,7 +328,7 @@ const userInfo = ref<{
 // 사용자 정보 불러오기
 const fetchUserInfo = async () => {
   try {
-    const token = localStorage.getItem('access_token')
+    const token = localStorage.getItem('accessToken')
     if (!token) {
       console.error('액세스 토큰이 없습니다.')
       return
@@ -532,7 +512,7 @@ const handleCompleteProVerification = async () => {
   }
 
   try {
-    const token = localStorage.getItem('access_token')
+    const token = localStorage.getItem('accessToken')
     if (!token) {
       alert('로그인이 필요합니다.')
       return
@@ -585,7 +565,7 @@ const handleKakaoLink = async () => {
   try {
     isLinkingKakao.value = true
 
-    const token = localStorage.getItem('access_token')
+    const token = localStorage.getItem('accessToken')
     if (!token) {
       alert('로그인이 필요합니다.')
       return

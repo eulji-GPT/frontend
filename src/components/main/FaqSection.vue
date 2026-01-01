@@ -39,6 +39,7 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick, type ComponentPublicInstance } from 'vue'
 import SkeletonLoader from '../common/SkeletonLoader.vue'
+import { getApiBaseUrl } from '@/utils/ports-config'
 
 interface FaqItem {
   q: string;
@@ -51,23 +52,6 @@ const answerHeights = ref<Record<number, number>>({})
 const answerRefs = ref<Record<number, HTMLElement>>({})
 const isLoading = ref(true)
 const error = ref<string | null>(null)
-
-// API Base URL 설정
-const getApiBaseUrl = () => {
-  const envUrl = import.meta.env.VITE_FASTAPI_URL
-  if (envUrl && envUrl.includes('.railway.internal')) {
-    return 'https://fastapi-backend-production-2cd0.up.railway.app'
-  }
-  if (!envUrl || envUrl === '/api') {
-    if (typeof window !== 'undefined' && window.location.hostname.includes('railway.app')) {
-      return 'https://fastapi-backend-production-2cd0.up.railway.app'
-    }
-    if (typeof window !== 'undefined' && (window.location.hostname === 'euljigpt.com' || window.location.hostname === 'www.euljigpt.com')) {
-      return 'https://fastapi-backend-production-2cd0.up.railway.app'
-    }
-  }
-  return envUrl || '/api'
-}
 
 const API_BASE_URL = getApiBaseUrl()
 

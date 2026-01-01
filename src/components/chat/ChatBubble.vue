@@ -82,60 +82,17 @@
   </div>
 </template>
 
-<script setup>
-import { computed, useSlots, onMounted, onUpdated, nextTick } from 'vue';
-import { marked } from 'marked';
+<script setup lang="ts">
+import { computed, useSlots, onMounted, onUpdated, nextTick, watch, ref } from 'vue';
 import ChatFeedbackButtons from './ChatFeedbackButtons.vue';
 import LottieLoader from './LottieLoader.vue';
+import { createEnhancedMarked, createStreamingHighlighter } from '@/utils/markdown-extensions';
 
-// marked 설정 강화 - 테이블, GFM, 코드 하이라이팅 지원
-marked.use({
-  breaks: false,  // 개행을 <br>로 변환하지 않음
-  gfm: true,
-  headerIds: false,
-  mangle: false,
-  pedantic: false,
-  tables: true,
-  smartLists: true,
-  smartypants: false
-});
+// 향상된 마크다운 렌더러 초기화 (Prism.js + KaTeX 포함)
+const { marked, parse: enhancedParse, highlightCode } = createEnhancedMarked();
 
-// 코드 블록 렌더러 커스터마이징 - 복사 버튼 추가
-const renderer = new marked.Renderer();
-
-renderer.code = function(token) {
-  // marked.js 4.x+에서는 token 객체로 전달됨
-  const code = token.text || token;
-  const lang = token.lang || '';
-
-  // code가 문자열이 아닌 경우 문자열로 변환
-  const codeString = typeof code === 'string' ? code : String(code || '');
-  const codeId = 'code-' + Math.random().toString(36).substr(2, 9);
-  const escapedCode = codeString
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-
-  return `
-    <div class="code-block-wrapper">
-      <div class="code-header">
-        <span class="code-language">${lang || 'text'}</span>
-        <button class="code-copy-btn" onclick="
-          const code = this.closest('.code-block-wrapper').querySelector('code').textContent;
-          navigator.clipboard.writeText(code).then(() => {
-            this.textContent = '✓ 복사됨';
-            setTimeout(() => this.textContent = '복사', 2000);
-          });
-        ">복사</button>
-      </div>
-      <pre><code id="${codeId}" class="language-${lang || 'text'}">${escapedCode}</code></pre>
-    </div>
-  `;
-};
-
-marked.use({ renderer });
+// 스트리밍 하이라이터 (디바운스 적용)
+const streamingHighlighter = createStreamingHighlighter();
 
 
 const props = defineProps({
@@ -156,7 +113,7 @@ const props = defineProps({
     default: '',
   },
   images: {
-    type: Array,
+    type: Array as () => File[],
     default: () => []
   },
   messageId: {
@@ -182,7 +139,7 @@ const emit = defineEmits(['feedback', 'regenerate', 'openArtifact']);
 const slots = useSlots();
 
 // 파일 미리보기를 위한 함수
-const getFilePreview = (file) => {
+const getFilePreview = (file: File) => {
   try {
     if (file && file instanceof File) {
       return URL.createObjectURL(file);
@@ -292,13 +249,13 @@ const streamingRenderedContent = computed(() => {
 });
 
 // 피드백 처리 함수
-const handleFeedback = (type, messageId) => {
+const handleFeedback = (type: string, messageId: string) => {
   console.log(`피드백 수신: ${type}`, messageId);
   emit('feedback', type, messageId);
 };
 
 // 답변 재생성 처리 함수
-const handleRegenerate = (messageId) => {
+const handleRegenerate = (messageId: string) => {
   console.log('답변 재생성 요청:', messageId);
   emit('regenerate', messageId);
 };
@@ -330,35 +287,64 @@ const addTableCopyButtons = () => {
       `;
 
       // 복사 버튼 클릭 이벤트
-      const copyBtn = header.querySelector('.table-copy-btn');
-      copyBtn.addEventListener('click', () => {
-        const rows = Array.from(table.querySelectorAll('tr'));
-        const text = rows.map(row => {
-          const cells = Array.from(row.querySelectorAll('th, td'));
-          return cells.map(cell => cell.textContent.trim()).join('\t');
-        }).join('\n');
+      const copyBtn = header.querySelector('.table-copy-btn') as HTMLButtonElement | null;
+      if (copyBtn) {
+        copyBtn.addEventListener('click', () => {
+          const rows = Array.from(table.querySelectorAll('tr'));
+          const text = rows.map(row => {
+            const cells = Array.from(row.querySelectorAll('th, td'));
+            return cells.map(cell => (cell.textContent || '').trim()).join('\t');
+          }).join('\n');
 
-        navigator.clipboard.writeText(text).then(() => {
-          copyBtn.textContent = '✓ 복사됨';
-          setTimeout(() => copyBtn.textContent = '복사', 2000);
+          navigator.clipboard.writeText(text).then(() => {
+            copyBtn.textContent = '✓ 복사됨';
+            setTimeout(() => copyBtn.textContent = '복사', 2000);
+          });
         });
-      });
+      }
 
       // 테이블을 래퍼로 감싸기
-      table.parentNode.insertBefore(wrapper, table);
+      if (table.parentNode) {
+        table.parentNode.insertBefore(wrapper, table);
+      }
       wrapper.appendChild(header);
       wrapper.appendChild(table);
     });
   });
 };
 
-// 컴포넌트 마운트 및 업데이트 시 테이블 복사 버튼 추가
+// 코드 블록 하이라이팅 적용
+const applyCodeHighlighting = () => {
+  nextTick(() => {
+    const codeBlocks = document.querySelectorAll('.markdown-content pre code:not(.prism-highlighted)');
+    codeBlocks.forEach((block) => {
+      block.classList.add('prism-highlighted');
+      if (props.isStreaming) {
+        // 스트리밍 중에는 디바운스 적용
+        streamingHighlighter.queueHighlight(block as HTMLElement);
+      }
+    });
+  });
+};
+
+// 스트리밍 종료 시 하이라이팅 플러시
+watch(() => props.isStreaming, (newVal, oldVal) => {
+  if (oldVal && !newVal) {
+    // 스트리밍 완료 - 즉시 하이라이팅 적용
+    streamingHighlighter.flushHighlight();
+    applyCodeHighlighting();
+  }
+});
+
+// 컴포넌트 마운트 및 업데이트 시 테이블 복사 버튼 추가 및 코드 하이라이팅
 onMounted(() => {
   addTableCopyButtons();
+  applyCodeHighlighting();
 });
 
 onUpdated(() => {
   addTableCopyButtons();
+  applyCodeHighlighting();
 });
 </script>
 
@@ -384,6 +370,17 @@ onUpdated(() => {
 .feedback-container {
   width: 100%;
   margin-top: 10px;
+  /* 데스크톱에서 기본적으로 숨김 */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+/* 호버 시 표시 (데스크톱) */
+.chat-bubble-wrapper.left:hover .feedback-container,
+.chat-bubble-wrapper.left:focus-within .feedback-container {
+  opacity: 1;
+  visibility: visible;
 }
 
 .chat-bubble {
@@ -639,8 +636,11 @@ onUpdated(() => {
   margin: 0;
 }
 
+/* br 태그는 마크다운에서 줄바꿈을 위해 필요 */
 :deep(.markdown-content br) {
-  display: none;
+  display: block;
+  content: "";
+  margin-top: 0.3em;
 }
 
 :deep(.markdown-content strong) {
@@ -1187,52 +1187,282 @@ onUpdated(() => {
   transform: translateX(4px);
 }
 
-/* 모바일 대응 */
-@media (max-width: 768px) {
+/* ===========================================
+   모바일 반응형 스타일 (PRD Breakpoints)
+   - Mobile: ~640px
+   - Tablet: 641-1024px
+   - Desktop: 1025px+
+   =========================================== */
+
+/* 모바일 (640px 이하) */
+@media (max-width: 640px) {
+  /* 모바일에서는 피드백 버튼 항상 표시 (터치 환경) */
+  .feedback-container {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .chat-bubble-wrapper {
+    max-width: calc(100% - 12px);
+  }
+
+  .chat-bubble-wrapper.right {
+    margin-right: 6px;
+  }
+
+  .chat-bubble {
+    max-width: 88%;
+    padding: 10px 14px;
+    font-size: 14px;
+    border-radius: 20px;
+  }
+
+  .chat-bubble.right {
+    max-width: 85%;
+    padding: 8px 14px;
+    border-radius: 22px;
+  }
+
+  .chat-bubble.left {
+    max-width: 100%;
+    padding: 12px 14px;
+  }
+
+  /* 아티팩트 알림 카드 */
   .artifact-notification-card {
-    padding: 14px 16px;
-    gap: 12px;
+    padding: 12px 14px;
+    gap: 10px;
+    border-radius: 12px;
   }
 
   .artifact-icon-wrapper {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
   }
 
   .artifact-icon {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
   }
 
   .artifact-notification-title {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .artifact-notification-subtitle {
+    font-size: 11px;
+  }
+
+  .artifact-notification-arrow svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* 파일 미리보기 */
+  .message-files {
+    gap: 6px;
+  }
+
+  .message-file {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+  }
+
+  .message-pdf .pdf-icon {
+    font-size: 16px;
+  }
+
+  .message-pdf .pdf-name {
+    font-size: 7px;
+  }
+
+  /* CoT 단계별 스타일 */
+  .cot-content {
+    gap: 14px;
+  }
+
+  .cot-step-block {
+    gap: 10px;
+  }
+
+  .step-circle {
+    width: 26px;
+    height: 26px;
+    font-size: 13px;
+  }
+
+  .cot-question {
+    font-size: 14px;
+  }
+
+  .cot-answer {
+    font-size: 14px;
+  }
+
+  /* 로딩 인디케이터 */
+  .loading-text {
+    font-size: 12px;
+  }
+
+  :deep(.lottie-container) {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  /* 마크다운 콘텐츠 모바일 조정 */
+  :deep(.markdown-content h1) {
+    font-size: 1.6em !important;
+    margin: 12px 0 6px 0 !important;
+  }
+
+  :deep(.markdown-content h2) {
+    font-size: 1.35em !important;
+    margin: 10px 0 5px 0 !important;
+  }
+
+  :deep(.markdown-content h3) {
+    font-size: 1.15em !important;
+    margin: 8px 0 4px 0 !important;
+  }
+
+  :deep(.markdown-content) {
+    font-size: 14px;
+  }
+
+  :deep(.markdown-content ul),
+  :deep(.markdown-content ol) {
+    padding-left: 1em;
+  }
+
+  :deep(.markdown-content pre) {
+    padding: 8px;
+    font-size: 12px;
+    border-radius: 6px;
+  }
+
+  :deep(.markdown-content code) {
+    font-size: 0.85em;
+    padding: 1px 4px;
+  }
+
+  :deep(.markdown-content blockquote) {
+    padding: 10px 12px;
+    margin: 8px 0;
+  }
+
+  /* 코드 블록 래퍼 */
+  :deep(.code-block-wrapper) {
+    margin: 8px 0;
+  }
+
+  :deep(.code-header) {
+    padding: 6px 10px;
+  }
+
+  :deep(.code-language) {
+    font-size: 10px;
+  }
+
+  :deep(.code-copy-btn) {
+    padding: 3px 8px;
+    font-size: 10px;
+  }
+
+  :deep(.code-block-wrapper pre code) {
+    font-size: 0.8em;
+    line-height: 1.5;
+  }
+
+  /* 테이블 모바일 조정 */
+  :deep(.table-wrapper) {
+    margin: 8px 0;
+    overflow-x: auto;
+  }
+
+  :deep(.table-header) {
+    padding: 6px 10px;
+  }
+
+  :deep(.table-wrapper table th),
+  :deep(.table-wrapper table td) {
+    padding: 6px 8px;
     font-size: 12px;
   }
 }
-</style>
 
-/* CSS 변수 정의 */
-:root {
-  --Gray-100: #F3F4F6;
-  --Primary-300: #F0F6FF;
-}
-
-/* 반응형 디자인 */
-@media (max-width: 768px) {
-  .chat-bubble {
-    max-width: 85%;
-    padding: 8px 16px;
-    font-size: 14px;
-  }
-}
-
+/* 초소형 모바일 (480px 이하) */
 @media (max-width: 480px) {
   .chat-bubble {
-    max-width: 90%;
-    padding: 6px 12px;
+    max-width: 92%;
+    padding: 8px 12px;
+    font-size: 13px;
+    border-radius: 18px;
+  }
+
+  .chat-bubble.right {
+    max-width: 88%;
+    padding: 7px 12px;
+    border-radius: 18px;
+  }
+
+  .chat-bubble.left {
+    padding: 10px 12px;
+  }
+
+  .artifact-notification-card {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .artifact-icon-wrapper {
+    width: 32px;
+    height: 32px;
+  }
+
+  .artifact-notification-title {
+    font-size: 12px;
+  }
+
+  .artifact-notification-subtitle {
+    font-size: 10px;
+  }
+
+  .message-file {
+    width: 50px;
+    height: 50px;
+  }
+
+  :deep(.markdown-content) {
     font-size: 13px;
   }
+
+  :deep(.markdown-content h1) {
+    font-size: 1.4em !important;
+  }
+
+  :deep(.markdown-content h2) {
+    font-size: 1.2em !important;
+  }
+
+  :deep(.markdown-content h3) {
+    font-size: 1.1em !important;
+  }
 }
+
+/* 태블릿 (641px - 1024px) */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .chat-bubble {
+    max-width: 80%;
+  }
+
+  .chat-bubble.right {
+    max-width: 500px;
+  }
+
+  .chat-bubble.left {
+    max-width: 700px;
+  }
+}
+</style>

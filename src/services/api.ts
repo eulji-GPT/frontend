@@ -1,26 +1,7 @@
 // API 기본 설정 및 서비스
-// Railway 내부 URL(.railway.internal)은 브라우저에서 접근 불가하므로 외부 URL로 대체
-const getApiBaseUrl = () => {
-  const envUrl = import.meta.env.VITE_FASTAPI_URL;
+import { getApiBaseUrl } from '../utils/ports-config';
 
-  // Railway 내부 URL 감지 및 외부 URL로 대체
-  if (envUrl && envUrl.includes('.railway.internal')) {
-    
-    return 'https://fastapi-backend-production-2cd0.up.railway.app';
-  }
-
-  // 프로덕션 환경에서 /api 프록시 경로 사용 시 외부 URL로 대체
-  if (!envUrl || envUrl === '/api') {
-    // 브라우저에서 Railway 호스트인지 확인
-    if (typeof window !== 'undefined' && window.location.hostname.includes('railway.app')) {
-      return 'https://fastapi-backend-production-2cd0.up.railway.app';
-    }
-  }
-
-  return envUrl || '/api';
-};
-
-const API_BASE_URL = getApiBaseUrl(); // 환경 변수 또는 프록시 경로 사용
+const API_BASE_URL = getApiBaseUrl();
 
 // API 요청을 위한 기본 fetch 함수
 async function apiRequest<T>(
@@ -34,7 +15,7 @@ async function apiRequest<T>(
   };
 
   // 토큰이 있다면 Authorization 헤더 추가
-  const token = localStorage.getItem('access_token');
+  const token = localStorage.getItem('accessToken');
   if (token) {
     defaultHeaders['Authorization'] = `Bearer ${token}`;
   }

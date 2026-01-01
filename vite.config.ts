@@ -16,10 +16,10 @@ export default defineConfig(({ mode }) => {
       }
     },
     server: {
-      allowedHosts: ['eulgpt-dev.duckdns.org'], // DuckDNS 도메인 허용
-      host: '0.0.0.0', // 외부 접속 허용
+      allowedHosts: ['eulgpt-dev.duckdns.org', 'localhost'], // DuckDNS 도메인 허용
+      host: 'localhost', // 로컬 개발 시 localhost 사용
       port: port,
-      strictPort: true, // 포트가 사용 중이면 에러 발생 (스크립트에서 처리)
+      strictPort: false, // 포트가 사용 중이면 다른 포트 자동 선택
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:8000',
