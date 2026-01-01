@@ -197,14 +197,17 @@ const getFilePreview = (file) => {
 // 마크다운 렌더링
 const renderedContent = computed(() => {
   if (props.content) {
-    const result = props.useMarkdown ? marked.parse(props.content) : props.content;
+    // 마크다운 변환 전에 연속 개행 정규화
+    const normalizedContent = normalizeLineBreaks(props.content);
+    const result = props.useMarkdown ? marked.parse(normalizedContent) : normalizedContent;
     // 마크다운 렌더링 결과에서 끝부분의 공백과 개행 제거
     return typeof result === 'string' ? result.trim() : result;
   }
   // slot 내용 처리 (기본 폴백)
   const slotContent = slots.default?.()?.[0]?.children || '';
   const textContent = slotContent.toString();
-  const result = props.useMarkdown ? marked.parse(textContent) : textContent;
+  const normalizedSlot = normalizeLineBreaks(textContent);
+  const result = props.useMarkdown ? marked.parse(normalizedSlot) : normalizedSlot;
   return typeof result === 'string' ? result.trim() : result;
 });
 
@@ -241,12 +244,44 @@ const parsedCotContent = computed(() => {
   return steps.length > 0 ? steps : null;
 });
 
+// 연속된 개행을 정규화하는 함수
+const normalizeLineBreaks = (text: string): string => {
+  if (!text) return text;
+
+  // 3개 이상 연속 개행을 2개로 줄임
+  let normalized = text.replace(/\n{3,}/g, '\n\n');
+
+  // 목록 항목 사이의 과도한 빈 줄 제거 (숫자 목록)
+  normalized = normalized.replace(/(\d+\.\s+[^\n]+)\n{2,}(?=\d+\.)/g, '$1\n');
+
+  // 불릿 목록 사이의 과도한 빈 줄 제거
+  normalized = normalized.replace(/([-*]\s+[^\n]+)\n{2,}(?=[-*]\s)/g, '$1\n');
+
+  // 제목 다음의 과도한 빈 줄 제거 (최대 1개만 유지)
+  normalized = normalized.replace(/(#{1,6}\s+[^\n]+)\n{3,}/g, '$1\n\n');
+
+  // 제목 바로 다음에 오는 내용 앞의 빈 줄 최소화
+  normalized = normalized.replace(/(#{1,6}\s+[^\n]+)\n{2,}(?=\d+\.)/g, '$1\n');
+  normalized = normalized.replace(/(#{1,6}\s+[^\n]+)\n{2,}(?=[-*]\s)/g, '$1\n');
+
+  // 목록 항목 뒤 제목 앞의 빈 줄 정규화
+  normalized = normalized.replace(/(\d+\.\s+[^\n]+)\n{2,}(?=#{1,6}\s)/g, '$1\n\n');
+  normalized = normalized.replace(/([-*]\s+[^\n]+)\n{2,}(?=#{1,6}\s)/g, '$1\n\n');
+
+  // 연속된 빈 줄 최종 정리 (2개로 제한)
+  normalized = normalized.replace(/\n{3,}/g, '\n\n');
+
+  return normalized;
+};
+
 // 렌더링된 마크다운 콘텐츠 (스트리밍 실시간 반영)
 const streamingRenderedContent = computed(() => {
   const content = displayContent.value;
   if (content && props.useMarkdown) {
     try {
-      const result = marked.parse(content);
+      // 마크다운 변환 전에 연속 개행 정규화
+      const normalizedContent = normalizeLineBreaks(content);
+      const result = marked.parse(normalizedContent);
       return typeof result === 'string' ? result.trim() : result;
     } catch (error) {
       console.error('마크다운 변환 오류:', error);
@@ -574,8 +609,38 @@ onUpdated(() => {
   display: block !important;
 }
 
+/* 제목 바로 다음에 오는 목록/단락의 상단 마진 제거 */
+:deep(.markdown-content h1 + p),
+:deep(.markdown-content h2 + p),
+:deep(.markdown-content h3 + p),
+:deep(.markdown-content h4 + p),
+:deep(.markdown-content h1 + ul),
+:deep(.markdown-content h2 + ul),
+:deep(.markdown-content h3 + ul),
+:deep(.markdown-content h4 + ul),
+:deep(.markdown-content h1 + ol),
+:deep(.markdown-content h2 + ol),
+:deep(.markdown-content h3 + ol),
+:deep(.markdown-content h4 + ol) {
+  margin-top: 2px !important;
+}
+
 :deep(.markdown-content p) {
-  margin: 2px 0;
+  margin: 4px 0;
+}
+
+/* 빈 단락 숨김 */
+:deep(.markdown-content p:empty) {
+  display: none;
+  margin: 0;
+  padding: 0;
+  height: 0;
+}
+
+/* 공백만 있는 단락 (렌더링 후 빈 것처럼 보이는 것들) */
+:deep(.markdown-content p:has(> br:only-child)) {
+  display: none;
+  margin: 0;
 }
 
 :deep(.markdown-content br) {
@@ -597,8 +662,16 @@ onUpdated(() => {
 
 :deep(.markdown-content ul),
 :deep(.markdown-content ol) {
-  margin: 4px 0;
+  margin: 4px 0 4px 0;
   padding-left: 1.2em;
+}
+
+/* 연속된 목록 사이 간격 줄이기 */
+:deep(.markdown-content ul + ul),
+:deep(.markdown-content ol + ol),
+:deep(.markdown-content ul + ol),
+:deep(.markdown-content ol + ul) {
+  margin-top: 2px;
 }
 
 :deep(.markdown-content ul) {
