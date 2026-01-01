@@ -15,7 +15,7 @@
             </div>
           </div>
           <div class="Frame2147227348">
-            <div class="features-section-block">
+            <div class="features-section-block clickable" @click="navigateToFeature('classroom')">
               <img class="features-section-icon" src="../../assets/FeaturesSection/icon_day.svg" alt="day icon" />
               <div class="features-section-texts">
                 <span class="features-section-title">빈 강의실 확인</span>
@@ -23,7 +23,7 @@
                 <span class="features-section-desc">지금 비어있는 강의실을 바로 확인하고 예약해 보세요.</span>
               </div>
             </div>
-            <div class="features-section-block">
+            <div class="features-section-block clickable" @click="navigateToFeature('cafeteria')">
               <img class="features-section-icon" src="../../assets/FeaturesSection/icon_haksic.svg" alt="haksic icon" />
               <div class="features-section-texts">
                 <span class="features-section-title">학식</span>
@@ -31,7 +31,7 @@
                 <span class="features-section-desc">실시간 학식 대기 시간 혼잡도 그래프를 제공해요.</span>
               </div>
             </div>
-            <div class="features-section-block">
+            <div class="features-section-block clickable" @click="navigateToFeature('library')">
               <img class="features-section-icon" src="../../assets/FeaturesSection/icon_computer.svg" alt="computer icon" />
               <div class="features-section-texts">
                 <span class="features-section-title">도서관/열람실 자리 예약</span>
@@ -46,8 +46,15 @@
   </section>
 </template>
 
-<script setup>
-// Add your script here if needed
+<script setup lang="ts">
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+const navigateToFeature = (feature: string) => {
+  // 채팅 페이지로 이동하면서 해당 기능 관련 쿼리 전달
+  router.push({ path: '/chat', query: { feature } })
+}
 </script>
 
 <style scoped>
@@ -208,6 +215,16 @@
   flex: 1 1 0;
   min-height: 0;
   margin-bottom: 20px;
+  transition: all 0.2s ease;
+}
+
+.features-section-block.clickable {
+  cursor: pointer;
+}
+
+.features-section-block.clickable:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(2, 71, 138, 0.15);
 }
 
 .features-section-block:last-child {

@@ -48,6 +48,14 @@
               <span class="error-label">상세 정보:</span>
               <span class="error-value">{{ msg.errorDetails.reason }}</span>
             </div>
+            <!-- 재시도 버튼 -->
+            <button
+              class="retry-button"
+              @click="$emit('retry', idx)"
+            >
+              <span class="retry-icon">🔄</span>
+              <span class="retry-text">다시 시도</span>
+            </button>
           </div>
           
           <!-- CoT 단계들 -->
@@ -113,7 +121,7 @@ const props = defineProps<{
   messages: ChatMessage[];
 }>();
 
-const emit = defineEmits(['feedback', 'regenerate', 'openArtifact']);
+const emit = defineEmits(['feedback', 'regenerate', 'openArtifact', 'retry']);
 
 // 메시지 컨테이너 ref
 const messagesContainer = ref<HTMLElement | null>(null);
@@ -206,7 +214,7 @@ const handleOpenArtifact = (messageId: string) => {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  margin-bottom: 12px;
+  margin-bottom: 20px; /* 메시지 간격 넓힘 (12px → 20px) */
   overflow: visible;
   padding: 0 10px; /* 추가 여유 공간 */
 }
@@ -435,6 +443,46 @@ const handleOpenArtifact = (messageId: string) => {
   border: 1px solid rgba(220, 38, 38, 0.2);
 }
 
+/* 재시도 버튼 스타일 */
+.retry-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px 16px;
+  background: #02478a;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Pretendard', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  /* 터치 친화적 최소 높이 */
+  min-height: 44px;
+}
+
+.retry-button:hover {
+  background: #013a6f;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(2, 71, 138, 0.3);
+}
+
+.retry-button:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.retry-icon {
+  font-size: 16px;
+}
+
+.retry-text {
+  font-size: 14px;
+}
 
 .cot-steps {
   display: flex;
@@ -551,21 +599,121 @@ const handleOpenArtifact = (messageId: string) => {
 
 /* 스크롤바 스타일링은 상위 컨테이너에서 처리 */
 
-@media (max-width: 1200px) {
+/* ========================================
+   Responsive Breakpoints (PRD Spec):
+   - Mobile: ~640px
+   - Tablet: 641px ~ 1024px
+   - Desktop: 1025px+
+   ======================================== */
+
+/* Tablet styles (641px ~ 1024px) */
+@media (min-width: 641px) and (max-width: 1024px) {
   .chat-messages-area {
     width: 100%;
+    padding: 0 16px;
+  }
+
+  .message-wrapper {
+    padding: 0 8px;
   }
 }
 
-@media (max-width: 1024px) {
+/* Mobile styles (640px and below) */
+@media (max-width: 640px) {
   .chat-messages-area {
     width: 100%;
+    padding: 0 8px;
+  }
+
+  .message-wrapper {
+    padding: 0 4px;
+    margin-bottom: 8px;
+  }
+
+  .loading-indicator {
+    margin-left: 8px;
+    padding: 10px 12px;
+    max-width: calc(100% - 16px);
+  }
+
+  .loading-text {
+    font-size: 13px;
+  }
+
+  .progress-info {
+    font-size: 11px;
+  }
+
+  .cot-step {
+    padding: 4px 8px;
+  }
+
+  .step-indicator {
+    width: 18px;
+    height: 18px;
+    font-size: 11px;
+  }
+
+  .step-text {
+    font-size: 12px;
+  }
+
+  .phase-info {
+    font-size: 10px;
+  }
+
+  .error-details {
+    padding: 8px;
+  }
+
+  .error-label {
+    font-size: 11px;
+  }
+
+  .error-value {
+    font-size: 12px;
+    padding: 3px 6px;
+  }
+
+  .retry-button {
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-top: 10px;
+  }
+
+  .retry-icon {
+    font-size: 14px;
   }
 }
 
-@media (max-width: 768px) {
+/* Extra small mobile (480px and below) */
+@media (max-width: 480px) {
   .chat-messages-area {
-    width: 100%;
+    padding: 0 4px;
+  }
+
+  .message-wrapper {
+    padding: 0 2px;
+  }
+
+  .loading-indicator {
+    margin-left: 4px;
+    padding: 8px 10px;
+    max-width: calc(100% - 8px);
+    gap: 8px;
+  }
+
+  .loading-text {
+    font-size: 12px;
+  }
+
+  .cot-steps {
+    gap: 6px;
+  }
+
+  .cot-step {
+    padding: 3px 6px;
+    gap: 6px;
   }
 }
 </style>

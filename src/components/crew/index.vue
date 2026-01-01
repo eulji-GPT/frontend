@@ -43,12 +43,13 @@ import FooterContainer from './FooterContainer.vue'
 
 const crewPage = ref<HTMLElement>()
 const backgroundGradient = ref<HTMLElement>()
-const heroRef = ref<HTMLElement>()
-const infoRef = ref<HTMLElement>()
-const featuresRef = ref<HTMLElement>()
-const recruitmentRef = ref<HTMLElement>()
-const faqRef = ref<HTMLElement>()
-const footerRef = ref<HTMLElement>()
+// Vue 컴포넌트 refs - .$el로 DOM 요소 접근 필요
+const heroRef = ref<InstanceType<typeof HeroContainer> | null>(null)
+const infoRef = ref<InstanceType<typeof InfoContainer> | null>(null)
+const featuresRef = ref<InstanceType<typeof FeaturesContainer> | null>(null)
+const recruitmentRef = ref<InstanceType<typeof RecruitmentContainer> | null>(null)
+const faqRef = ref<InstanceType<typeof FAQContainer> | null>(null)
+const footerRef = ref<InstanceType<typeof FooterContainer> | null>(null)
 
 const scrollProgress = ref(0)
 const showFloatingActions = ref(false)
@@ -79,21 +80,18 @@ const updateScrollEffects = () => {
   scrollProgress.value = Math.min(scrolled / maxScroll, 1)
   showFloatingActions.value = scrolled > 300
 
-  if (backgroundGradient.value) {
-    const parallaxSpeed = scrolled * 0.15
-    backgroundGradient.value.style.transform = `translate3d(0, ${parallaxSpeed}px, 0)`
-  }
+  // 배경 그라데이션은 absolute로 변경되어 parallax 효과 제거됨
 
   const sections = [
-    { ref: heroRef.value, speed: 0.05 },
-    { ref: infoRef.value, speed: 0.075 },
-    { ref: featuresRef.value, speed: 0.1 },
-    { ref: recruitmentRef.value, speed: 0.125 },
-    { ref: faqRef.value, speed: 0.15 }
+    { el: heroRef.value?.$el as HTMLElement | undefined, speed: 0.05 },
+    { el: infoRef.value?.$el as HTMLElement | undefined, speed: 0.075 },
+    { el: featuresRef.value?.$el as HTMLElement | undefined, speed: 0.1 },
+    { el: recruitmentRef.value?.$el as HTMLElement | undefined, speed: 0.125 },
+    { el: faqRef.value?.$el as HTMLElement | undefined, speed: 0.15 }
   ]
 
-  sections.forEach(({ ref, speed }) => {
-    animateOnScroll(ref, scrolled, speed)
+  sections.forEach(({ el, speed }) => {
+    animateOnScroll(el, scrolled, speed)
   })
 
   ticking = false
@@ -139,9 +137,11 @@ const setupIntersectionObserver = () => {
   }, options)
 
   const sections = [heroRef, infoRef, featuresRef, recruitmentRef, faqRef, footerRef]
-  sections.forEach(ref => {
-    if (ref.value) {
-      intersectionObserver?.observe(ref.value)
+  sections.forEach(componentRef => {
+    // Vue 컴포넌트의 경우 .$el로 실제 DOM 요소 접근
+    const element = componentRef.value?.$el as HTMLElement | undefined
+    if (element && element instanceof Element) {
+      intersectionObserver?.observe(element)
     }
   })
 }
@@ -198,7 +198,7 @@ onUnmounted(() => {
 }
 
 .background-gradient {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   right: 0;
@@ -381,7 +381,10 @@ body, html {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
+  overflow-y: auto;
   width: 100%;
+  height: auto;
+  min-height: 100%;
   scroll-behavior: smooth;
 }
 
@@ -389,6 +392,7 @@ body, html {
   background-color: #141D30 !important;
   background: #141D30 !important;
   min-height: 100vh;
+  height: auto;
   width: 100%;
   scroll-behavior: smooth;
 }
