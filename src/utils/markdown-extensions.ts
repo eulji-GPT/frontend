@@ -241,7 +241,7 @@ const katexOptions = {
 export function createEnhancedMarked() {
   // Configure base options on the global marked instance
   marked.use({
-    breaks: false,
+    breaks: true,  // 단일 줄바꿈(\n)을 <br>로 변환 - 채팅 UI 가독성 향상
     gfm: true,
     pedantic: false,
   });

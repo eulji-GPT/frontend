@@ -1,6 +1,32 @@
 <template>
   <div :class="['chat-bubble-wrapper', align]">
     <div :class="['chat-bubble', align, { 'streaming': isStreaming }]">
+      <!-- 모델 이름 배지 (AI 응답 상단) -->
+      <div v-if="align === 'left' && modelName" :class="['model-badge-header', modelBadgeClass]">
+        <span class="model-badge-icon">
+          <svg v-if="modelBadgeClass === 'badge-rag'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+          <svg v-else-if="modelBadgeClass === 'badge-study'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+          </svg>
+          <svg v-else-if="modelBadgeClass === 'badge-cot'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 6v6l4 2"></path>
+          </svg>
+          <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 8V4H8"></path>
+            <rect width="16" height="12" x="4" y="8" rx="2"></rect>
+            <path d="M2 14h2"></path>
+            <path d="M20 14h2"></path>
+            <path d="M15 13v2"></path>
+            <path d="M9 13v2"></path>
+          </svg>
+        </span>
+        <span class="model-badge-text">{{ modelName }}</span>
+      </div>
       <div class="message-content">
         <!-- 파일 미리보기 (사용자 메시지에서만) -->
         <div v-if="images && Array.isArray(images) && images.length > 0 && align === 'right'" class="message-files">
@@ -131,6 +157,10 @@ const props = defineProps({
   hasArtifact: {
     type: Boolean,
     default: false
+  },
+  modelName: {
+    type: String,
+    default: ''
   }
 });
 
@@ -150,6 +180,20 @@ const getFilePreview = (file: File) => {
     return '';
   }
 };
+
+// 모델 배지 클래스 결정 (모드에 따라 다른 색상)
+const modelBadgeClass = computed(() => {
+  const name = props.modelName?.toLowerCase() || '';
+  if (name.includes('검색') || name.includes('rag')) {
+    return 'badge-rag';
+  } else if (name.includes('학습') || name.includes('study')) {
+    return 'badge-study';
+  } else if (name.includes('추론') || name.includes('cot')) {
+    return 'badge-cot';
+  } else {
+    return 'badge-default';
+  }
+});
 
 // 마크다운 렌더링
 const renderedContent = computed(() => {
@@ -201,12 +245,44 @@ const parsedCotContent = computed(() => {
   return steps.length > 0 ? steps : null;
 });
 
+// tool_call 태그 및 함수 호출 표시 제거
+const stripToolCallTags = (text: string): string => {
+  if (!text) return text;
+
+  // <tool_call>...</tool_call> 태그 전체 제거
+  let cleaned = text.replace(/<tool_call>\s*\[.*?\]\s*<\/tool_call>/gs, '');
+
+  // 개별 함수 호출 패턴 제거
+  cleaned = cleaned.replace(/\[get_current_datetime\(\)\]/g, '');
+  cleaned = cleaned.replace(/\[search_university_rag\([^\]]*\)\]/g, '');
+  cleaned = cleaned.replace(/\[get_academic_calendar\([^\]]*\)\]/g, '');
+  cleaned = cleaned.replace(/\[scrape_notices\([^\]]*\)\]/g, '');
+  cleaned = cleaned.replace(/\[scrape_[a-z_]+\([^\]]*\)\]/g, '');
+  cleaned = cleaned.replace(/\[get_news\([^\]]*\)\]/g, '');
+  cleaned = cleaned.replace(/\[get_faq\([^\]]*\)\]/g, '');
+
+  // 코드 블록 내 tool_call도 제거
+  cleaned = cleaned.replace(/`<tool_call>.*?<\/tool_call>`/gs, '');
+
+  // 빈 코드 블록/백틱 제거 (`: `` ` 또는 `:`뒤에 빈 백틱)
+  cleaned = cleaned.replace(/:\s*``\s*/g, ' ');
+  cleaned = cleaned.replace(/``/g, '');
+
+  // 연속된 빈 줄 정리
+  cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
+
+  return cleaned.trim();
+};
+
 // 연속된 개행을 정규화하는 함수
 const normalizeLineBreaks = (text: string): string => {
   if (!text) return text;
 
+  // 먼저 tool_call 태그 제거
+  let normalized = stripToolCallTags(text);
+
   // 3개 이상 연속 개행을 2개로 줄임
-  let normalized = text.replace(/\n{3,}/g, '\n\n');
+  normalized = normalized.replace(/\n{3,}/g, '\n\n');
 
   // 목록 항목 사이의 과도한 빈 줄 제거 (숫자 목록)
   normalized = normalized.replace(/(\d+\.\s+[^\n]+)\n{2,}(?=\d+\.)/g, '$1\n');
@@ -231,6 +307,42 @@ const normalizeLineBreaks = (text: string): string => {
   return normalized;
 };
 
+// marked가 처리하지 못한 **bold** 패턴을 수동으로 변환
+// (한글 + 괄호 조합에서 marked 버그 발생)
+const fixUnparsedBold = (html: string): string => {
+  if (!html) return html;
+
+  // 코드 블록 안의 ** 는 보호 (임시 플레이스홀더로 대체)
+  const codeBlocks: string[] = [];
+  let protected_html = html.replace(/<code[^>]*>[\s\S]*?<\/code>/g, (match) => {
+    codeBlocks.push(match);
+    return `__CODE_BLOCK_${codeBlocks.length - 1}__`;
+  });
+
+  // pre 블록도 보호
+  const preBlocks: string[] = [];
+  protected_html = protected_html.replace(/<pre[^>]*>[\s\S]*?<\/pre>/g, (match) => {
+    preBlocks.push(match);
+    return `__PRE_BLOCK_${preBlocks.length - 1}__`;
+  });
+
+  // 남아있는 **text** 패턴을 <strong>text</strong>로 변환
+  // (?!<) 는 이미 태그 안에 있는 경우를 제외
+  protected_html = protected_html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+  // 코드 블록 복원
+  protected_html = protected_html.replace(/__CODE_BLOCK_(\d+)__/g, (_, index) => {
+    return codeBlocks[parseInt(index)];
+  });
+
+  // pre 블록 복원
+  protected_html = protected_html.replace(/__PRE_BLOCK_(\d+)__/g, (_, index) => {
+    return preBlocks[parseInt(index)];
+  });
+
+  return protected_html;
+};
+
 // 렌더링된 마크다운 콘텐츠 (스트리밍 실시간 반영)
 const streamingRenderedContent = computed(() => {
   const content = displayContent.value;
@@ -238,7 +350,13 @@ const streamingRenderedContent = computed(() => {
     try {
       // 마크다운 변환 전에 연속 개행 정규화
       const normalizedContent = normalizeLineBreaks(content);
-      const result = marked.parse(normalizedContent);
+      let result = marked.parse(normalizedContent);
+
+      // marked가 처리하지 못한 **bold** 패턴 수동 변환
+      if (typeof result === 'string') {
+        result = fixUnparsedBold(result);
+      }
+
       return typeof result === 'string' ? result.trim() : result;
     } catch (error) {
       console.error('마크다운 변환 오류:', error);
@@ -370,10 +488,100 @@ onUpdated(() => {
 .feedback-container {
   width: 100%;
   margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   /* 데스크톱에서 기본적으로 숨김 */
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+/* 모델 배지 헤더 (메시지 상단) - 모던 칩 스타일 */
+.model-badge-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding: 6px 12px 6px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: all 0.2s ease;
+  cursor: default;
+  width: fit-content;
+}
+
+/* 기본 스타일 (통합 모델) */
+.model-badge-header.badge-default {
+  background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+  color: #1E40AF;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.1);
+}
+
+.model-badge-header.badge-default:hover {
+  background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.15);
+}
+
+/* RAG (대학 정보 검색) - 그린 계열 */
+.model-badge-header.badge-rag {
+  background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
+  color: #065F46;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.1);
+}
+
+.model-badge-header.badge-rag:hover {
+  background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.15);
+}
+
+/* 학습 도우미 - 퍼플 계열 */
+.model-badge-header.badge-study {
+  background: linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%);
+  color: #5B21B6;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  box-shadow: 0 1px 3px rgba(139, 92, 246, 0.1);
+}
+
+.model-badge-header.badge-study:hover {
+  background: linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%);
+  box-shadow: 0 2px 6px rgba(139, 92, 246, 0.15);
+}
+
+/* CoT (단계별 추론) - 오렌지 계열 */
+.model-badge-header.badge-cot {
+  background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%);
+  color: #C2410C;
+  border: 1px solid rgba(249, 115, 22, 0.2);
+  box-shadow: 0 1px 3px rgba(249, 115, 22, 0.1);
+}
+
+.model-badge-header.badge-cot:hover {
+  background: linear-gradient(135deg, #FFEDD5 0%, #FED7AA 100%);
+  box-shadow: 0 2px 6px rgba(249, 115, 22, 0.15);
+}
+
+.model-badge-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.model-badge-icon svg {
+  stroke-width: 2.5;
+}
+
+.model-badge-text {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 /* 호버 시 표시 (데스크톱) */
@@ -532,10 +740,11 @@ onUpdated(() => {
   line-height: 1.4;
 }
 
-/* 마크다운 스타일링 */
+/* 마크다운 스타일링 - ChatGPT/Claude 수준의 가독성 */
 :deep(.markdown-content) {
-  line-height: 1.5;
+  line-height: 1.75;  /* 1.5 → 1.75: 더 넉넉한 줄 간격 */
   white-space: normal;
+  letter-spacing: -0.01em;  /* 한글 가독성 향상 */
 }
 
 :deep(.markdown-content h1),
@@ -619,7 +828,11 @@ onUpdated(() => {
 }
 
 :deep(.markdown-content p) {
-  margin: 4px 0;
+  margin: 0 0 1em 0;  /* 4px → 1em: 단락 간 충분한 여백 */
+}
+
+:deep(.markdown-content p:last-child) {
+  margin-bottom: 0;  /* 마지막 단락은 하단 여백 제거 */
 }
 
 /* 빈 단락 숨김 */
@@ -640,7 +853,7 @@ onUpdated(() => {
 :deep(.markdown-content br) {
   display: block;
   content: "";
-  margin-top: 0.3em;
+  margin-top: 0.6em;  /* 0.3em → 0.6em: 줄바꿈 시 더 명확한 간격 */
 }
 
 :deep(.markdown-content strong) {
@@ -658,7 +871,7 @@ onUpdated(() => {
 
 :deep(.markdown-content ul),
 :deep(.markdown-content ol) {
-  margin: 4px 0 4px 0;
+  margin: 0.75em 0;  /* 4px → 0.75em: 목록 전후 여백 확대 */
   padding-left: 1.2em;
 }
 
@@ -676,8 +889,9 @@ onUpdated(() => {
 
 :deep(.markdown-content ul li) {
   position: relative;
-  margin: 2px 0;
+  margin: 0.5em 0;  /* 2px → 0.5em: 리스트 항목 간 여백 확대 */
   padding-left: 1em;
+  line-height: 1.6;
 }
 
 :deep(.markdown-content ul li::before) {
@@ -696,8 +910,9 @@ onUpdated(() => {
 :deep(.markdown-content ol li) {
   display: block;
   position: relative;
-  margin: 4px 0;
+  margin: 0.5em 0;  /* 4px → 0.5em: 순서 목록 항목 간 여백 확대 */
   padding-left: 0.5em;
+  line-height: 1.6;
 }
 
 :deep(.markdown-content ol li::before) {
@@ -747,10 +962,10 @@ onUpdated(() => {
 :deep(.markdown-content blockquote) {
   border-left: 4px solid #02478a;
   background: linear-gradient(135deg, #f0f6ff 0%, #f8fafc 100%);
-  margin: 12px 0;
-  padding: 12px 16px;
+  margin: 1em 0;  /* 12px → 1em: 인용 블록 전후 여백 확대 */
+  padding: 1em 1.25em;  /* 패딩도 확대 */
   font-style: normal;
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 12px 12px 0;
   box-shadow: 0 2px 6px rgba(2, 71, 138, 0.08);
   position: relative;
 }
@@ -1228,6 +1443,22 @@ onUpdated(() => {
     padding: 12px 14px;
   }
 
+  /* 모델 배지 모바일 */
+  .model-badge-header {
+    padding: 5px 10px 5px 8px;
+    margin-bottom: 10px;
+    gap: 5px;
+  }
+
+  .model-badge-icon svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .model-badge-text {
+    font-size: 10px;
+  }
+
   /* 아티팩트 알림 카드 */
   .artifact-notification-card {
     padding: 12px 14px;
@@ -1409,6 +1640,23 @@ onUpdated(() => {
 
   .chat-bubble.left {
     padding: 10px 12px;
+  }
+
+  /* 모델 배지 초소형 모바일 */
+  .model-badge-header {
+    padding: 4px 8px 4px 6px;
+    margin-bottom: 8px;
+    gap: 4px;
+    border-radius: 16px;
+  }
+
+  .model-badge-icon svg {
+    width: 10px;
+    height: 10px;
+  }
+
+  .model-badge-text {
+    font-size: 9px;
   }
 
   .artifact-notification-card {
