@@ -659,30 +659,43 @@ onMounted(() => {
   .box {
     height: auto;
     width: 100%;
-    padding: 20px;
+    padding: 40px 20px;
+    min-height: auto;
   }
-  
+
   .box .group {
     position: static;
     height: auto;
     width: 100%;
   }
-  
+
   .box .overlap {
     height: auto;
     top: 0;
+    min-height: auto;
   }
-  
-  .box .img {
+
+  .floating-image {
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%) rotate(-12deg);
+    width: 150px;
+    height: 150px;
+    margin-bottom: 30px;
+  }
+
+  .gradient-circle.left-top,
+  .gradient-circle-2.right-bottom {
     display: none;
   }
-  
+
   .box .overlap-wrapper {
     position: static;
     height: auto;
     width: 100%;
+    top: 0;
   }
-  
+
   .box .overlap-group {
     position: static;
     height: auto;
@@ -690,19 +703,23 @@ onMounted(() => {
     left: 0;
     top: 0;
   }
-  
+
   .box .div {
     position: static;
     height: auto;
     width: 100%;
+    min-height: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
   }
-  
+
   .box .vector,
   .box .vector-2,
   .box .vector-3 {
     display: none;
   }
-  
+
   .box .ellipse,
   .box .ellipse-2,
   .box .ellipse-3,
@@ -713,35 +730,74 @@ onMounted(() => {
   .box .ellipse-8 {
     display: none;
   }
-  
+
   .box .frame,
   .box .frame-2,
   .box .frame-3,
   .box .frame-4 {
     position: static;
     width: 100%;
-    max-width: 320px;
-    margin: 0 auto 40px;
+    max-width: 100%;
+    margin: 0;
     left: auto;
     top: auto;
     align-items: center !important;
+    padding: 24px;
+    background: rgba(2, 71, 138, 0.1) !important;
+    border-radius: 16px;
+    border: 1px solid rgba(71, 137, 238, 0.2);
   }
-  
+
   .box .text-wrapper {
     font-size: 20px;
+    text-align: center;
   }
-  
+
   .box .p,
   .box .text-wrapper-2 {
-    font-size: 16px;
-    line-height: 28px;
+    font-size: 15px;
+    line-height: 26px;
     width: auto;
+    text-align: center;
   }
-  
+
   .animated-gradient,
   .pulse-dot,
   .glowing-dot {
     animation: none;
+  }
+
+  .feature-card {
+    background: rgba(2, 71, 138, 0.1) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .box {
+    padding: 30px 16px;
+  }
+
+  .floating-image {
+    width: 120px;
+    height: 120px;
+    margin-bottom: 20px;
+  }
+
+  .box .frame,
+  .box .frame-2,
+  .box .frame-3,
+  .box .frame-4 {
+    padding: 20px;
+  }
+
+  .box .text-wrapper {
+    font-size: 18px;
+  }
+
+  .box .p,
+  .box .text-wrapper-2 {
+    font-size: 14px;
+    line-height: 24px;
   }
 }
 </style>

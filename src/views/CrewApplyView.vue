@@ -427,6 +427,11 @@ const goBack = () => {
 @media (max-width: 768px) {
   .apply-container {
     margin: 80px auto 40px;
+    padding: 0 16px;
+  }
+
+  .apply-header {
+    margin-bottom: 40px;
   }
 
   .apply-title {
@@ -435,23 +440,112 @@ const goBack = () => {
 
   .apply-subtitle {
     font-size: 16px;
+    line-height: 1.6;
   }
 
   .apply-form {
     padding: 24px;
+    border-radius: 16px;
+  }
+
+  .form-section {
+    margin-bottom: 32px;
   }
 
   .section-title {
     font-size: 20px;
+    margin-bottom: 20px;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-label {
+    font-size: 15px;
+  }
+
+  .form-input,
+  .form-select,
+  .form-textarea {
+    padding: 12px 14px;
+    font-size: 15px;
+    border-radius: 10px;
   }
 
   .form-actions {
     flex-direction: column-reverse;
+    gap: 12px;
+    margin-top: 32px;
+    padding-top: 24px;
   }
 
   .btn-primary,
   .btn-secondary {
     width: 100%;
+    padding: 14px 24px;
+    font-size: 15px;
+    border-radius: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .apply-container {
+    margin: 70px auto 30px;
+    padding: 0 12px;
+  }
+
+  .apply-header {
+    margin-bottom: 30px;
+  }
+
+  .apply-title {
+    font-size: 28px;
+  }
+
+  .apply-subtitle {
+    font-size: 15px;
+  }
+
+  .apply-form {
+    padding: 20px;
+  }
+
+  .form-section {
+    margin-bottom: 28px;
+  }
+
+  .section-title {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-label {
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+
+  .form-input,
+  .form-select,
+  .form-textarea {
+    padding: 11px 12px;
+    font-size: 14px;
+  }
+
+  .form-actions {
+    margin-top: 24px;
+    padding-top: 20px;
+    gap: 10px;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    padding: 12px 20px;
+    font-size: 14px;
   }
 }
 </style>

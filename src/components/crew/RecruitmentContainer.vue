@@ -217,55 +217,102 @@
 @media (max-width: 768px) {
   .recruitment-container {
     width: 100%;
-    padding: 40px 20px;
-    gap: 80px;
+    padding: 60px 20px;
+    gap: 60px;
   }
-  
+
   .qualification-section {
     width: 100%;
+    gap: 24px;
   }
-  
+
   .section-title {
     font-size: 28px;
   }
-  
+
   .qualification-text {
     font-size: 16px;
     line-height: 28px;
   }
-  
-  .departments-frame {
-    height: auto;
+
+  .departments-section {
+    gap: 40px;
   }
-  
-  .departments-list {
-    width: 100%;
+
+  .departments-frame {
     height: auto;
     gap: 40px;
   }
-  
+
+  .departments-list {
+    width: 100%;
+    height: auto;
+    gap: 32px;
+  }
+
   .department-item {
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
     align-items: flex-start;
+    padding: 20px;
+    background: rgba(2, 71, 138, 0.1);
+    border-radius: 16px;
+    border: 1px solid rgba(71, 137, 238, 0.2);
   }
-  
+
   .department-item:nth-child(2),
   .department-item:nth-child(3),
   .department-item:nth-child(4),
   .department-item:nth-child(5) {
-    gap: 15px;
+    gap: 12px;
   }
-  
+
   .department-name {
     font-size: 20px;
   }
-  
+
   .department-description {
     width: 100%;
-    font-size: 16px;
-    line-height: 28px;
+    font-size: 15px;
+    line-height: 26px;
     min-height: auto;
+  }
+
+  .line-separator {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .recruitment-container {
+    padding: 40px 16px;
+    gap: 40px;
+  }
+
+  .section-title {
+    font-size: 24px;
+  }
+
+  .qualification-text {
+    font-size: 15px;
+    line-height: 26px;
+  }
+
+  .departments-list {
+    gap: 24px;
+  }
+
+  .department-item {
+    padding: 16px;
+  }
+
+  .department-name {
+    font-size: 18px;
+  }
+
+  .department-description {
+    font-size: 14px;
+    line-height: 24px;
   }
 }
 </style>

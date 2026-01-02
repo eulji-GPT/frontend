@@ -533,48 +533,97 @@ onMounted(() => {
 
 @media (max-width: 768px) {
   .hero-container {
-    padding: 60px 20px 40px 20px;
+    padding: 80px 20px 60px 20px;
     align-items: center;
     min-height: auto;
+    gap: 40px;
   }
 
   .hero-main {
     width: 100%;
-    max-width: 571px;
+    max-width: 100%;
     align-items: center;
   }
 
   .eulgpt-title {
-    font-size: 80px;
-    height: auto;
+    font-size: 64px;
+    min-height: auto;
     text-align: center;
     justify-content: center;
+    letter-spacing: 1.5px;
   }
 
   .team-recruit-section {
     justify-content: center;
+    width: auto;
   }
 
   .typing-text {
-    font-size: 40px;
-    line-height: 60px;
+    font-size: 36px;
+    line-height: 50px;
+  }
+
+  .asterisk-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .asterisk-bar {
+    width: 4px;
+    height: 16px;
   }
 
   .buttons-container {
     justify-content: center;
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 12px;
   }
 
-  .apply-button {
-    width: 180px;
-    padding: 12px 60px;
+  .interactive-button {
+    width: 160px;
+    padding: 12px 40px;
   }
 
   .button-text {
-    font-size: 24px;
+    font-size: 20px;
   }
 
   .orbital-graphics {
     display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-container {
+    padding: 60px 16px 40px 16px;
+    gap: 30px;
+  }
+
+  .eulgpt-title {
+    font-size: 48px;
+    letter-spacing: 1px;
+  }
+
+  .typing-text {
+    font-size: 28px;
+    line-height: 40px;
+  }
+
+  .buttons-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .interactive-button {
+    width: 100%;
+    max-width: 200px;
+    padding: 12px 30px;
+  }
+
+  .button-text {
+    font-size: 18px;
   }
 }
 </style>

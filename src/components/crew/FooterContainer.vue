@@ -264,81 +264,131 @@
 
 @media (max-width: 768px) {
   .footer-desktop {
-    min-height: 800px;
+    min-height: 600px;
   }
 
   .overlap-wrapper {
     width: 100%;
-    height: 800px;
+    height: 600px;
   }
 
   .overlap {
     width: 100%;
-    height: 800px;
+    height: 600px;
     left: 0;
   }
-  
+
   .group {
     display: none;
   }
-  
+
   .hero-frame {
     left: 50%;
     transform: translateX(-50%);
     width: 90%;
-    max-width: 500px;
-    top: 100px;
+    max-width: 100%;
+    top: 80px;
+    align-items: center;
+    gap: 30px;
   }
-  
+
   .hero-content {
     width: 100%;
+    align-items: center;
   }
-  
+
   .eulgpt-logo {
-    font-size: 80px;
+    font-size: 64px;
     text-align: center;
   }
-  
+
   .recruitment-section {
     justify-content: center;
     width: 100%;
   }
-  
+
   .recruitment-text {
-    font-size: 40px;
-    line-height: 60px;
+    font-size: 36px;
+    line-height: 50px;
   }
-  
+
+  .icon-container {
+    top: -15px;
+    right: -15px;
+  }
+
+  .recruitment-icon {
+    width: 14px;
+    height: 48px;
+  }
+
   .apply-button {
     align-self: center;
-    width: 180px;
+    width: 160px;
+    padding: 12px 40px;
   }
-  
+
   .button-text {
-    font-size: 24px;
+    font-size: 20px;
   }
-  
+
   .ellipse,
   .ellipse-2,
   .ellipse-3 {
     display: none;
   }
-  
+
   .common-footer {
     left: 0;
     right: 0;
     width: 100%;
     bottom: 0;
+    padding: 10px 16px;
+    height: auto;
   }
-  
-  .footer-content {
-    flex-direction: column;
-    gap: 20px;
+
+  .privacy-policy,
+  .copyright,
+  .email {
     text-align: center;
+    font-size: 12px;
   }
-  
-  .footer-info {
-    align-items: center;
+}
+
+@media (max-width: 480px) {
+  .footer-desktop {
+    min-height: 500px;
+  }
+
+  .overlap-wrapper {
+    height: 500px;
+  }
+
+  .overlap {
+    height: 500px;
+  }
+
+  .hero-frame {
+    top: 60px;
+    gap: 24px;
+  }
+
+  .eulgpt-logo {
+    font-size: 48px;
+  }
+
+  .recruitment-text {
+    font-size: 28px;
+    line-height: 40px;
+  }
+
+  .apply-button {
+    width: 140px;
+    padding: 10px 30px;
+  }
+
+  .button-text {
+    font-size: 18px;
   }
 }
 </style>

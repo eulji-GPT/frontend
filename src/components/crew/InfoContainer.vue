@@ -72,13 +72,43 @@
 }
 
 @media (max-width: 768px) {
-  .info-question {
-    font-size: 40px;
-    line-height: 60px;
+  .info-container {
+    padding: 60px 20px;
+    gap: 30px;
   }
-  
+
+  .info-question {
+    font-size: 32px;
+    line-height: 48px;
+  }
+
   .info-answer {
+    font-size: 18px;
+    line-height: 32px;
+  }
+
+  .ellipse-left {
+    width: 400px;
+    height: 400px;
+    left: -200px;
+    top: -200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .info-container {
+    padding: 40px 16px;
+    gap: 24px;
+  }
+
+  .info-question {
     font-size: 24px;
+    line-height: 36px;
+  }
+
+  .info-answer {
+    font-size: 16px;
+    line-height: 28px;
   }
 }
 </style>

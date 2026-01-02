@@ -519,6 +519,11 @@ const goBack = () => {
 @media (max-width: 768px) {
   .explore-container {
     margin: 80px auto 40px;
+    padding: 0 16px;
+  }
+
+  .explore-header {
+    margin-bottom: 50px;
   }
 
   .explore-title {
@@ -527,19 +532,154 @@ const goBack = () => {
 
   .explore-subtitle {
     font-size: 16px;
+    line-height: 1.6;
+  }
+
+  .content-section {
+    margin-bottom: 50px;
   }
 
   .section-title {
     font-size: 24px;
+    margin-bottom: 20px;
   }
 
   .card {
     padding: 24px;
+    border-radius: 16px;
+  }
+
+  .card-title {
+    font-size: 20px;
+  }
+
+  .card-text {
+    font-size: 15px;
+    line-height: 1.7;
   }
 
   .tech-grid,
   .culture-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .tech-card,
+  .culture-card {
+    padding: 24px;
+    border-radius: 16px;
+  }
+
+  .tech-icon {
+    font-size: 36px;
+  }
+
+  .tech-name,
+  .culture-title {
+    font-size: 18px;
+  }
+
+  .tech-description,
+  .culture-description {
+    font-size: 14px;
+  }
+
+  .culture-number {
+    font-size: 32px;
+  }
+
+  .timeline {
+    padding-left: 24px;
+  }
+
+  .timeline-item {
+    padding-left: 24px;
+    margin-bottom: 30px;
+  }
+
+  .timeline-item::before {
+    left: -29px;
+    width: 10px;
+    height: 10px;
+  }
+
+  .timeline-content {
+    padding: 20px;
+  }
+
+  .timeline-title {
+    font-size: 16px;
+  }
+
+  .cta-section {
+    padding: 40px 24px;
+    margin-top: 50px;
+    border-radius: 16px;
+  }
+
+  .cta-title {
+    font-size: 22px;
+  }
+
+  .cta-description {
+    font-size: 15px;
+    margin-bottom: 24px;
+  }
+
+  .cta-buttons {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .btn-apply,
+  .btn-back {
+    width: 100%;
+    padding: 14px 30px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .explore-container {
+    margin: 70px auto 30px;
+    padding: 0 12px;
+  }
+
+  .explore-header {
+    margin-bottom: 40px;
+  }
+
+  .explore-title {
+    font-size: 28px;
+  }
+
+  .explore-subtitle {
+    font-size: 15px;
+  }
+
+  .content-section {
+    margin-bottom: 40px;
+  }
+
+  .section-title {
+    font-size: 22px;
+  }
+
+  .card {
+    padding: 20px;
+  }
+
+  .card-title {
+    font-size: 18px;
+  }
+
+  .card-text {
+    font-size: 14px;
+  }
+
+  .tech-card,
+  .culture-card {
+    padding: 20px;
   }
 
   .timeline {
@@ -547,28 +687,26 @@ const goBack = () => {
   }
 
   .timeline-item {
-    padding-left: 30px;
+    padding-left: 20px;
   }
 
   .cta-section {
-    padding: 40px 24px;
+    padding: 30px 20px;
   }
 
   .cta-title {
-    font-size: 24px;
+    font-size: 20px;
   }
 
   .cta-description {
-    font-size: 16px;
-  }
-
-  .cta-buttons {
-    flex-direction: column;
+    font-size: 14px;
   }
 
   .btn-apply,
   .btn-back {
-    width: 100%;
+    padding: 12px 24px;
+    font-size: 15px;
+    border-radius: 10px;
   }
 }
 </style>

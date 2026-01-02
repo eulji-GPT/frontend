@@ -647,57 +647,128 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .faq-container {
     width: 100%;
-    padding: 40px 20px;
-    gap: 80px;
+    padding: 60px 20px;
+    gap: 60px;
   }
-  
+
+  .notes-section {
+    gap: 24px;
+  }
+
   .section-title {
     font-size: 28px;
   }
-  
+
   .notes-text {
-    font-size: 16px;
-    line-height: 28px;
+    font-size: 15px;
+    line-height: 26px;
   }
-  
+
+  .faq-section {
+    gap: 40px;
+  }
+
+  .faq-list {
+    gap: 20px;
+  }
+
+  .faq-card {
+    border-radius: 12px;
+  }
+
   .question-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
-    padding: 15px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
   }
-  
+
   .question-content {
-    gap: 15px;
+    gap: 12px;
+    flex: 1;
   }
-  
+
   .q-label {
     font-size: 24px;
   }
-  
+
   .question-text {
-    font-size: 18px;
+    font-size: 16px;
+    text-align: left;
   }
-  
+
   .expand-icon {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
   }
-  
+
   .answer-row {
-    flex-direction: column;
+    flex-direction: row;
     align-items: flex-start;
-    gap: 15px;
-    padding: 15px;
+    gap: 12px;
+    padding: 0 16px 16px 16px;
   }
-  
+
   .a-label {
     font-size: 24px;
   }
-  
+
   .answer-text {
-    font-size: 16px;
+    font-size: 15px;
     line-height: 24px;
+  }
+
+  .floating-orb {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .faq-container {
+    padding: 40px 16px;
+    gap: 40px;
+  }
+
+  .section-title {
+    font-size: 24px;
+  }
+
+  .notes-text {
+    font-size: 14px;
+    line-height: 24px;
+  }
+
+  .question-row {
+    padding: 14px;
+  }
+
+  .question-content {
+    gap: 10px;
+  }
+
+  .q-label,
+  .a-label {
+    font-size: 20px;
+  }
+
+  .question-text {
+    font-size: 15px;
+  }
+
+  .expand-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .answer-row {
+    gap: 10px;
+    padding: 0 14px 14px 14px;
+  }
+
+  .answer-text {
+    font-size: 14px;
+    line-height: 22px;
   }
 }
 </style>

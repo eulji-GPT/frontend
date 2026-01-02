@@ -353,22 +353,55 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .crew-page {
     width: 100%;
-    max-width: 768px;
+    max-width: 100%;
+    padding: 0;
+  }
+
+  .scroll-container {
+    gap: 40px;
+    max-width: 100%;
     padding: 0 16px;
   }
-  
-  .scroll-container {
-    gap: 60px;
-  }
-  
+
   .floating-actions {
     bottom: 20px;
     right: 20px;
   }
-  
+
   .scroll-to-top {
     width: 48px;
     height: 48px;
+  }
+
+  .ellipse {
+    width: 300px;
+    height: 300px;
+    right: -150px;
+    top: -150px;
+  }
+
+  .ellipse-2 {
+    width: 350px;
+    height: 350px;
+    right: -175px;
+    top: -175px;
+  }
+}
+
+@media (max-width: 480px) {
+  .scroll-container {
+    gap: 30px;
+    padding: 0 12px;
+  }
+
+  .scroll-to-top {
+    width: 44px;
+    height: 44px;
+  }
+
+  .floating-actions {
+    bottom: 16px;
+    right: 16px;
   }
 }
 </style>
