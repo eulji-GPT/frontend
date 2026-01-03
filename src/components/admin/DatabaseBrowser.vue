@@ -70,7 +70,7 @@
             <tr>
               <th v-for="col in tableData.columns" :key="col.name" :class="{ 'pk-column': col.primary_key }">
                 <div class="column-header">
-                  <span>{{ col.name }}</span>
+                  <span>{{ getColumnDisplayName(col.name) }}</span>
                   <span class="column-type">{{ formatColumnType(col.type) }}</span>
                 </div>
               </th>
@@ -79,9 +79,22 @@
           </thead>
           <tbody>
             <tr v-for="(row, idx) in tableData.rows" :key="idx">
-              <td v-for="col in tableData.columns" :key="col.name" :class="{ 'pk-column': col.primary_key }">
-                <span class="cell-value" :title="formatCellValue(row[col.name])">
-                  {{ formatCellValue(row[col.name]) }}
+              <td
+                v-for="col in tableData.columns"
+                :key="col.name"
+                :class="getCellClass(row[col.name], col)"
+                @click="openDetailModal(row[col.name], col.name)"
+              >
+                <span
+                  class="cell-value"
+                  :title="isDateValue(col.name, row[col.name]) ? formatDateFull(String(row[col.name])) : String(row[col.name] ?? '')"
+                >
+                  {{ formatCellValue(row[col.name], col.name) }}
+                </span>
+                <span v-if="isClickableCell(row[col.name], col.name)" class="expand-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+                  </svg>
                 </span>
               </td>
               <td class="actions-column">
@@ -166,12 +179,46 @@
         </div>
       </div>
     </div>
+
+    <!-- 상세 보기 모달 -->
+    <div v-if="showDetailModal" class="modal-overlay" @click.self="closeDetailModal">
+      <div class="detail-modal-content">
+        <div class="detail-modal-header">
+          <h3>{{ detailModalTitle }}</h3>
+          <button class="close-btn" @click="closeDetailModal">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="detail-modal-body">
+          <pre v-if="detailModalType === 'json'" class="json-content">{{ detailModalContent }}</pre>
+          <div v-else-if="detailModalType === 'message'" class="message-content">
+            <p>{{ detailModalContent }}</p>
+          </div>
+          <div v-else class="text-content">
+            <p>{{ detailModalContent }}</p>
+          </div>
+        </div>
+        <div class="detail-modal-footer">
+          <button class="copy-btn" @click="copyToClipboard">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            복사
+          </button>
+          <button class="cancel-btn" @click="closeDetailModal">닫기</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { adminAPI, type TableInfo, type TableDataResponse } from '../../services/api'
+import { adminAPI, type TableInfo, type TableDataResponse, type TableColumn } from '../../services/api'
 
 const tables = ref<TableInfo[]>([])
 const selectedTable = ref<string | null>(null)
@@ -182,7 +229,42 @@ const searchQuery = ref('')
 const showDeleteModal = ref(false)
 const rowToDelete = ref<Record<string, unknown> | null>(null)
 
+// 상세 보기 모달
+const showDetailModal = ref(false)
+const detailModalTitle = ref('')
+const detailModalContent = ref('')
+const detailModalType = ref<'text' | 'json' | 'message'>('text')
+
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
+
+// 컬럼명 한글 번역
+const columnNameMap: Record<string, string> = {
+  id: 'ID',
+  user_id: '사용자 ID',
+  chat_history_id: '채팅 ID',
+  chat_message_id: '메시지 ID',
+  title: '제목',
+  message: '메시지',
+  is_user: '사용자 여부',
+  is_positive: '긍정 여부',
+  is_pro: 'Pro 회원',
+  is_admin: '관리자',
+  name: '이름',
+  nickname: '닉네임',
+  email: '이메일',
+  phone_number: '전화번호',
+  birth_date: '생년월일',
+  password: '비밀번호',
+  verified_email: '인증 이메일',
+  oauth_provider: 'OAuth 제공자',
+  oauth_id: 'OAuth ID',
+  profile_image_url: '프로필 이미지',
+  created_at: '생성일',
+  updated_at: '수정일',
+  policy_agree_1: '이용약관 동의',
+  policy_agree_2: '개인정보 동의',
+}
+
 
 const loadTables = async () => {
   try {
@@ -235,8 +317,12 @@ const getTableDisplayName = (tableName: string): string => {
   return table?.display_name || tableName
 }
 
+// 컬럼명 한글화
+const getColumnDisplayName = (colName: string): string => {
+  return columnNameMap[colName] || colName
+}
+
 const formatColumnType = (type: string): string => {
-  // 간략한 타입 표시
   if (type.includes('VARCHAR') || type.includes('String')) return 'STR'
   if (type.includes('BIGINT') || type.includes('BigInteger')) return 'INT'
   if (type.includes('BOOLEAN') || type.includes('Boolean')) return 'BOOL'
@@ -246,18 +332,163 @@ const formatColumnType = (type: string): string => {
   return type.slice(0, 4).toUpperCase()
 }
 
-const formatCellValue = (value: unknown): string => {
-  if (value === null || value === undefined) return '(null)'
-  if (typeof value === 'boolean') return value ? 'Yes' : 'No'
-  if (typeof value === 'string' && value.length > 50) {
-    return value.slice(0, 50) + '...'
+// 날짜 포맷팅 (상대 시간)
+const formatDate = (dateStr: string): string => {
+  try {
+    const date = new Date(dateStr)
+    if (isNaN(date.getTime())) return dateStr
+
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffSec = Math.floor(diffMs / 1000)
+    const diffMin = Math.floor(diffSec / 60)
+    const diffHour = Math.floor(diffMin / 60)
+    const diffDay = Math.floor(diffHour / 24)
+
+    if (diffDay > 30) {
+      return date.toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      })
+    } else if (diffDay > 0) {
+      return `${diffDay}일 전`
+    } else if (diffHour > 0) {
+      return `${diffHour}시간 전`
+    } else if (diffMin > 0) {
+      return `${diffMin}분 전`
+    } else {
+      return '방금 전'
+    }
+  } catch {
+    return dateStr
   }
+}
+
+// 날짜 풀 포맷
+const formatDateFull = (dateStr: string): string => {
+  try {
+    const date = new Date(dateStr)
+    if (isNaN(date.getTime())) return dateStr
+    return date.toLocaleString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    })
+  } catch {
+    return dateStr
+  }
+}
+
+// 값이 날짜인지 확인
+const isDateValue = (colName: string, value: unknown): boolean => {
+  if (typeof value !== 'string') return false
+  if (colName.includes('_at') || colName.includes('date')) return true
+  // ISO 8601 형식 체크
+  return /^\d{4}-\d{2}-\d{2}(T|\s)\d{2}:\d{2}/.test(value)
+}
+
+// 셀 값 포맷팅 (개선)
+const formatCellValue = (value: unknown, colName: string): string => {
+  if (value === null || value === undefined) return '-'
+
+  // Boolean 처리
+  if (typeof value === 'boolean') {
+    if (colName === 'is_user') return value ? '👤 사용자' : '🤖 AI'
+    if (colName === 'is_positive') return value ? '👍 좋아요' : '👎 싫어요'
+    if (colName === 'is_pro') return value ? '✨ Pro' : '일반'
+    if (colName === 'is_admin') return value ? '🛡️ 관리자' : '일반'
+    return value ? 'Yes' : 'No'
+  }
+
+  // 날짜 처리
+  if (typeof value === 'string' && isDateValue(colName, value)) {
+    return formatDate(value)
+  }
+
+  // 비밀번호 마스킹
+  if (colName === 'password' && typeof value === 'string') {
+    return '••••••••'
+  }
+
+  // 긴 텍스트 처리
+  if (typeof value === 'string') {
+    if (value.length > 80) {
+      return value.slice(0, 80) + '...'
+    }
+    return value
+  }
+
   return String(value)
 }
 
+// 셀이 클릭 가능한지 (긴 텍스트)
+const isClickableCell = (value: unknown, colName: string): boolean => {
+  if (colName === 'password') return false
+  if (typeof value === 'string' && value.length > 80) return true
+  if (colName === 'message') return true
+  return false
+}
+
+// 상세 모달 열기
+const openDetailModal = (value: unknown, colName: string) => {
+  if (!isClickableCell(value, colName)) return
+
+  detailModalTitle.value = getColumnDisplayName(colName)
+
+  if (typeof value === 'string') {
+    // JSON 파싱 시도
+    try {
+      const parsed = JSON.parse(value)
+      detailModalContent.value = JSON.stringify(parsed, null, 2)
+      detailModalType.value = 'json'
+    } catch {
+      detailModalContent.value = value
+      detailModalType.value = colName === 'message' ? 'message' : 'text'
+    }
+  } else {
+    detailModalContent.value = String(value)
+    detailModalType.value = 'text'
+  }
+
+  showDetailModal.value = true
+}
+
+const closeDetailModal = () => {
+  showDetailModal.value = false
+  detailModalContent.value = ''
+}
+
+// 셀 클래스 계산
+const getCellClass = (value: unknown, col: TableColumn): string => {
+  const classes: string[] = []
+  if (col.primary_key) classes.push('pk-column')
+  if (isClickableCell(value, col.name)) classes.push('clickable-cell')
+  if (col.name === 'message') classes.push('message-cell')
+  return classes.join(' ')
+}
+
+// 클립보드 복사
+const copyToClipboard = async () => {
+  try {
+    await navigator.clipboard.writeText(detailModalContent.value)
+    alert('복사되었습니다.')
+  } catch {
+    // fallback for older browsers
+    const textarea = document.createElement('textarea')
+    textarea.value = detailModalContent.value
+    document.body.appendChild(textarea)
+    textarea.select()
+    document.execCommand('copy')
+    document.body.removeChild(textarea)
+    alert('복사되었습니다.')
+  }
+}
+
 const isProtectedRow = (_row: Record<string, unknown>): boolean => {
-  // member 테이블의 현재 사용자는 삭제 불가
-  // (실제 체크는 백엔드에서 하지만 UI에서도 표시)
   return false
 }
 
@@ -280,9 +511,10 @@ const deleteRow = async () => {
     showDeleteModal.value = false
     rowToDelete.value = null
     loadTableData()
-    loadTables() // 카운트 업데이트
-  } catch (error: any) {
-    alert(error.message || '삭제 중 오류가 발생했습니다.')
+    loadTables()
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : '삭제 중 오류가 발생했습니다.'
+    alert(errorMessage)
   }
 }
 
@@ -701,6 +933,142 @@ onMounted(() => {
 
 .confirm-delete-btn:hover {
   background: #dc2626;
+}
+
+/* 클릭 가능한 셀 */
+.clickable-cell {
+  cursor: pointer;
+  position: relative;
+}
+
+.clickable-cell:hover {
+  background: #eff6ff;
+}
+
+.clickable-cell .expand-icon {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.clickable-cell:hover .expand-icon {
+  opacity: 1;
+  color: #02478A;
+}
+
+.message-cell {
+  max-width: 400px;
+}
+
+/* 상세 보기 모달 */
+.detail-modal-content {
+  background: #fff;
+  border-radius: 12px;
+  max-width: 800px;
+  width: 90%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.detail-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.detail-modal-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.detail-modal-body {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.json-content {
+  background: #1f2937;
+  color: #e5e7eb;
+  padding: 16px;
+  border-radius: 8px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.message-content,
+.text-content {
+  background: #f9fafb;
+  padding: 16px;
+  border-radius: 8px;
+  line-height: 1.8;
+}
+
+.message-content p,
+.text-content p {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #374151;
+}
+
+.detail-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: #02478A;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.copy-btn:hover {
+  background: #023a6f;
 }
 
 /* 반응형 */
