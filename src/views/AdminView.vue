@@ -11,6 +11,7 @@
         <DatabaseBrowser v-else-if="activeMenu === 'database'" />
         <ChatLogViewer v-else-if="activeMenu === 'chatlogs'" />
         <LLMSettings v-else-if="activeMenu === 'llm'" />
+        <ContentManager v-else-if="activeMenu === 'content'" />
         <div v-else-if="activeMenu === 'dashboard'" class="dashboard-content">
           <h2 class="section-title">대시보드</h2>
           <div class="stats-grid">
@@ -60,6 +61,7 @@ import UserManagement from '../components/admin/UserManagement.vue'
 import DatabaseBrowser from '../components/admin/DatabaseBrowser.vue'
 import ChatLogViewer from '../components/admin/ChatLogViewer.vue'
 import LLMSettings from '../components/admin/LLMSettings.vue'
+import ContentManager from '../components/admin/ContentManager.vue'
 import StatsCard from '../components/admin/StatsCard.vue'
 import { adminAPI, type PlatformStats } from '../services/api'
 import { removeAccessToken, removeUserInfo } from '../utils/auth'
