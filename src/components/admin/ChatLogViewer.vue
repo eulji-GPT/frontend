@@ -197,10 +197,10 @@ const loadSessions = async () => {
 
 const loadMessageCounts = async () => {
   try {
-    // 메시지 테이블에서 세션별 개수 계산
+    // 메시지 테이블에서 세션별 개수 계산 (백엔드 limit 최대값: 100)
     const response = await adminAPI.getTableData('chatmessage', {
       page: 1,
-      limit: 1000, // 충분히 큰 수
+      limit: 100,
     })
 
     const counts = new Map<number, number>()
@@ -236,10 +236,10 @@ const selectSession = async (session: ChatSession) => {
   loadingMessages.value = true
 
   try {
-    // 해당 세션의 메시지만 필터링하여 가져오기
+    // 해당 세션의 메시지만 필터링하여 가져오기 (백엔드 limit 최대값: 100)
     const response = await adminAPI.getTableData('chatmessage', {
       page: 1,
-      limit: 500,
+      limit: 100,
       search: String(session.id),
     })
 
@@ -264,8 +264,12 @@ const getMessageCount = (sessionId: number): number => {
 }
 
 const formatDate = (dateStr: string): string => {
+  if (!dateStr) return '-'
   try {
     const date = new Date(dateStr)
+    // Invalid Date 체크
+    if (isNaN(date.getTime())) return '-'
+
     const now = new Date()
     const diffMs = now.getTime() - date.getTime()
     const diffDay = Math.floor(diffMs / (1000 * 60 * 60 * 24))
@@ -278,15 +282,19 @@ const formatDate = (dateStr: string): string => {
       return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
     }
   } catch {
-    return dateStr
+    return '-'
   }
 }
 
 const formatDateFull = (dateStr: string): string => {
+  if (!dateStr) return '-'
   try {
-    return new Date(dateStr).toLocaleString('ko-KR')
+    const date = new Date(dateStr)
+    // Invalid Date 체크
+    if (isNaN(date.getTime())) return '-'
+    return date.toLocaleString('ko-KR')
   } catch {
-    return dateStr
+    return '-'
   }
 }
 
