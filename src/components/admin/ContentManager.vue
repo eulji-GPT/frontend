@@ -54,13 +54,13 @@
             <span class="card-date">{{ item.date }}</span>
           </div>
           <div class="card-actions">
-            <button class="edit-btn" @click="openNewsModal(item, index)" title="수정">
+            <button class="edit-btn" @click="openNewsModal(item)" title="수정">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
               </svg>
             </button>
-            <button class="delete-btn" @click="confirmDeleteNews(index)" title="삭제">
+            <button class="delete-btn" @click="confirmDeleteNews(item.row_number)" title="삭제">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="3 6 5 6 21 6"></polyline>
                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -106,13 +106,13 @@
             </div>
           </div>
           <div class="card-actions">
-            <button class="edit-btn" @click="openFaqModal(item, index)" title="수정">
+            <button class="edit-btn" @click="openFaqModal(item)" title="수정">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
               </svg>
             </button>
-            <button class="delete-btn" @click="confirmDeleteFaq(index)" title="삭제">
+            <button class="delete-btn" @click="confirmDeleteFaq(item.row_number)" title="삭제">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="3 6 5 6 21 6"></polyline>
                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -130,7 +130,7 @@
     <!-- 공지사항 모달 -->
     <div v-if="showNewsModal" class="modal-overlay" @click.self="showNewsModal = false">
       <div class="modal-content">
-        <h3>{{ editingNewsIndex !== null ? '공지사항 수정' : '새 공지사항 추가' }}</h3>
+        <h3>{{ editingNewsRowNumber !== null ? '공지사항 수정' : '새 공지사항 추가' }}</h3>
         <div class="form-group">
           <label>제목 *</label>
           <input v-model="newsForm.title" type="text" placeholder="공지 제목" />
@@ -153,7 +153,7 @@
     <!-- FAQ 모달 -->
     <div v-if="showFaqModal" class="modal-overlay" @click.self="showFaqModal = false">
       <div class="modal-content">
-        <h3>{{ editingFaqIndex !== null ? 'FAQ 수정' : '새 FAQ 추가' }}</h3>
+        <h3>{{ editingFaqRowNumber !== null ? 'FAQ 수정' : '새 FAQ 추가' }}</h3>
         <div class="form-group">
           <label>질문 *</label>
           <input v-model="faqForm.q" type="text" placeholder="자주 묻는 질문" />
@@ -196,11 +196,13 @@ interface NewsItem {
   title: string
   date: string
   desc: string
+  row_number: number
 }
 
 interface FaqItem {
   q: string
   a: string
+  row_number: number
 }
 
 const activeTab = ref<'news' | 'faq'>('news')
@@ -209,8 +211,8 @@ const activeTab = ref<'news' | 'faq'>('news')
 const newsList = ref<NewsItem[]>([])
 const loadingNews = ref(false)
 const showNewsModal = ref(false)
-const editingNewsIndex = ref<number | null>(null)
-const newsForm = reactive<NewsItem>({
+const editingNewsRowNumber = ref<number | null>(null)
+const newsForm = reactive({
   title: '',
   date: '',
   desc: ''
@@ -220,8 +222,8 @@ const newsForm = reactive<NewsItem>({
 const faqList = ref<FaqItem[]>([])
 const loadingFaq = ref(false)
 const showFaqModal = ref(false)
-const editingFaqIndex = ref<number | null>(null)
-const faqForm = reactive<FaqItem>({
+const editingFaqRowNumber = ref<number | null>(null)
+const faqForm = reactive({
   q: '',
   a: ''
 })
@@ -229,7 +231,7 @@ const faqForm = reactive<FaqItem>({
 // Delete state
 const showDeleteModal = ref(false)
 const deleteType = ref<'news' | 'faq'>('news')
-const deleteIndex = ref<number | null>(null)
+const deleteRowNumber = ref<number | null>(null)
 
 // Toast
 const toast = reactive({
@@ -250,7 +252,7 @@ const getAuthHeaders = () => {
 const loadNews = async () => {
   loadingNews.value = true
   try {
-    const response = await fetch('/api/news', {
+    const response = await fetch('/api/news/admin', {
       headers: getAuthHeaders()
     })
     if (response.ok) {
@@ -267,7 +269,7 @@ const loadNews = async () => {
 const loadFaq = async () => {
   loadingFaq.value = true
   try {
-    const response = await fetch('/api/faq', {
+    const response = await fetch('/api/faq/admin', {
       headers: getAuthHeaders()
     })
     if (response.ok) {
@@ -281,17 +283,17 @@ const loadFaq = async () => {
 }
 
 // News modal
-const openNewsModal = (item?: NewsItem, index?: number) => {
-  if (item && index !== undefined) {
+const openNewsModal = (item?: NewsItem) => {
+  if (item) {
     newsForm.title = item.title
     newsForm.date = item.date
     newsForm.desc = item.desc
-    editingNewsIndex.value = index
+    editingNewsRowNumber.value = item.row_number
   } else {
     newsForm.title = ''
     newsForm.date = new Date().toISOString().slice(0, 10)
     newsForm.desc = ''
-    editingNewsIndex.value = null
+    editingNewsRowNumber.value = null
   }
   showNewsModal.value = true
 }
@@ -299,9 +301,9 @@ const openNewsModal = (item?: NewsItem, index?: number) => {
 // Save news
 const saveNews = async () => {
   try {
-    const rowIndex = editingNewsIndex.value !== null ? editingNewsIndex.value + 1 : null
-    const method = rowIndex ? 'PUT' : 'POST'
-    const url = rowIndex ? `/api/news/${rowIndex}` : '/api/news'
+    const rowNumber = editingNewsRowNumber.value
+    const method = rowNumber ? 'PUT' : 'POST'
+    const url = rowNumber ? `/api/news/${rowNumber}` : '/api/news'
 
     const response = await fetch(url, {
       method,
@@ -314,7 +316,7 @@ const saveNews = async () => {
     })
 
     if (response.ok) {
-      showToast(editingNewsIndex.value !== null ? '공지사항이 수정되었습니다' : '공지사항이 추가되었습니다', 'success')
+      showToast(editingNewsRowNumber.value !== null ? '공지사항이 수정되었습니다' : '공지사항이 추가되었습니다', 'success')
       showNewsModal.value = false
       await loadNews()
     } else {
@@ -328,15 +330,15 @@ const saveNews = async () => {
 }
 
 // FAQ modal
-const openFaqModal = (item?: FaqItem, index?: number) => {
-  if (item && index !== undefined) {
+const openFaqModal = (item?: FaqItem) => {
+  if (item) {
     faqForm.q = item.q
     faqForm.a = item.a
-    editingFaqIndex.value = index
+    editingFaqRowNumber.value = item.row_number
   } else {
     faqForm.q = ''
     faqForm.a = ''
-    editingFaqIndex.value = null
+    editingFaqRowNumber.value = null
   }
   showFaqModal.value = true
 }
@@ -344,9 +346,9 @@ const openFaqModal = (item?: FaqItem, index?: number) => {
 // Save FAQ
 const saveFaq = async () => {
   try {
-    const rowIndex = editingFaqIndex.value !== null ? editingFaqIndex.value + 1 : null
-    const method = rowIndex ? 'PUT' : 'POST'
-    const url = rowIndex ? `/api/faq/${rowIndex}` : '/api/faq'
+    const rowNumber = editingFaqRowNumber.value
+    const method = rowNumber ? 'PUT' : 'POST'
+    const url = rowNumber ? `/api/faq/${rowNumber}` : '/api/faq'
 
     const response = await fetch(url, {
       method,
@@ -358,7 +360,7 @@ const saveFaq = async () => {
     })
 
     if (response.ok) {
-      showToast(editingFaqIndex.value !== null ? 'FAQ가 수정되었습니다' : 'FAQ가 추가되었습니다', 'success')
+      showToast(editingFaqRowNumber.value !== null ? 'FAQ가 수정되었습니다' : 'FAQ가 추가되었습니다', 'success')
       showFaqModal.value = false
       await loadFaq()
     } else {
@@ -372,25 +374,24 @@ const saveFaq = async () => {
 }
 
 // Delete confirmation
-const confirmDeleteNews = (index: number) => {
+const confirmDeleteNews = (rowNumber: number) => {
   deleteType.value = 'news'
-  deleteIndex.value = index
+  deleteRowNumber.value = rowNumber
   showDeleteModal.value = true
 }
 
-const confirmDeleteFaq = (index: number) => {
+const confirmDeleteFaq = (rowNumber: number) => {
   deleteType.value = 'faq'
-  deleteIndex.value = index
+  deleteRowNumber.value = rowNumber
   showDeleteModal.value = true
 }
 
 // Execute delete
 const executeDelete = async () => {
-  if (deleteIndex.value === null) return
+  if (deleteRowNumber.value === null) return
 
   try {
-    const rowIndex = deleteIndex.value + 1
-    const url = deleteType.value === 'news' ? `/api/news/${rowIndex}` : `/api/faq/${rowIndex}`
+    const url = deleteType.value === 'news' ? `/api/news/${deleteRowNumber.value}` : `/api/faq/${deleteRowNumber.value}`
 
     const response = await fetch(url, {
       method: 'DELETE',
