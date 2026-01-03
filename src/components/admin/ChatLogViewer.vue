@@ -240,13 +240,13 @@ const selectSession = async (session: ChatSession) => {
     const response = await adminAPI.getTableData('chatmessage', {
       page: 1,
       limit: 100,
-      search: String(session.id),
+      filter_column: 'chat_history_id',
+      filter_value: String(session.id),
     })
 
-    // chat_history_id로 필터링
+    // ID 순으로 정렬 (오래된 메시지가 먼저)
     messages.value = (response.rows as unknown as ChatMessage[])
-      .filter(msg => msg.chat_history_id === session.id)
-      .sort((a, b) => a.id - b.id) // ID 순으로 정렬
+      .sort((a, b) => a.id - b.id)
   } catch (error) {
     console.error('메시지 로드 실패:', error)
   } finally {

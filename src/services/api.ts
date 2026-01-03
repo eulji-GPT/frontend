@@ -330,11 +330,15 @@ export const adminAPI = {
     page?: number;
     limit?: number;
     search?: string;
+    filter_column?: string;
+    filter_value?: string;
   } = {}): Promise<TableDataResponse> => {
     const queryParams = new URLSearchParams();
     if (params.page) queryParams.append('page', params.page.toString());
     if (params.limit) queryParams.append('limit', params.limit.toString());
     if (params.search) queryParams.append('search', params.search);
+    if (params.filter_column) queryParams.append('filter_column', params.filter_column);
+    if (params.filter_value) queryParams.append('filter_value', params.filter_value);
 
     const queryString = queryParams.toString();
     const endpoint = `/admin/db/tables/${tableName}${queryString ? `?${queryString}` : ''}`;
