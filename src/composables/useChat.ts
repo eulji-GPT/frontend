@@ -44,6 +44,7 @@ export interface ChatMessage {
   };
   ragSources?: RagSource[];
   artifact?: Artifact | null;
+  modelName?: string;  // 응답을 생성한 모델 이름
 }
 
 export interface ChatSession {
@@ -1028,6 +1029,11 @@ export function useChat() {
                 currentChat.sessionId = data.session_id;
                 console.log("✅ 새 세션 ID 저장됨:", data.session_id);
               }
+              // 모델 이름 저장
+              if (data.model_name && currentChat.messages[messageIndex]) {
+                currentChat.messages[messageIndex].modelName = data.model_name;
+                console.log("🤖 모델 이름 저장됨:", data.model_name);
+              }
             } else if (data.type === 'chunk') {
               // 실시간 스트리밍 청크 추가
               fullResponseText += data.content;
@@ -1041,6 +1047,11 @@ export function useChat() {
               setTimeout(() => scrollToBottom(), 10);
             } else if (data.type === 'done') {
               console.log("✅ 스트리밍 완료");
+              // done에서도 model_name 확인 (fallback)
+              if (data.model_name && currentChat.messages[messageIndex] && !currentChat.messages[messageIndex].modelName) {
+                currentChat.messages[messageIndex].modelName = data.model_name;
+                console.log("🤖 모델 이름 저장됨 (done):", data.model_name);
+              }
             } else if (data.type === 'error') {
               throw new Error(data.error);
             }
@@ -1202,6 +1213,7 @@ export function useChat() {
           currentChat.messages[messageIndex].isStreaming = false;
           currentChat.messages[messageIndex].currentStep = undefined;
           currentChat.messages[messageIndex].hasError = false;
+          currentChat.messages[messageIndex].modelName = "대학 정보 검색";  // RAG 모드 모델 이름
 
           // RAG 소스 정보 추가 (백엔드에서 받은 실제 데이터 사용)
           if (data.sources && Array.isArray(data.sources) && data.sources.length > 0) {
@@ -1559,9 +1571,22 @@ export function useChat() {
     }
   }
 
-  function setChatMode(mode: ChatMode) {
+  async function setChatMode(mode: ChatMode) {
+    // 같은 모드면 아무것도 하지 않음
+    if (chatMode.value === mode) {
+      return;
+    }
+
+    const previousMode = chatMode.value;
     chatMode.value = mode;
-    console.log("🤖 채팅 모드 변경:", mode);
+    console.log("🤖 채팅 모드 변경:", previousMode, "→", mode);
+
+    // 현재 채팅에 메시지가 있으면 새 채팅 세션 시작
+    const currentChat = chatHistory.value.find(c => c.id === currentChatId.value);
+    if (currentChat && currentChat.messages && currentChat.messages.length > 0) {
+      console.log("📝 모드 변경으로 인해 새 채팅 세션 시작");
+      await startNewChat();
+    }
   }
 
   function getChatModeInfo() {

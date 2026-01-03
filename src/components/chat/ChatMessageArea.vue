@@ -101,6 +101,7 @@
         :cotSteps="msg.cotSteps || []"
         :showCotNumbers="!!(msg.cotSteps && msg.cotSteps.length > 0)"
         :hasArtifact="!!(msg.artifact)"
+        :modelName="msg.modelName || ''"
         @feedback="handleFeedback"
         @regenerate="handleRegenerate"
         @openArtifact="handleOpenArtifact"
