@@ -9,6 +9,8 @@
       <main class="admin-main">
         <UserManagement v-if="activeMenu === 'users'" />
         <DatabaseBrowser v-else-if="activeMenu === 'database'" />
+        <ChatLogViewer v-else-if="activeMenu === 'chatlogs'" />
+        <LLMSettings v-else-if="activeMenu === 'llm'" />
         <div v-else-if="activeMenu === 'dashboard'" class="dashboard-content">
           <h2 class="section-title">대시보드</h2>
           <div class="stats-grid">
@@ -56,6 +58,8 @@ import AdminHeader from '../components/admin/AdminHeader.vue'
 import AdminSidebar from '../components/admin/AdminSidebar.vue'
 import UserManagement from '../components/admin/UserManagement.vue'
 import DatabaseBrowser from '../components/admin/DatabaseBrowser.vue'
+import ChatLogViewer from '../components/admin/ChatLogViewer.vue'
+import LLMSettings from '../components/admin/LLMSettings.vue'
 import StatsCard from '../components/admin/StatsCard.vue'
 import { adminAPI, type PlatformStats } from '../services/api'
 import { removeAccessToken, removeUserInfo } from '../utils/auth'
