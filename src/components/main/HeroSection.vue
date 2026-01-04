@@ -9,7 +9,7 @@
         <img class="hero-svg" src="../../assets/HeroSection/Frame-2147227367.svg" alt="장식 이미지" />
       </div>
       <div class="hero-bottom-section">
-        <img class="hero-image" :src="heroImg" alt="EULGPT 메인 이미지" />
+        <img class="hero-image" src="../../assets/HeroSection/Group-48097225.svg" alt="EULGPT 메인 이미지" />
       </div>
     </div>
     <!-- 고정 버튼을 hero-section 외부로 이동 -->
@@ -20,7 +20,6 @@
 </template>
 
 <script setup lang="ts">
-import heroImg from '../../assets/HeroSection/Group-48097225.svg'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
