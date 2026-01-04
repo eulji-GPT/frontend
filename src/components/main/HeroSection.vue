@@ -54,7 +54,7 @@ function goToChatApp() {
   min-width: 100vw;
   height: 800px;
   overflow-x: hidden;
-  background: linear-gradient(-180deg, var(--color-bg-primary), var(--color-bg-secondary));
+  background: linear-gradient(-180deg, white, rgb(243, 248, 255));
   position: relative;
   align-self: stretch;
   flex-shrink: 0;
@@ -97,7 +97,7 @@ function goToChatApp() {
   line-height: 90px;
   text-align: left;
   width: 671px;
-  color: var(--color-text-primary);
+  color: var(--Black, #000);
   margin: 0;
   max-width: none;
   display: block;
@@ -153,10 +153,10 @@ function goToChatApp() {
   gap: 8px;
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
   border-radius: 30px;
-  background-color: var(--color-button-primary-bg);
+  background-color: #000;
   box-sizing: border-box;
   padding: 13px 60px;
-  color: var(--color-button-primary-text);
+  color: white;
   font-size: 18px;
   font-family: Pretendard, sans-serif;
   font-weight: 700;
@@ -169,13 +169,13 @@ function goToChatApp() {
 }
 
 .floating-start-btn:hover {
-  background-color: var(--color-button-primary-hover);
+  background-color: rgb(2, 71, 138);
   box-shadow: 0px 6px 8px 0px rgba(2, 71, 138, 0.35);
   transform: translateY(-1px);
 }
 
 .floating-start-btn:active {
-  background-color: var(--color-button-primary-hover);
+  background-color: rgb(1, 60, 116);
   box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.15);
   transform: translateY(0);
 }
