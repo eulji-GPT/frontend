@@ -4,10 +4,10 @@
       <div class="root-wrapper-common-delete-modal" @click.stop>
         <div class="frame-2147227194">
           <span class="delete-title">
-            삭제하시겠습니까?
+            {{ title || '삭제하시겠습니까?' }}
           </span>
           <span class="delete-subtitle">
-            삭제된 대화는 복구할 수 없습니다.
+            {{ message || '삭제된 대화는 복구할 수 없습니다.' }}
           </span>
         </div>
         <div class="frame-2147227155">
@@ -32,6 +32,8 @@
 <script setup lang="ts">
 interface Props {
   isVisible: boolean
+  title?: string
+  message?: string
 }
 
 defineProps<Props>()
@@ -53,7 +55,7 @@ defineEmits<{
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 9999; /* 모든 요소보다 위에 표시 */
+  z-index: 10001; /* 모든 요소보다 위에 표시 */
   backdrop-filter: blur(2px); /* 흐림 효과 추가 */
 }
 
