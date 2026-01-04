@@ -69,13 +69,13 @@
                     <div class="reservation-items">
                       <div class="reservation-item">
                         <span class="item-text">빈강의실 확인</span>
-                        <button class="view-button">
+                        <button class="view-button" @click="handleClassroomCheck">
                           <span class="button-text">조회</span>
                         </button>
                       </div>
                       <div class="reservation-item">
                         <span class="item-text">도서관 • 열람실 확인</span>
-                        <button class="view-button">
+                        <button class="view-button" @click="handleLibraryCheck">
                           <span class="button-text">조회</span>
                         </button>
                       </div>
@@ -192,20 +192,20 @@
             <div class="settings-group">
               <div class="settings-title">화면 테마</div>
               <div class="theme-buttons">
-                <button class="theme-button" :class="{ active: selectedTheme === 'light' }" @click="setTheme('light')">
+                <button class="theme-button" :class="{ active: selectedTheme === 'light' }" @click="handleThemeChange('light')">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="5"/>
                     <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
                   </svg>
                   <span>라이트</span>
                 </button>
-                <button class="theme-button" :class="{ active: selectedTheme === 'dark' }" @click="setTheme('dark')">
+                <button class="theme-button" :class="{ active: selectedTheme === 'dark' }" @click="handleThemeChange('dark')">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M21 12.79A9 9 0 1111.21 3A7 7 0 0021 12.79z"/>
                   </svg>
                   <span>다크</span>
                 </button>
-                <button class="theme-button" :class="{ active: selectedTheme === 'system' }" @click="setTheme('system')">
+                <button class="theme-button" :class="{ active: selectedTheme === 'system' }" @click="handleThemeChange('system')">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
                     <line x1="8" y1="21" x2="16" y2="21"/>
@@ -222,48 +222,48 @@
                 <div class="settings-title">전체 데이터 삭제</div>
                 <div class="settings-description">기존 대화를 모두 삭제합니다.</div>
               </div>
-              <button class="delete-button">
+              <button class="delete-button" @click="handleDeleteAllData">
                 <span>삭제</span>
               </button>
             </div>
-            
+
             <!-- 고객 지원 -->
             <div class="settings-row">
               <div class="settings-info wide">
                 <div class="settings-title">고객 지원</div>
                 <div class="settings-links">
-                  <span class="link">새로운 소식</span>
+                  <span class="link" @click="handleNewsLink">새로운 소식</span>
                   <span class="separator">|</span>
-                  <span class="link">자주 묻는 질문</span>
+                  <span class="link" @click="handleFaqLink">자주 묻는 질문</span>
                   <span class="separator">|</span>
-                  <span class="link">가이드</span>
+                  <span class="link" @click="handleGuideLink">가이드</span>
                 </div>
               </div>
             </div>
-            
+
             <!-- 서비스 정보 -->
             <div class="settings-row">
               <div class="settings-info wide">
                 <div class="settings-title">서비스 정보</div>
                 <div class="settings-links">
-                  <span class="link">개인정보 처리 방침</span>
+                  <span class="link" @click="handlePrivacyPolicy">개인정보 처리 방침</span>
                   <span class="separator">|</span>
-                  <span class="link">서비스 이용약관</span>
+                  <span class="link" @click="handleTermsOfService">서비스 이용약관</span>
                   <span class="separator">|</span>
-                  <span class="link">서비스 이용정책</span>
+                  <span class="link" @click="handleServicePolicy">서비스 이용정책</span>
                   <span class="separator">|</span>
-                  <span class="link">AI 개인정보 처리 안내</span>
+                  <span class="link" @click="handleAIPrivacyPolicy">AI 개인정보 처리 안내</span>
                 </div>
               </div>
             </div>
-            
+
             <!-- 서비스 탈퇴 -->
             <div class="settings-row">
               <div class="settings-info">
                 <div class="settings-title">서비스 탈퇴</div>
                 <div class="settings-description">서비스 탈퇴 시, 더 이상 해당 계정으로 서비스를 사용할 수 없습니다.</div>
               </div>
-              <button class="delete-button">
+              <button class="delete-button" @click="handleDeleteAccount">
                 <span>탈퇴</span>
               </button>
             </div>
@@ -271,13 +271,35 @@
         </div>
       </div>
     </div>
+
+    <!-- 전체 데이터 삭제 확인 모달 -->
+    <CommonDeleteModal
+      :is-visible="showDeleteDataModal"
+      title="전체 데이터 삭제"
+      message="모든 채팅 기록을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+      @confirm="confirmDeleteAllData"
+      @cancel="cancelDeleteData"
+    />
+
+    <!-- 서비스 탈퇴 확인 모달 -->
+    <CommonDeleteModal
+      :is-visible="showDeleteAccountModal"
+      title="서비스 탈퇴"
+      message="정말로 서비스를 탈퇴하시겠습니까? 모든 데이터가 삭제되며 복구할 수 없습니다."
+      @confirm="confirmDeleteAccount"
+      @cancel="cancelDeleteAccount"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
 import './MyPageModal_settings.css'
 import { getApiBaseUrl } from '../../utils/ports-config'
+import { chatAPI, memberAPI } from '../../services/api'
+import { useTheme } from '../../composables/useTheme'
+import CommonDeleteModal from './CommonDeleteModal.vue'
 
 defineProps<{
   isVisible: boolean
@@ -288,10 +310,16 @@ const emit = defineEmits<{
 }>()
 
 const API_BASE_URL = getApiBaseUrl()
+const router = useRouter()
+const { currentTheme, setTheme: setThemeMode } = useTheme()
 const activeTab = ref<'mypage' | 'settings'>('mypage')
-const selectedTheme = ref<'light' | 'dark' | 'system'>('system')
+const selectedTheme = currentTheme
 const profileImage = ref<string | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
+
+// 삭제 모달 상태
+const showDeleteDataModal = ref(false)
+const showDeleteAccountModal = ref(false)
 
 // Pro 인증 관련 상태
 const showProVerification = ref(false)
@@ -556,6 +584,131 @@ const handleCompleteProVerification = async () => {
   }
 }
 
+// === 새로운 기능 핸들러 함수들 ===
+
+// 빈강의실 확인
+const handleClassroomCheck = () => {
+  emit('close')
+  router.push('/ready/classroom')
+}
+
+// 도서관·열람실 확인
+const handleLibraryCheck = () => {
+  emit('close')
+  router.push('/ready/library')
+}
+
+// 테마 변경
+const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
+  setThemeMode(theme)
+}
+
+// 전체 데이터 삭제
+const handleDeleteAllData = () => {
+  showDeleteDataModal.value = true
+}
+
+const confirmDeleteAllData = async () => {
+  try {
+    await chatAPI.deleteAllChats()
+    // localStorage에서도 채팅 관련 데이터 삭제
+    const keysToRemove: string[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && (key.startsWith('chat_') || key.startsWith('session_'))) {
+        keysToRemove.push(key)
+      }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key))
+
+    showDeleteDataModal.value = false
+    alert('모든 채팅 기록이 삭제되었습니다.')
+  } catch (error) {
+    console.error('전체 데이터 삭제 실패:', error)
+    alert('데이터 삭제 중 오류가 발생했습니다.')
+  }
+}
+
+const cancelDeleteData = () => {
+  showDeleteDataModal.value = false
+}
+
+// 고객 지원 링크
+const handleNewsLink = async () => {
+  emit('close')
+  await router.push('/')
+  await nextTick()
+  const newsSection = document.querySelector('#news')
+  if (newsSection) {
+    newsSection.scrollIntoView({ behavior: 'smooth' })
+  }
+}
+
+const handleFaqLink = async () => {
+  emit('close')
+  await router.push('/')
+  await nextTick()
+  const faqSection = document.querySelector('#faq')
+  if (faqSection) {
+    faqSection.scrollIntoView({ behavior: 'smooth' })
+  }
+}
+
+const handleGuideLink = () => {
+  // 가이드 페이지가 없으므로 무시
+  console.log('가이드 페이지는 아직 준비되지 않았습니다.')
+}
+
+// 서비스 정보 링크
+const handlePrivacyPolicy = () => {
+  emit('close')
+  router.push('/privacy-policy')
+}
+
+const handleTermsOfService = () => {
+  emit('close')
+  router.push('/terms-of-service')
+}
+
+const handleServicePolicy = () => {
+  // 서비스 이용정책은 이용약관과 동일하게 처리
+  emit('close')
+  router.push('/terms-of-service')
+}
+
+const handleAIPrivacyPolicy = () => {
+  // AI 개인정보 처리 안내는 개인정보 처리방침과 동일하게 처리
+  emit('close')
+  router.push('/privacy-policy')
+}
+
+// 서비스 탈퇴
+const handleDeleteAccount = () => {
+  showDeleteAccountModal.value = true
+}
+
+const confirmDeleteAccount = async () => {
+  try {
+    await memberAPI.deleteAccount()
+
+    // localStorage 전체 정리
+    localStorage.clear()
+
+    showDeleteAccountModal.value = false
+    emit('close')
+
+    alert('회원 탈퇴가 완료되었습니다. 그동안 서비스를 이용해 주셔서 감사합니다.')
+    router.push('/login')
+  } catch (error) {
+    console.error('회원 탈퇴 실패:', error)
+    alert('회원 탈퇴 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
+  }
+}
+
+const cancelDeleteAccount = () => {
+  showDeleteAccountModal.value = false
+}
+
 const handleOverlayClick = () => {
   emit('close')
 }
@@ -615,16 +768,16 @@ onUnmounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--color-modal-overlay);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 2000;
+  z-index: 10000;
   backdrop-filter: blur(4px);
 }
 
 .modal-container {
-  background: white;
+  background: var(--color-modal-bg);
   border-radius: 20px;
   padding: 0;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -642,26 +795,26 @@ onUnmounted(() => {
 
 .modal-nav {
   width: 200px;
-  background: #f9fafb;
+  background: var(--color-bg-secondary);
   border-top-left-radius: 20px;
   border-bottom-left-radius: 20px;
   padding: 20px 15px;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  border-right: 1px solid #e5e7eb;
+  border-right: 1px solid var(--color-card-border);
 }
 
 .nav-header {
   padding-bottom: 10px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--color-card-border);
 }
 
 .nav-title {
   font-size: 18px;
   font-family: Pretendard, sans-serif;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--color-text-primary);
   margin: 0;
   text-align: center;
 }
@@ -680,16 +833,16 @@ onUnmounted(() => {
   font-size: 15px;
   font-family: Pretendard, sans-serif;
   font-weight: 500;
-  color: #6b7280;
+  color: var(--color-text-secondary);
 }
 
 .nav-item:hover {
-  background: #e5e7eb;
+  background: var(--color-sidebar-item-hover);
 }
 
 .nav-item.active {
-  background: #2563eb;
-  color: white;
+  background: var(--color-primary);
+  color: var(--color-button-primary-text);
 }
 
 .modal-content {
@@ -716,7 +869,7 @@ onUnmounted(() => {
   height: 80px;
   border-radius: 50%;
   overflow: hidden;
-  background: #f3f4f6;
+  background: var(--color-bg-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -792,8 +945,8 @@ onUnmounted(() => {
   max-width: 500px;
   min-height: 201px;
   overflow: hidden;
-  background-color: rgb(249, 250, 251);
-  border: solid 1px rgb(243, 244, 246);
+  background-color: var(--color-card-bg);
+  border: solid 1px var(--color-card-border);
   border-radius: 15px;
   position: relative;
   margin: 0 auto;
@@ -835,7 +988,7 @@ onUnmounted(() => {
 }
 
 .label {
-  color: rgb(156, 163, 175);
+  color: var(--color-text-tertiary);
   text-overflow: ellipsis;
   font-size: 15px;
   font-family: Pretendard, sans-serif;
@@ -847,7 +1000,7 @@ onUnmounted(() => {
 }
 
 .value {
-  color: rgb(31, 41, 55);
+  color: var(--color-text-primary);
   font-size: 15px;
   font-family: Pretendard, sans-serif;
   font-weight: 500;
@@ -864,11 +1017,11 @@ onUnmounted(() => {
   align-items: center;
   flex: none;
   gap: 8px;
-  border: solid 1px rgb(229, 231, 235);
+  border: solid 1px var(--color-card-border);
   border-radius: 12px;
   width: 70px;
   height: 32px;
-  background-color: rgb(243, 244, 246);
+  background-color: var(--color-button-secondary-bg);
   box-sizing: border-box;
   padding: 0px 12px;
   cursor: pointer;
@@ -877,7 +1030,7 @@ onUnmounted(() => {
 }
 
 .button-text {
-  color: rgb(107, 114, 128);
+  color: var(--color-text-secondary);
   text-overflow: ellipsis;
   font-size: 14px;
   font-family: Pretendard, sans-serif;
@@ -902,7 +1055,7 @@ onUnmounted(() => {
 }
 
 .section-title {
-  color: rgb(156, 163, 175);
+  color: var(--color-text-tertiary);
   text-overflow: ellipsis;
   font-size: 15px;
   font-family: Pretendard, sans-serif;
@@ -934,7 +1087,7 @@ onUnmounted(() => {
 }
 
 .item-text {
-  color: rgb(31, 41, 55);
+  color: var(--color-text-primary);
   text-overflow: ellipsis;
   font-size: 15px;
   font-family: Pretendard, sans-serif;
@@ -952,11 +1105,11 @@ onUnmounted(() => {
   align-items: center;
   flex: none;
   gap: 8px;
-  border: solid 1px rgb(229, 231, 235);
+  border: solid 1px var(--color-card-border);
   border-radius: 12px;
   width: 70px;
   height: 32px;
-  background-color: rgb(243, 244, 246);
+  background-color: var(--color-button-secondary-bg);
   box-sizing: border-box;
   padding: 0px 12px;
   cursor: pointer;
@@ -979,7 +1132,7 @@ onUnmounted(() => {
 }
 
 .kakao-text {
-  color: black;
+  color: var(--color-text-primary);
   text-overflow: ellipsis;
   font-size: 15px;
   font-family: Pretendard, sans-serif;
@@ -995,11 +1148,11 @@ onUnmounted(() => {
   align-items: center;
   flex: none;
   gap: 8px;
-  border: solid 1px rgb(229, 231, 235);
+  border: solid 1px var(--color-card-border);
   border-radius: 12px;
   width: 70px;
   height: 32px;
-  background-color: white;
+  background-color: var(--color-card-bg);
   box-sizing: border-box;
   padding: 0px 12px;
   cursor: pointer;
