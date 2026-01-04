@@ -1,0 +1,383 @@
+<template>
+  <div class="privacy-policy-view">
+    <div class="policy-container">
+      <h1 class="policy-title">개인정보 처리 및 데이터 활용 동의서</h1>
+
+      <div class="policy-content">
+        <pre class="policy-text">{{ policyText }}</pre>
+      </div>
+
+      <button @click="goHome" class="home-button">
+        홈으로
+      </button>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed } from 'vue';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+
+// 현재 날짜 또는 회원가입 날짜 (localStorage에서 가져오기)
+const agreementDate = computed(() => {
+  const savedDate = localStorage.getItem('agreement_date');
+  if (savedDate) {
+    return savedDate;
+  }
+  // 없으면 현재 날짜 저장
+  const today = new Date();
+  const formattedDate = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
+  localStorage.setItem('agreement_date', formattedDate);
+  return formattedDate;
+});
+
+const userName = computed(() => {
+  try {
+    const userProfile = localStorage.getItem('dev_user_profile');
+    if (userProfile) {
+      const profile = JSON.parse(userProfile);
+      return profile.nickname || profile.name || '이용자';
+    }
+  } catch {
+    // ignore
+  }
+  return '이용자';
+});
+
+const policyText = computed(() => `EULGPT 개인정보 처리 및 데이터 활용 동의서
+
+EULGPT(이하 "서비스")는 을지대학교 구성원에게 AI 기반 학습 도우미 서비스를 제공하기 위해 개인정보를 수집·이용합니다. 본 동의서는 『개인정보 보호법』 등 관련 법령을 준수하여 작성되었습니다.
+
+■ 필수 동의 항목 (서비스 이용을 위해 반드시 필요)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【 필수 1 】 기본 개인정보 수집·이용 동의 (필수)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+▶ 수집하는 개인정보 항목
+- 이름, 학번, 이메일(@g.eulji.ac.kr), 비밀번호(암호화 저장)
+- 생년월일, 전화번호, 닉네임
+- 서비스 접속 기록(접속 일시, IP 주소, 기기 정보)
+
+▶ 수집 및 이용 목적
+- 회원 인증 및 서비스 이용 권한 확인
+- 서비스 제공 및 고객 지원
+- 시스템 보안 및 부정 이용 방지
+- 학교 공지사항, 학사정보 등 맞춤형 정보 제공
+
+▶ 보유 및 이용 기간
+- 회원 탈퇴 시까지 (탈퇴 후 즉시 삭제)
+- 법령에 따른 보관 의무가 있는 경우 해당 기간까지
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【 필수 2 】 대화 내용 처리 및 AI 서비스 제공 동의 (필수)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+▶ 수집하는 정보
+- 이용자가 입력한 질문 및 요청 내용(텍스트, 파일 등)
+- AI가 생성한 응답 및 제공된 정보(텍스트, 링크, 정보 등)
+- 대화 세션 정보(날짜, 시간, 대화 길이 등)
+- 이용자 피드백 및 평가 정보
+
+▶ 수집 및 이용 목적
+- 실시간 대화 서비스 제공 및 AI 응답 생성
+- 대화 연속성 유지 및 맥락 이해
+- 기술적 오류 발생 시 문제 해결 지원
+- 부적절한 사용 감지 및 필터링
+
+▶ 보유 기간
+- 대화 종료 후 최대 30일 (자동 삭제)
+- 이용자가 직접 대화 저장을 요청한 경우 삭제 요청 시까지
+
+▶ AI 서비스 특성 안내
+- 본 서비스는 AI 기술 기반으로 응답의 정확성을 보장하지 않습니다
+- 법률, 의료, 재정 등 전문 분야 조언은 정확성을 보장하지 않습니다
+- 중요한 결정은 AI 응답을 참고하되 공식 기관을 통해 재확인하세요
+- 개인정보(학번, 주민번호 등)는 대화에 입력하지 마세요
+
+■ 선택 동의 항목 (거부 시에도 서비스 이용 가능)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【 선택 1 】 서비스 품질 개선을 위한 데이터 활용 동의 (선택)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+▶ 활용하는 정보
+- 비식별화 처리된 대화 내용 및 이용 패턴
+- 서비스 이용 통계 및 오류 발생 정보
+- 이용자 피드백 및 만족도 정보
+
+▶ 활용 목적
+- AI 응답 품질 향상 및 정확도 개선
+- 서비스 기능 개선 및 업데이트
+- 오류 패턴 분석 및 해결
+
+▶ 비식별화 처리 방법
+- 개인 식별 정보 자동 제거(이름, 학번, 연락처 등)
+- 고유 식별자를 랜덤 코드로 대체
+- 민감 정보 필터링 및 마스킹 처리
+
+▶ 보유 기간: 동의일로부터 최대 2년
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【 선택 2 】 맞춤형 서비스 제공을 위한 정보 활용 동의 (선택)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+▶ 활용하는 정보
+- 서비스 이용 기록 및 선호도
+- 자주 질문하는 분야 및 주제
+- 학과, 학년 등 학적 정보(선택 입력 시)
+
+▶ 활용 목적
+- 개인 맞춤형 정보 및 콘텐츠 추천
+- 학과별, 학년별 특화 서비스 제공
+- 이용자 관심사 기반 우선 정보 제공
+
+▶ 보유 기간: 동의 철회 시까지
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【 선택 3 】 통계 분석 및 연구 목적 데이터 활용 동의 (선택)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+▶ 활용하는 정보
+- 완전 익명화된 이용 통계 및 트렌드 분석 결과
+- 집계 처리된 서비스 이용 패턴(개별 식별 불가)
+- 익명화된 만족도 및 피드백 정보
+
+▶ 활용 목적
+- 을지대학교 학생 대상 서비스 개선 연구
+- AI 교육 서비스 효과 분석
+- 학술 연구 및 논문 발표(개인 식별 정보 완전 제거)
+
+▶ 데이터 처리 방법
+- 완전 익명화 처리(개인 식별 절대 불가)
+- 통계적 집계 데이터만 활용
+- 외부 제공 시 IRB 승인 절차 준수
+
+▶ 보유 기간: 동의일로부터 최대 5년
+
+■ 개인정보 보호 및 이용자 권리
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【 개인정보의 제3자 제공 】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- 원칙적으로 이용자의 개인정보를 외부에 제공하지 않습니다
+- 예외: 이용자의 별도 동의가 있거나 법령에 따른 요청이 있는 경우
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【 기술적·관리적 보호조치 】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- TLS 암호화 통신을 통한 정보 전송 보호
+- 개인정보 암호화 저장(AES-256)
+- 접근권한 관리 및 접근 기록 관리
+- 정기적 보안 점검 및 모니터링
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【 이용자 권리 및 행사 방법 】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+▶ 행사 가능한 권리
+- 개인정보 열람, 정정·삭제 요구
+- 개인정보 처리정지 요구
+- 동의 철회 및 회원 탈퇴
+- 손해 발생 시 배상 요구
+
+▶ 권리 행사 방법
+1. 온라인: 서비스 내 [설정] → [개인정보 관리] → [동의 관리]
+2. 이메일: eulgpt@eulji.ac.kr
+3. 전화: 010-2177-9155 (평일 09:00~18:00)
+
+▶ 동의 철회 시 처리
+- 선택 동의 철회: 해당 데이터 즉시 삭제, 일부 기능 제한 가능
+- 필수 동의 철회: 서비스 이용 중단(회원 탈퇴)
+
+■ 사람에 의한 검토 안내
+
+서비스 품질 개선을 위해 다음과 같은 경우 최소한의 인원이 대화 내용을 비식별 상태로 검토할 수 있습니다:
+- 부정확한 응답에 대한 이용자 피드백 접수 시
+- 악의적 사용 또는 정책 위반 의심 시
+- 기술 오류로 인한 응답 품질 문제 확인 시
+
+검토자는 이용자의 신원을 확인할 수 없으며, 검토 결과는 서비스 개선 목적으로만 사용됩니다.
+
+■ 만 14세 미만 이용자 안내
+
+만 14세 미만의 경우 법정대리인의 동의가 필요하며, 본인 및 법정대리인 모두 동의 철회를 요청할 수 있습니다.
+
+■ 개인정보 보호책임자
+
+- 책임자: EULGPT 운영팀
+- 소속: 을지대학교 EULGPT 개발팀
+- 이메일: eulgpt@eulji.ac.kr
+- 전화: 010-2177-9155
+
+■ 기타 안내사항
+
+1. 본 동의서는 관련 법령 및 서비스 정책 변경에 따라 변경될 수 있으며, 변경 시 최소 7일 전 공지합니다.
+2. 중요한 변경 시에는 이메일 또는 로그인 시 별도 안내합니다.
+3. 개인정보 관련 분쟁은 개인정보보호위원회(privacy.go.kr) 등에 신고할 수 있습니다.
+
+■ 동의 확인
+
+위 내용을 충분히 읽고 이해하였으며, 개인정보 수집·이용 및 데이터 활용에 대해 동의합니다.
+
+동의일: ${agreementDate.value}
+동의자: ${userName.value}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+시행일: 2025년 9월 1일
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+
+const goHome = () => {
+  router.push('/');
+};
+</script>
+
+<style scoped>
+.privacy-policy-view {
+  min-height: 100vh;
+  background-color: #F3F4F6;
+  padding: 40px 20px;
+  font-family: Pretendard, sans-serif;
+}
+
+.policy-container {
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: #FFFFFF;
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.policy-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #02478A;
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.policy-content {
+  max-height: 600px;
+  overflow-y: auto;
+  margin-bottom: 32px;
+  padding: 20px;
+  background-color: #F0F6FF;
+  border-radius: 12px;
+  border: 1px solid #E5E7EB;
+}
+
+.policy-text {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #1F2937;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: Pretendard, sans-serif;
+  margin: 0;
+}
+
+.home-button {
+  width: 100%;
+  padding: 13px 60px;
+  background-color: #02478A;
+  color: #F0F6FF;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: Pretendard, sans-serif;
+  cursor: pointer;
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+  transition: all 0.2s ease;
+}
+
+.home-button:hover {
+  background-color: #013C74;
+  transform: translateY(-1px);
+  box-shadow: 0px 6px 8px rgba(0, 0, 0, 0.3);
+}
+
+.home-button:active {
+  transform: translateY(0);
+}
+
+/* 스크롤바 스타일 */
+.policy-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.policy-content::-webkit-scrollbar-track {
+  background: #E5E7EB;
+  border-radius: 4px;
+}
+
+.policy-content::-webkit-scrollbar-thumb {
+  background: #02478A;
+  border-radius: 4px;
+}
+
+.policy-content::-webkit-scrollbar-thumb:hover {
+  background: #013C74;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .policy-container {
+    padding: 24px;
+  }
+
+  .policy-title {
+    font-size: 22px;
+  }
+
+  .policy-content {
+    max-height: 500px;
+    padding: 16px;
+  }
+
+  .policy-text {
+    font-size: 13px;
+  }
+
+  .home-button {
+    padding: 12px 40px;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .privacy-policy-view {
+    padding: 20px 12px;
+  }
+
+  .policy-container {
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  .policy-title {
+    font-size: 20px;
+    margin-bottom: 24px;
+  }
+
+  .policy-content {
+    max-height: 400px;
+    padding: 12px;
+  }
+
+  .policy-text {
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .home-button {
+    padding: 11px 30px;
+    font-size: 14px;
+  }
+}
+</style>

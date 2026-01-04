@@ -768,7 +768,7 @@ onUnmounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: var(--color-modal-overlay);
+  background: rgba(0, 0, 0, 0.75); /* 불투명한 어두운 배경으로 변경 */
   display: flex;
   justify-content: center;
   align-items: center;
