@@ -59,8 +59,7 @@ const navigateToFeature = (feature: string) => {
 
 <style scoped>
 .features-section {
-  width: 100vw;
-  min-width: 100vw;
+  width: 100%;
   min-height: 0;
   height: auto;
   background: var(--color-bg-secondary) !important;
@@ -77,7 +76,7 @@ const navigateToFeature = (feature: string) => {
   max-width: 1440px;
   height: 100%;
   margin: 0 auto;
-  padding: 0 180px 127px 180px;
+  padding: 0 max(40px, 5vw) 127px max(40px, 5vw);
   box-sizing: border-box;
   background: transparent;
 }
@@ -279,7 +278,7 @@ const navigateToFeature = (feature: string) => {
 /* 태블릿 반응형 */
 @media (max-width: 1024px) {
   .features-container {
-    padding: 0 100px 80px 100px;
+    padding-bottom: 80px;
   }
   
   .features-content-frame {
@@ -311,7 +310,7 @@ const navigateToFeature = (feature: string) => {
 /* 모바일 반응형 */
 @media (max-width: 768px) {
   .features-container {
-    padding: 0 20px 60px 20px;
+    padding-bottom: 60px;
   }
   
   .features-content-frame {
@@ -368,7 +367,7 @@ const navigateToFeature = (feature: string) => {
 /* 소형 모바일 반응형 */
 @media (max-width: 480px) {
   .features-container {
-    padding: 0 16px 50px 16px;
+    padding-bottom: 50px;
   }
   
   .Frame2147227299 {

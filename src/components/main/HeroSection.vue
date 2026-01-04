@@ -49,8 +49,7 @@ function goToChatApp() {
 }
 
 .hero-section {
-  width: 100vw;
-  min-width: 100vw;
+  width: 100%;
   height: 800px;
   overflow-x: hidden;
   background: linear-gradient(-180deg, white, rgb(243, 248, 255));
@@ -67,8 +66,8 @@ function goToChatApp() {
   align-items: center;
   flex: none;
   gap: 59px;
-  width: 1414px;
-  max-width: calc(100vw - 26px);
+  width: 100%;
+  max-width: 1414px;
   height: 536px;
   box-sizing: border-box;
   position: absolute;
@@ -82,7 +81,7 @@ function goToChatApp() {
   justify-content: flex-start;
   flex-direction: row;
   align-items: center;
-  gap: 112px;
+  gap: clamp(40px, 8vw, 112px);
   align-self: flex-start;
   box-sizing: border-box;
   flex-shrink: 0;
@@ -98,7 +97,7 @@ function goToChatApp() {
   width: 671px;
   color: var(--Black, #000);
   margin: 0;
-  max-width: none;
+  max-width: 100%;
   display: block;
   padding: 0;
   position: relative;
