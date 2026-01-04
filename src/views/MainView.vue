@@ -1,6 +1,6 @@
 <template>
   <div class="main-container">
-    <HeaderSection @scrollToSection="scrollToSection" />
+    <HeaderSection @scrollToSection="scrollToSection" @openMyPage="openMyPageModal" />
     <main class="main-content">
       <HeroSection />
       <IntroSection />
@@ -9,6 +9,7 @@
       <NewsSection />
     </main>
     <CommonFooter />
+    <MyPageModal :isVisible="isMyPageModalVisible" @close="closeMyPageModal" />
   </div>
 </template>
 
@@ -20,7 +21,18 @@ import FeaturesSection from '../components/main/FeaturesSection.vue'
 import FaqSection from '../components/main/FaqSection.vue'
 import NewsSection from '../components/main/NewsSection.vue'
 import CommonFooter from '../components/common/CommonFooter.vue'
-import { nextTick } from 'vue'
+import MyPageModal from '../components/common/MyPageModal.vue'
+import { ref, nextTick } from 'vue'
+
+const isMyPageModalVisible = ref(false)
+
+const openMyPageModal = () => {
+  isMyPageModalVisible.value = true
+}
+
+const closeMyPageModal = () => {
+  isMyPageModalVisible.value = false
+}
 
 const HEADER_HEIGHT = 100
 const smoothScrollTo = (target: number, duration: number = 800) => {
