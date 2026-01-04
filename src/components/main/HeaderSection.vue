@@ -10,13 +10,32 @@
         <li><a href="#faq" @click.prevent="scrollToSection('faq')">자주 묻는 질문</a></li>
         <li><a href="#news" @click.prevent="scrollToSection('news')">새로운 소식</a></li>
       </ul>
+
+      <!-- 테마 토글 버튼 -->
+      <button
+        class="theme-toggle-btn"
+        @click="toggleTheme"
+        :title="effectiveTheme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'"
+        aria-label="테마 전환"
+      >
+        <!-- 다크 모드일 때 달 아이콘 -->
+        <svg v-if="effectiveTheme === 'dark'" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M21 12.79A9 9 0 1111.21 3A7 7 0 0021 12.79z"/>
+        </svg>
+        <!-- 라이트 모드일 때 태양 아이콘 -->
+        <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="5"/>
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+      </button>
+
       <div class="auth-links">
         <template v-if="!isLoggedIn">
           <router-link to="/login">로그인</router-link>
           <router-link to="/signup">회원가입</router-link>
         </template>
         <template v-else>
-          <span class="user-info">안녕하세요!<br>{{ userName }}님</span>
+          <span class="user-info" @click="handleOpenMyPage" style="cursor: pointer;">안녕하세요!<br>{{ userName }}님</span>
           <button @click="handleLogout" class="logout-btn">로그아웃</button>
         </template>
       </div>
@@ -49,6 +68,12 @@ import { useRouter, useRoute } from 'vue-router'
 import eulLogo from '../../assets/eul_logo.svg'
 import { isAuthenticated, logout } from '../../utils/auth'
 import { getApiBaseUrl } from '../../utils/ports-config'
+import { useTheme } from '../../composables/useTheme'
+
+const emit = defineEmits<{
+  (e: 'scrollToSection', id: string): void
+  (e: 'openMyPage'): void
+}>()
 
 const router = useRouter()
 const route = useRoute()
@@ -57,6 +82,21 @@ const API_BASE_URL = getApiBaseUrl()
 const isMobileMenuOpen = ref(false)
 const isLoggedIn = ref(false)
 const userName = ref('')
+
+// 테마 컴포저블
+const { currentTheme, effectiveTheme, setTheme } = useTheme()
+
+// 테마 토글 함수
+function toggleTheme() {
+  if (currentTheme.value === 'light') {
+    setTheme('dark')
+  } else if (currentTheme.value === 'dark') {
+    setTheme('light')
+  } else {
+    // 시스템 모드인 경우, 현재 표시된 테마의 반대로 전환
+    setTheme(effectiveTheme.value === 'dark' ? 'light' : 'dark')
+  }
+}
 
 // 사용자 정보 가져오기
 const fetchUserInfo = async () => {
@@ -136,6 +176,10 @@ function scrollToSection(id: string) {
 function handleLogout() {
   logout()
   isLoggedIn.value = false
+}
+
+function handleOpenMyPage() {
+  emit('openMyPage')
 }
 
 function scrollToMobileSection(id: string) {
@@ -225,7 +269,7 @@ header.header {
 
 .nav-list li a {
   text-decoration: none;
-  color: #222;
+  color: var(--color-text-primary);
   font-weight: 500;
   font-size: 16px;
   padding: 8px 12px;
@@ -238,8 +282,8 @@ header.header {
 }
 
 .nav-list li a:hover {
-  background-color: #f3f8ff;
-  color: #02478a;
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
 }
 
 .nav-list li a:hover::after {
@@ -251,7 +295,7 @@ header.header {
   display: flex;
   gap: 24px;
   font-size: 16px;
-  color: #222;
+  color: var(--color-text-primary);
   font-weight: 500;
 }
 
@@ -264,20 +308,45 @@ header.header {
 }
 
 .auth-links a:hover {
-  background-color: #02478a;
-  color: white;
+  background-color: var(--color-button-primary-bg);
+  color: var(--color-button-primary-text);
+}
+
+/* 테마 토글 버튼 */
+.theme-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16px;
+}
+
+.theme-toggle-btn:hover {
+  background: var(--color-bg-tertiary);
+  transform: scale(1.05);
+}
+
+.theme-toggle-btn svg {
+  width: 20px;
+  height: 20px;
 }
 
 .user-info {
-  color: #02478a;
+  color: var(--color-primary);
   font-weight: 600;
   font-size: 16px;
 }
 
 .logout-btn {
   background: none;
-  border: 1px solid #02478a;
-  color: #02478a;
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
   font-weight: 600;
   font-size: 16px;
   padding: 8px 16px;
@@ -287,8 +356,8 @@ header.header {
 }
 
 .logout-btn:hover {
-  background-color: #02478a;
-  color: white;
+  background-color: var(--color-button-primary-bg);
+  color: var(--color-button-primary-text);
 }
 
 /* 모바일 메뉴 버튼 */
@@ -309,7 +378,7 @@ header.header {
 .hamburger-line {
   width: 24px;
   height: 2px;
-  background-color: #222;
+  background-color: var(--color-text-primary);
   transition: all 0.3s ease;
   margin: 2px 0;
   display: block;
@@ -333,7 +402,7 @@ header.header {
   top: 100%;
   left: 0;
   right: 0;
-  background: white;
+  background: var(--color-bg-elevated);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border-radius: 0 0 12px 12px;
   opacity: 0;
@@ -362,7 +431,7 @@ header.header {
 .mobile-nav-list li a {
   display: block;
   text-decoration: none;
-  color: #222;
+  color: var(--color-text-primary);
   font-weight: 500;
   font-size: 16px;
   padding: 12px 16px;
@@ -371,8 +440,8 @@ header.header {
 }
 
 .mobile-nav-list li a:hover {
-  background-color: #f3f8ff;
-  color: #02478a;
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
 }
 
 .mobile-auth-links {
@@ -385,24 +454,24 @@ header.header {
   flex: 1;
   text-align: center;
   text-decoration: none;
-  color: #222;
+  color: var(--color-text-primary);
   font-weight: 500;
   padding: 12px 16px;
   border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-card-border);
   transition: all 0.3s ease;
 }
 
 .mobile-auth-links a:first-child:hover {
-  background-color: #f3f8ff;
-  color: #02478a;
-  border-color: #02478a;
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .mobile-auth-links a:last-child:hover {
-  background-color: #02478a;
-  color: white;
-  border-color: #02478a;
+  background-color: var(--color-button-primary-bg);
+  color: var(--color-button-primary-text);
+  border-color: var(--color-primary);
 }
 
 /* 태블릿 반응형 */
@@ -440,7 +509,11 @@ header.header {
   .auth-links {
     display: none;
   }
-  
+
+  .theme-toggle-btn {
+    display: none;  /* 모바일에서 테마 토글 버튼 숨김 */
+  }
+
   .mobile-menu-btn {
     display: flex;
   }
