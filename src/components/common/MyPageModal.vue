@@ -772,7 +772,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 10000;
+  z-index: 10000; /* 마이페이지 모달을 플로팅 버튼 위에 표시 */
   backdrop-filter: blur(4px);
 }
 
