@@ -7,7 +7,7 @@
         <pre class="terms-text">{{ termsText }}</pre>
       </div>
 
-      <button @click="goHome" class="home-button">
+      <button @click="goHome" class="home-button" aria-label="메인 페이지로 이동">
         홈으로
       </button>
     </div>
@@ -159,7 +159,7 @@ const goHome = () => {
 <style scoped>
 .terms-of-service-view {
   min-height: 100vh;
-  background-color: #F3F4F6;
+  background-color: var(--color-bg-primary);
   padding: 40px 20px;
   font-family: Pretendard, sans-serif;
 }
@@ -167,16 +167,16 @@ const goHome = () => {
 .terms-container {
   max-width: 800px;
   margin: 0 auto;
-  background-color: #FFFFFF;
+  background-color: var(--color-card-bg);
   border-radius: 20px;
   padding: 40px;
-  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0px 4px 20px var(--color-shadow);
 }
 
 .terms-title {
   font-size: 28px;
   font-weight: 700;
-  color: #02478A;
+  color: var(--color-primary);
   margin-bottom: 32px;
   text-align: center;
 }
@@ -186,15 +186,15 @@ const goHome = () => {
   overflow-y: auto;
   margin-bottom: 32px;
   padding: 20px;
-  background-color: #F0F6FF;
+  background-color: var(--color-bg-secondary);
   border-radius: 12px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--color-border);
 }
 
 .terms-text {
   font-size: 14px;
   line-height: 1.8;
-  color: #1F2937;
+  color: var(--color-text-primary);
   white-space: pre-wrap;
   word-wrap: break-word;
   font-family: Pretendard, sans-serif;
@@ -204,22 +204,22 @@ const goHome = () => {
 .home-button {
   width: 100%;
   padding: 13px 60px;
-  background-color: #02478A;
-  color: #F0F6FF;
+  background-color: var(--color-primary);
+  color: white;
   border: none;
   border-radius: 12px;
   font-size: 16px;
   font-weight: 600;
   font-family: Pretendard, sans-serif;
   cursor: pointer;
-  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+  box-shadow: 0px 4px 4px var(--color-shadow);
   transition: all 0.2s ease;
 }
 
 .home-button:hover {
-  background-color: #013C74;
+  background-color: var(--color-primary-hover);
   transform: translateY(-1px);
-  box-shadow: 0px 6px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0px 6px 8px var(--color-shadow-hover);
 }
 
 .home-button:active {
@@ -232,17 +232,17 @@ const goHome = () => {
 }
 
 .terms-content::-webkit-scrollbar-track {
-  background: #E5E7EB;
+  background: var(--color-border);
   border-radius: 4px;
 }
 
 .terms-content::-webkit-scrollbar-thumb {
-  background: #02478A;
+  background: var(--color-primary);
   border-radius: 4px;
 }
 
 .terms-content::-webkit-scrollbar-thumb:hover {
-  background: #013C74;
+  background: var(--color-primary-hover);
 }
 
 /* 반응형 디자인 */

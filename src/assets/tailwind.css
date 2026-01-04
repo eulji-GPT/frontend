@@ -2,3 +2,181 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* EulGPT Dark Mode - CSS Variables */
+@layer base {
+  :root {
+    /* ============================================
+       배경 색상 (4단계 계층)
+       ============================================ */
+    --color-bg-primary: #FFFFFF;        /* 메인 배경 */
+    --color-bg-secondary: #F3F4F6;      /* 사이드바, 헤더 */
+    --color-bg-tertiary: #E5E7EB;       /* 카드, 입력창 */
+    --color-bg-elevated: #FFFFFF;       /* 모달, 드롭다운 */
+
+    /* ============================================
+       텍스트 색상 (4단계 계층)
+       ============================================ */
+    --color-text-primary: #1F2937;      /* 주요 텍스트 */
+    --color-text-secondary: #4B5563;    /* 보조 텍스트 */
+    --color-text-tertiary: #6B7280;     /* 비활성 텍스트 */
+    --color-text-disabled: #9CA3AF;     /* 비활성화 상태 */
+
+    /* ============================================
+       브랜드 색상
+       ============================================ */
+    --color-primary: #02478A;           /* 기존 브랜드 블루 */
+    --color-primary-hover: #013C74;     /* 호버 상태 */
+    --color-primary-light: #E3F2FD;     /* 연한 배경용 */
+
+    /* ============================================
+       시맨틱 색상
+       ============================================ */
+    --color-success: #10B981;           /* 성공 메시지 */
+    --color-warning: #F59E0B;           /* 경고 */
+    --color-error: #EF4444;             /* 에러 */
+    --color-info: #3B82F6;              /* 정보 */
+
+    /* ============================================
+       컴포넌트별 색상 - 버튼
+       ============================================ */
+    --color-button-primary-bg: #02478A;
+    --color-button-primary-hover: #013C74;
+    --color-button-primary-text: #FFFFFF;
+    --color-button-secondary-bg: #F3F4F6;
+    --color-button-secondary-hover: #E5E7EB;
+    --color-button-secondary-text: #1F2937;
+
+    /* ============================================
+       컴포넌트별 색상 - 채팅 버블
+       ============================================ */
+    --color-chat-user-bg: #E3F2FD;      /* 사용자 버블 */
+    --color-chat-ai-bg: #F3F4F6;        /* AI 버블 */
+    --color-chat-user-text: #1F2937;
+    --color-chat-ai-text: #1F2937;
+    --color-chat-border: #E5E7EB;
+
+    /* ============================================
+       컴포넌트별 색상 - 카드/모달
+       ============================================ */
+    --color-card-bg: #FFFFFF;
+    --color-card-border: #E5E7EB;
+    --color-modal-bg: #FFFFFF;
+    --color-modal-overlay: rgba(0, 0, 0, 0.5);
+
+    /* ============================================
+       컴포넌트별 색상 - 입력 필드
+       ============================================ */
+    --color-input-bg: #F9FAFB;
+    --color-input-border: #E5E7EB;
+    --color-input-focus-border: #02478A;
+    --color-input-text: #1F2937;
+    --color-input-placeholder: #9CA3AF;
+
+    /* ============================================
+       컴포넌트별 색상 - 사이드바/네비게이션
+       ============================================ */
+    --color-sidebar-bg: #FFFFFF;
+    --color-sidebar-item-hover: #F3F4F6;
+    --color-sidebar-active: #02478A;
+    --color-header-bg: #FFFFFF;
+    --color-footer-bg: #F9FAFB;
+  }
+
+  .dark {
+    /* ============================================
+       배경 색상 (4단계 계층) - UX 명세 준수
+       ============================================ */
+    --color-bg-primary: #111827;        /* gray-900 - 메인 배경 */
+    --color-bg-secondary: #1F2937;      /* gray-800 - 사이드바, 헤더 */
+    --color-bg-tertiary: #374151;       /* gray-700 - 카드, 입력창 */
+    --color-bg-elevated: #1F2937;       /* gray-800 - 모달, 드롭다운 */
+
+    /* ============================================
+       텍스트 색상 (4단계 계층) - WCAG AA 대비율 준수
+       ============================================ */
+    --color-text-primary: #F9FAFB;      /* gray-50 - 주요 텍스트 (14.2:1) */
+    --color-text-secondary: #D1D5DB;    /* gray-300 - 보조 텍스트 (8.1:1) */
+    --color-text-tertiary: #9CA3AF;     /* gray-400 - 비활성 텍스트 (4.6:1) */
+    --color-text-disabled: #6B7280;     /* gray-500 - 비활성화 상태 */
+
+    /* ============================================
+       브랜드 색상 - 다크 배경에서 가독성 확보
+       ============================================ */
+    --color-primary: #60A5FA;           /* blue-400 - 밝은 블루 (5.2:1) */
+    --color-primary-hover: #3B82F6;     /* blue-500 - 호버 상태 */
+    --color-primary-light: #1E3A5F;     /* 어두운 블루 강조용 */
+
+    /* ============================================
+       시맨틱 색상 - 다크 모드 최적화
+       ============================================ */
+    --color-success: #34D399;           /* green-400 (6.8:1) */
+    --color-warning: #FBBF24;           /* yellow-400 (10.2:1) */
+    --color-error: #F87171;             /* red-400 (4.7:1) */
+    --color-info: #60A5FA;              /* blue-400 (5.2:1) */
+
+    /* ============================================
+       컴포넌트별 색상 - 버튼
+       ============================================ */
+    --color-button-primary-bg: #60A5FA;
+    --color-button-primary-hover: #3B82F6;
+    --color-button-primary-text: #FFFFFF;
+    --color-button-secondary-bg: #374151;
+    --color-button-secondary-hover: #4B5563;
+    --color-button-secondary-text: #F9FAFB;
+
+    /* ============================================
+       컴포넌트별 색상 - 채팅 버블 (UX 명세 기반)
+       ============================================ */
+    --color-chat-user-bg: #374151;      /* gray-700 - 사용자 버블 */
+    --color-chat-ai-bg: #1F2937;        /* gray-800 - AI 버블 */
+    --color-chat-user-text: #F9FAFB;
+    --color-chat-ai-text: #F9FAFB;
+    --color-chat-border: #4B5563;       /* gray-600 */
+
+    /* ============================================
+       컴포넌트별 색상 - 카드/모달
+       ============================================ */
+    --color-card-bg: #1F2937;
+    --color-card-border: #374151;
+    --color-modal-bg: #1F2937;
+    --color-modal-overlay: rgba(0, 0, 0, 0.7);
+
+    /* ============================================
+       컴포넌트별 색상 - 입력 필드
+       ============================================ */
+    --color-input-bg: #374151;
+    --color-input-border: #4B5563;
+    --color-input-focus-border: #60A5FA;
+    --color-input-text: #F9FAFB;
+    --color-input-placeholder: #9CA3AF;
+
+    /* ============================================
+       컴포넌트별 색상 - 사이드바/네비게이션
+       ============================================ */
+    --color-sidebar-bg: #1F2937;
+    --color-sidebar-item-hover: #374151;
+    --color-sidebar-active: #60A5FA;
+    --color-header-bg: #1F2937;
+    --color-footer-bg: #111827;
+  }
+
+  /* ============================================
+     전역 스타일 적용
+     ============================================ */
+  body {
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ============================================
+     전환 애니메이션 (모든 요소)
+     ============================================ */
+  * {
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-duration: 0.3s;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}

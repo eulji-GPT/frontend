@@ -204,24 +204,25 @@ onUnmounted(() => {
   flex-shrink: 0;
   overflow: visible;
   gap: 8px;
+  background: var(--color-bg-primary);
 }
 
 .conversation-list {
   font-size: 14px;
   font-weight: 600;
   line-height: 23px;
-  color: #6B7280;
+  color: var(--color-text-tertiary);
   font-family: Pretendard, var(--default-font-family);
 }
 
 .new-chat-button {
-  background-color: #F3F4F6;
-  border: 1px solid #E5E7EB;
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-card-border);
   border-radius: 6px;
   padding: 4px 10px;
   font-size: 11px;
   font-weight: 500;
-  color: #374151;
+  color: var(--color-text-primary);
   font-family: Pretendard, var(--default-font-family);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -230,7 +231,7 @@ onUnmounted(() => {
 }
 
 .new-chat-button:hover {
-  background-color: #E5E7EB;
+  background-color: var(--color-bg-tertiary);
   transform: translateY(-1px);
 }
 
@@ -259,7 +260,7 @@ onUnmounted(() => {
 }
 
 .chat-history-item:hover {
-  background-color: #f3f4f6;
+  background-color: var(--color-sidebar-item-hover);
 }
 
 .chat-history-item.active {
@@ -273,25 +274,25 @@ onUnmounted(() => {
   width: 100%;
   height: auto;
   min-height: 37px;
-  background-color: rgb(240, 246, 255);
+  background-color: var(--color-primary-light);
   box-sizing: border-box;
   padding: 10px 15px;
   /* 개선: 왼쪽 테두리 강조 */
-  border-left: 3px solid #02478a;
+  border-left: 3px solid var(--color-sidebar-active);
   /* 개선: 미세한 그림자 효과 */
   box-shadow: 0 1px 3px rgba(2, 71, 138, 0.1);
   /* 개선: 더 진한 테두리 */
   border: 1px solid rgba(2, 71, 138, 0.2);
-  border-left: 3px solid #02478a;
+  border-left: 3px solid var(--color-sidebar-active);
 }
 
 .chat-history-item.active .chat-title {
-  color: #02478a;
+  color: var(--color-sidebar-active);
   font-weight: 600;
 }
 
 .chat-title {
-  color: black;
+  color: var(--color-text-primary);
   text-overflow: ellipsis;
   font-size: 14px;
   font-family: Pretendard, sans-serif;
@@ -303,7 +304,7 @@ onUnmounted(() => {
 .delete-chat-button {
   background: transparent;
   border: none;
-  color: #9ca3af;
+  color: var(--color-text-tertiary);
   cursor: pointer;
   visibility: hidden;
   flex-shrink: 0;
@@ -324,8 +325,8 @@ onUnmounted(() => {
 }
 
 .title-edit-input {
-  background: white;
-  border: 1px solid #02478a;
+  background: var(--color-input-bg);
+  border: 1px solid var(--color-primary);
   border-radius: 3px;
   padding: 4px 8px;
   font-size: 14px;
@@ -360,7 +361,7 @@ onUnmounted(() => {
   flex-basis: auto;
   position: relative;
   height: 17px;
-  color: #9ca3af;
+  color: var(--color-text-tertiary);
   font-family: Pretendard, var(--default-font-family);
   font-size: 14px;
   font-weight: 500;
@@ -417,7 +418,7 @@ onUnmounted(() => {
   .chat-list-link {
     position: sticky;
     top: 0;
-    background: #ffffff;
+    background: var(--color-bg-primary);
     padding: 8px 0;
     z-index: 10;
   }
@@ -444,25 +445,25 @@ onUnmounted(() => {
     min-height: 48px;
     padding: 12px 16px;
     border-radius: 10px;
-    background: #f9fafb;
+    background: var(--color-bg-secondary);
   }
 
   .chat-history-item:active {
-    background-color: #e5e7eb;
+    background-color: var(--color-bg-tertiary);
   }
 
   .chat-history-item.active {
     width: 100%;
     height: auto;
     min-height: 48px;
-    background-color: rgb(240, 246, 255);
+    background-color: var(--color-primary-light);
     border: 1px solid rgba(2, 71, 138, 0.2);
-    border-left: 3px solid #02478a;
+    border-left: 3px solid var(--color-sidebar-active);
     box-shadow: 0 1px 3px rgba(2, 71, 138, 0.1);
   }
 
   .chat-history-item.active .chat-title {
-    color: #02478a;
+    color: var(--color-sidebar-active);
     font-weight: 600;
   }
 

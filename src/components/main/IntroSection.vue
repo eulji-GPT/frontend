@@ -26,13 +26,14 @@
   min-width: 100vw;
   min-height: 100vh;
   height: auto;
-  background: var(--Primary-200, #F3F8FF) !important;
+  background: var(--color-bg-secondary);
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 0;
   margin: 0;
   box-sizing: border-box;
+  scroll-margin-top: 84px;
 }
 
 .intro-content {
@@ -54,7 +55,7 @@
 }
 
 .intro-header {
-  color: var(--Primary-400, #02478A);
+  color: var(--color-primary);
   font-family: 'Pretendard', sans-serif;
   font-size: clamp(18px, 1.67vw, 24px); /* 동적 크기 조정 */
   font-style: normal;
@@ -72,7 +73,7 @@
 }
 
 .intro-description {
-  color: var(--Black, #000);
+  color: var(--color-text-primary);
   font-family: 'Pretendard', sans-serif;
   font-size: clamp(24px, 2.5vw, 36px); /* 동적 크기 조정 */
   font-style: normal;

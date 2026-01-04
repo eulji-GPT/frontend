@@ -516,21 +516,21 @@ onUpdated(() => {
 
 /* 기본 스타일 (통합 모델) */
 .model-badge-header.badge-default {
-  background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
-  color: #1E40AF;
+  background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-bg-tertiary) 100%);
+  color: var(--color-primary);
   border: 1px solid rgba(59, 130, 246, 0.2);
   box-shadow: 0 1px 3px rgba(59, 130, 246, 0.1);
 }
 
 .model-badge-header.badge-default:hover {
-  background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
+  background: linear-gradient(135deg, var(--color-bg-tertiary) 0%, var(--color-primary-light) 100%);
   box-shadow: 0 2px 6px rgba(59, 130, 246, 0.15);
 }
 
 /* RAG (대학 정보 검색) - 그린 계열 */
 .model-badge-header.badge-rag {
   background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
-  color: #065F46;
+  color: var(--color-success);
   border: 1px solid rgba(16, 185, 129, 0.2);
   box-shadow: 0 1px 3px rgba(16, 185, 129, 0.1);
 }
@@ -556,7 +556,7 @@ onUpdated(() => {
 /* CoT (단계별 추론) - 오렌지 계열 */
 .model-badge-header.badge-cot {
   background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%);
-  color: #C2410C;
+  color: var(--color-warning);
   border: 1px solid rgba(249, 115, 22, 0.2);
   box-shadow: 0 1px 3px rgba(249, 115, 22, 0.1);
 }
@@ -596,10 +596,10 @@ onUpdated(() => {
   max-width: 70%; /* 화면 너비의 70%로 제한 */
   padding: 12px 20px;
   border-radius: 25px;
-  border: 1px solid var(--Gray-100, #F3F4F6);
-  background: var(--Primary-300, #F0F6FF);
+  border: 1px solid var(--color-card-border);
+  background: var(--color-chat-user-bg);
   font-size: 16px;
-  color: #222;
+  color: var(--color-text-primary);
   word-break: break-word;
   font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Helvetica, Arial, sans-serif;
   margin: 8px 0;
@@ -632,9 +632,9 @@ onUpdated(() => {
   justify-content: center;
   align-items: center;
   border-radius: 30px;
-  border: 1px solid var(--Gray-100, #F3F4F6);
-  background: var(--Primary-300, #F0F6FF);
-  color: #222;
+  border: 1px solid var(--color-card-border);
+  background: var(--color-chat-user-bg);
+  color: var(--color-text-primary);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
   position: relative;
   font-weight: 500;
@@ -654,7 +654,7 @@ onUpdated(() => {
   width: 0;
   height: 0;
   border: 8px solid transparent;
-  border-left-color: var(--Primary-300, #F0F6FF);
+  border-left-color: var(--color-chat-user-bg);
   border-right: 0;
   border-top: 0;
   margin-top: -4px;
@@ -694,7 +694,7 @@ onUpdated(() => {
 }
 
 .loading-text {
-  color: #02478a;
+  color: var(--color-primary);
   font-size: 14px;
   font-weight: 500;
   animation: pulse 1.5s ease-in-out infinite;
@@ -709,7 +709,7 @@ onUpdated(() => {
 .streaming-cursor {
   display: inline-block;
   margin-left: 2px;
-  color: #2563eb;
+  color: var(--color-info);
   font-weight: bold;
   font-size: 1.1em;
   animation: blink 1s steps(1) infinite;
@@ -756,14 +756,14 @@ onUpdated(() => {
   margin: 12px 0 4px 0;
   font-weight: 700;
   line-height: 1.3;
-  color: #02478a;
+  color: var(--color-primary);
 }
 
 /* 대제목 - 가장 크고 눈에 띄게 */
 :deep(.markdown-content h1) {
   font-size: 2em !important;
   font-weight: 800 !important;
-  color: #02478a !important;
+  color: var(--color-primary) !important;
   margin: 16px 0 8px 0 !important;
   display: block !important;
 }
@@ -772,7 +772,7 @@ onUpdated(() => {
 :deep(.markdown-content h2) {
   font-size: 1.6em !important;
   font-weight: 700 !important;
-  color: #0c4a6e !important;
+  color: var(--color-primary) !important;
   margin: 14px 0 6px 0 !important;
   display: block !important;
 }
@@ -781,7 +781,7 @@ onUpdated(() => {
 :deep(.markdown-content h3) {
   font-size: 1.3em !important;
   font-weight: 700 !important;
-  color: #1e40af !important;
+  color: var(--color-primary) !important;
   margin: 12px 0 4px 0 !important;
   display: block !important;
 }
@@ -790,7 +790,7 @@ onUpdated(() => {
 :deep(.markdown-content h4) {
   font-size: 1.15em !important;
   font-weight: 600 !important;
-  color: #374151 !important;
+  color: var(--color-text-primary) !important;
   margin: 10px 0 3px 0 !important;
   display: block !important;
 }
@@ -798,7 +798,7 @@ onUpdated(() => {
 :deep(.markdown-content h5) {
   font-size: 1.05em !important;
   font-weight: 600 !important;
-  color: #4b5563 !important;
+  color: var(--color-text-secondary) !important;
   margin: 8px 0 2px 0 !important;
   display: block !important;
 }
@@ -806,7 +806,7 @@ onUpdated(() => {
 :deep(.markdown-content h6) {
   font-size: 1em !important;
   font-weight: 600 !important;
-  color: #6b7280 !important;
+  color: var(--color-text-tertiary) !important;
   margin: 6px 0 2px 0 !important;
   display: block !important;
 }
@@ -858,12 +858,12 @@ onUpdated(() => {
 
 :deep(.markdown-content strong) {
   font-weight: 700;
-  color: #02478a;
+  color: var(--color-primary);
 }
 
 :deep(.markdown-content em) {
   font-style: italic;
-  color: #1e40af;
+  color: var(--color-info);
   background: rgba(30, 64, 175, 0.05);
   padding: 1px 3px;
   border-radius: 2px;
@@ -898,7 +898,7 @@ onUpdated(() => {
   content: '▶';
   position: absolute;
   left: 0;
-  color: #02478a;
+  color: var(--color-primary);
   font-weight: bold;
 }
 
@@ -920,9 +920,9 @@ onUpdated(() => {
   counter-increment: item;
   position: absolute;
   left: -1.8em;
-  color: #02478a;
+  color: var(--color-primary);
   font-weight: bold;
-  background: #f0f6ff;
+  background: var(--color-primary-light);
   padding: 2px 6px;
   border-radius: 50%;
   font-size: 0.9em;
@@ -941,7 +941,7 @@ onUpdated(() => {
   content: counter(item) "." counter(subitem);
   counter-increment: subitem;
   left: -2.5em;
-  background: #e0f2fe;
+  background: var(--color-bg-tertiary);
   font-size: 0.85em;
 }
 
@@ -955,13 +955,13 @@ onUpdated(() => {
   content: counter(item) "." counter(subitem) "." counter(subsubitem);
   counter-increment: subsubitem;
   left: -3em;
-  background: #dbeafe;
+  background: var(--color-bg-secondary);
   font-size: 0.8em;
 }
 
 :deep(.markdown-content blockquote) {
-  border-left: 4px solid #02478a;
-  background: linear-gradient(135deg, #f0f6ff 0%, #f8fafc 100%);
+  border-left: 4px solid var(--color-primary);
+  background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-bg-secondary) 100%);
   margin: 1em 0;  /* 12px → 1em: 인용 블록 전후 여백 확대 */
   padding: 1em 1.25em;  /* 패딩도 확대 */
   font-style: normal;
@@ -978,12 +978,12 @@ onUpdated(() => {
 :deep(.markdown-content blockquote p) {
   margin: 0;
   font-weight: 500;
-  color: #1e40af;
+  color: var(--color-info);
 }
 
 :deep(.markdown-content code) {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
   padding: 2px 5px;
   border-radius: 3px;
   font-size: 0.9em;
@@ -1008,9 +1008,9 @@ onUpdated(() => {
 
 :deep(.markdown-content hr) {
   border: none;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--color-card-border);
   margin: 8px 0;
-  background: linear-gradient(to right, #02478a, #e5e7eb, #02478a);
+  background: linear-gradient(to right, var(--color-primary), var(--color-card-border), var(--color-primary));
   height: 1px;
 }
 
@@ -1019,29 +1019,29 @@ onUpdated(() => {
   margin: 10px 0;
   border-radius: 6px;
   overflow: hidden;
-  border: 1px solid #334155;
+  border: 1px solid var(--color-card-border);
 }
 
 :deep(.code-header) {
-  background: #0f172a;
+  background: var(--color-bg-primary);
   padding: 8px 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #334155;
+  border-bottom: 1px solid var(--color-card-border);
 }
 
 :deep(.code-language) {
   font-size: 12px;
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--color-text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   font-family: 'Courier New', monospace;
 }
 
 :deep(.code-copy-btn) {
-  background: #3b82f6;
+  background: var(--color-info);
   color: white;
   border: none;
   padding: 4px 12px;
@@ -1054,7 +1054,7 @@ onUpdated(() => {
 }
 
 :deep(.code-copy-btn:hover) {
-  background: #2563eb;
+  background: var(--color-primary-hover);
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
 }
@@ -1084,29 +1084,29 @@ onUpdated(() => {
   margin: 12px 0;
   border-radius: 6px;
   overflow: hidden;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-card-border);
 }
 
 :deep(.table-header) {
-  background: #f8fafc;
+  background: var(--color-bg-secondary);
   padding: 8px 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--color-card-border);
 }
 
 :deep(.table-title) {
   font-size: 12px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--color-text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   font-family: 'Courier New', monospace;
 }
 
 :deep(.table-copy-btn) {
-  background: #3b82f6;
+  background: var(--color-info);
   color: white;
   border: none;
   padding: 4px 12px;
@@ -1119,7 +1119,7 @@ onUpdated(() => {
 }
 
 :deep(.table-copy-btn:hover) {
-  background: #2563eb;
+  background: var(--color-primary-hover);
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
 }
@@ -1139,21 +1139,21 @@ onUpdated(() => {
 }
 
 :deep(.table-wrapper table thead) {
-  background: #f8fafc;
+  background: var(--color-bg-secondary);
 }
 
 :deep(.table-wrapper table th) {
   padding: 10px 12px;
   text-align: left;
   font-weight: 600;
-  color: #1e293b;
-  border-bottom: 2px solid #cbd5e1;
+  color: var(--color-text-primary);
+  border-bottom: 2px solid var(--color-card-border);
 }
 
 :deep(.table-wrapper table td) {
   padding: 10px 12px;
-  border-bottom: 1px solid #e5e7eb;
-  color: #334155;
+  border-bottom: 1px solid var(--color-card-border);
+  color: var(--color-text-secondary);
 }
 
 :deep(.table-wrapper table tbody tr:last-child td) {
@@ -1161,7 +1161,7 @@ onUpdated(() => {
 }
 
 :deep(.table-wrapper table tbody tr:hover) {
-  background: #f8fafc;
+  background: var(--color-bg-secondary);
 }
 
 /* 기존 마크다운 테이블 스타일 (폴백용) */
@@ -1170,7 +1170,7 @@ onUpdated(() => {
   border-collapse: collapse;
   margin: 12px 0;
   font-size: 0.9em;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-card-border);
   border-radius: 6px;
   overflow: hidden;
 }
@@ -1199,7 +1199,7 @@ onUpdated(() => {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #10b981;
+  background: var(--color-success);
   color: white;
   font-weight: 700;
   font-size: 16px;
@@ -1216,12 +1216,12 @@ onUpdated(() => {
 .cot-question {
   font-weight: 700;
   font-size: 16px;
-  color: #02478a;
+  color: var(--color-primary);
   line-height: 1.4;
 }
 
 .cot-answer {
-  color: #222;
+  color: var(--color-text-primary);
   line-height: 1.6;
 }
 
@@ -1238,7 +1238,7 @@ onUpdated(() => {
   height: 80px;
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-card-border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1258,7 +1258,7 @@ onUpdated(() => {
   text-align: center;
   padding: 4px;
   height: 100%;
-  background-color: #f9fafb;
+  background-color: var(--color-bg-secondary);
 }
 
 .message-pdf .pdf-icon {
@@ -1269,7 +1269,7 @@ onUpdated(() => {
 .message-pdf .pdf-name {
   font-size: 8px;
   font-family: Pretendard, sans-serif;
-  color: #666;
+  color: var(--color-text-secondary);
   word-break: break-all;
   overflow: hidden;
   text-overflow: ellipsis;

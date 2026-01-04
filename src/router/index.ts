@@ -82,6 +82,14 @@ const routes = [
     component: () => import('../views/AdminView.vue'),
     meta: { requiresAuth: true, requiresAdmin: true }
   },
+  {
+    path: '/privacy-policy',
+    component: () => import('../views/PrivacyPolicyView.vue')
+  },
+  {
+    path: '/terms-of-service',
+    component: () => import('../views/TermsOfServiceView.vue')
+  },
   // 404 페이지 - 모든 정의되지 않은 경로를 처리
   {
     path: '/:pathMatch(.*)*',

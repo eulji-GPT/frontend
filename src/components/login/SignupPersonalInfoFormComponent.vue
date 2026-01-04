@@ -361,7 +361,7 @@ if (typeof document !== 'undefined') {
 .signup-page {
   width: 100vw;
   height: 100vh;
-  background: #FFF;
+  background: var(--color-bg-primary);
   position: relative;
   font-family: 'Pretendard', -apple-system, Roboto, Helvetica, sans-serif;
 }
@@ -387,7 +387,7 @@ if (typeof document !== 'undefined') {
 
 .form-title {
   align-self: stretch;
-  color: #000;
+  color: var(--color-text-primary);
   font-family: 'Pretendard', -apple-system, Roboto, Helvetica, sans-serif;
   font-size: 24px;
   font-weight: 700;
@@ -423,7 +423,7 @@ if (typeof document !== 'undefined') {
 }
 
 .form-label {
-  color: #1F2937;
+  color: var(--color-text-primary);
   font-family: 'Pretendard', -apple-system, Roboto, Helvetica, sans-serif;
   font-size: 16px;
   font-weight: 700;
@@ -433,7 +433,7 @@ if (typeof document !== 'undefined') {
 .required-indicator {
   width: 5px;
   height: 5px;
-  background: #F87171;
+  background: var(--color-error);
   border-radius: 50%;
   margin-top: 10px;
 }
@@ -447,8 +447,8 @@ if (typeof document !== 'undefined') {
   gap: 4px;
   align-self: stretch;
   border-radius: 10px;
-  border: 1px solid #E5E7EB;
-  background: #FFF;
+  border: 1px solid var(--color-input-border);
+  background: var(--color-input-bg);
 }
 
 .form-input {
@@ -456,7 +456,7 @@ if (typeof document !== 'undefined') {
   border: none;
   outline: none;
   background: transparent;
-  color: #1F2937;
+  color: var(--color-text-primary);
   font-family: 'Pretendard', -apple-system, Roboto, Helvetica, sans-serif;
   font-size: 16px;
   font-weight: 400;
@@ -464,7 +464,7 @@ if (typeof document !== 'undefined') {
 }
 
 .form-input::placeholder {
-  color: #9CA3AF;
+  color: var(--color-input-placeholder);
 }
 
 /* Birth Date Inputs */
@@ -477,9 +477,9 @@ if (typeof document !== 'undefined') {
 
 .dropdown-container {
   position: relative;
-  background: #FFF;
+  background: var(--color-input-bg);
   border-radius: 10px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--color-input-border);
 }
 
 .year-dropdown {
@@ -498,11 +498,11 @@ if (typeof document !== 'undefined') {
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  border-bottom: 1px solid #E5E7EB;
+  border-bottom: 1px solid var(--color-input-border);
 }
 
 .dropdown-text {
-  color: #9CA3AF;
+  color: var(--color-text-secondary);
   font-family: 'Pretendard', -apple-system, Roboto, Helvetica, sans-serif;
   font-size: 16px;
   font-weight: 400;
@@ -525,9 +525,9 @@ if (typeof document !== 'undefined') {
   top: 100%;
   left: 0;
   right: 0;
-  background: #FFF;
+  background: var(--color-card-bg);
   border-radius: 0 0 10px 10px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--color-card-border);
   border-top: none;
   z-index: 10;
   max-height: 200px;
@@ -541,9 +541,14 @@ if (typeof document !== 'undefined') {
   justify-content: center;
   align-items: center;
   gap: 4px;
-  border-bottom: 1px solid #E5E7EB;
+  border-bottom: 1px solid var(--color-card-border);
   cursor: pointer;
   transition: background-color 0.2s ease;
+  color: var(--color-text-secondary);
+  font-family: 'Pretendard', -apple-system, Roboto, Helvetica, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 25px;
 }
 
 .dropdown-item:last-child {
@@ -551,15 +556,7 @@ if (typeof document !== 'undefined') {
 }
 
 .dropdown-item:hover {
-  background-color: #F9FAFB;
-}
-
-.dropdown-item {
-  color: #9CA3AF;
-  font-family: 'Pretendard', -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 25px;
+  background-color: var(--color-bg-secondary);
 }
 
 /* Submit Button */
@@ -571,18 +568,22 @@ if (typeof document !== 'undefined') {
   align-items: center;
   gap: 8px;
   border-radius: 12px;
-  border: 1px solid #E5E7EB;
-  background: #F0F6FF;
+  border: 1px solid var(--color-card-border);
+  background: var(--color-primary-light);
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
 
 .submit-button:hover {
-  background: #E0ECFF;
+  background: var(--color-button-primary-bg);
+}
+
+.submit-button:hover .button-text {
+  color: var(--color-button-primary-text);
 }
 
 .button-text {
-  color: #02478A;
+  color: var(--color-primary);
   font-family: 'Pretendard', -apple-system, Roboto, Helvetica, sans-serif;
   font-size: 18px;
   font-weight: 700;
@@ -604,7 +605,7 @@ if (typeof document !== 'undefined') {
 }
 
 .footer-privacy {
-  color: #9CA3AF;
+  color: var(--color-text-secondary);
   font-family: 'Pretendard', -apple-system, Roboto, Helvetica, sans-serif;
   font-size: 10px;
   font-weight: 400;
@@ -613,7 +614,7 @@ if (typeof document !== 'undefined') {
 
 .footer-separator {
   width: 4px;
-  color: #9CA3AF;
+  color: var(--color-text-secondary);
   font-family: 'Pretendard', -apple-system, Roboto, Helvetica, sans-serif;
   font-size: 10px;
   font-weight: 400;
@@ -622,7 +623,7 @@ if (typeof document !== 'undefined') {
 
 .footer-copyright {
   width: 191px;
-  color: #9CA3AF;
+  color: var(--color-text-secondary);
   font-family: 'Pretendard', -apple-system, Roboto, Helvetica, sans-serif;
   font-size: 10px;
   font-weight: 400;

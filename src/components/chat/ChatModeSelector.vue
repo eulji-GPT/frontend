@@ -151,10 +151,10 @@ document.addEventListener('click', (e) => {
   align-items: center;
   flex: none;
   gap: 8px;
-  box-shadow: 1px 1px 4px 0px rgb(217, 217, 217);
-  border: solid 1px rgb(243, 244, 246);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: solid 1px var(--color-card-border);
   border-radius: 15px;
-  background-color: white;
+  background-color: var(--color-bg-primary);
   box-sizing: border-box;
   padding: 8px 16px;
   cursor: pointer;
@@ -166,8 +166,8 @@ document.addEventListener('click', (e) => {
 }
 
 .mode-selector-header:hover {
-  border-color: #02478a;
-  box-shadow: 0 2px 8px rgba(2, 71, 138, 0.1);
+  border-color: var(--color-primary);
+  box-shadow: 0 2px 8px var(--color-primary-light);
 }
 
 /* CoT 모드 활성화 시 헤더 스타일 */

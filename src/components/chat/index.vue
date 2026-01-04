@@ -896,6 +896,7 @@ const goToCrew = () => {
   width: 100vw;
   height: 100vh;
   position: relative;
+  background: var(--color-bg-primary);
 }
 
 .chatbot-sidebar-wrapper {
@@ -904,10 +905,10 @@ const goToCrew = () => {
   position: relative;
   width: 270px;
   height: 100vh;
-  background: #ffffff;
+  background: var(--color-bg-primary);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border-right: 1px solid #e5e7eb;
+  border-right: 1px solid var(--color-card-border);
   min-width: 200px;
   max-width: 500px;
   border-radius: 20px;
@@ -950,7 +951,7 @@ const goToCrew = () => {
   width: 100%;
   height: 36px;
   padding: 0 20px 0 20px;
-  background: #ffffff;
+  background: var(--color-bg-primary);
   /* border-right removed to prevent double lines */
   z-index: 10;
 }
@@ -1036,7 +1037,7 @@ const goToCrew = () => {
 }
 
 .chatbot-menu-item > div:hover {
-  background-color: #f3f4f6;
+  background-color: var(--color-bg-secondary);
   transform: translateY(-1px);
 }
 .frame-3 {
@@ -1065,7 +1066,7 @@ const goToCrew = () => {
   width: 25px;
   height: 25px;
   margin: -4.751px 0 0 0;
-  background: rgba(2, 71, 138, 0.1);
+  background: var(--color-primary-light);
   z-index: 22;
   overflow: visible;
   border-radius: 6.251px;
@@ -1080,7 +1081,7 @@ const goToCrew = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  color: #02478a;
+  color: var(--color-primary);
   font-family: Pretendard, var(--default-font-family);
   font-size: 10px;
   font-weight: 700;
@@ -1094,7 +1095,7 @@ const goToCrew = () => {
   flex-basis: auto;
   position: relative;
   height: 23px;
-  color: #000000;
+  color: var(--color-text-primary);
   font-family: Pretendard, var(--default-font-family);
   font-size: 14px;
   font-weight: 500;
@@ -1120,7 +1121,7 @@ const goToCrew = () => {
   flex-basis: auto;
   position: relative;
   height: 23px;
-  color: #000000;
+  color: var(--color-text-primary);
   font-family: Pretendard, var(--default-font-family);
   font-size: 14px;
   font-weight: 500;
@@ -1146,7 +1147,7 @@ const goToCrew = () => {
   flex-basis: auto;
   position: relative;
   height: 23px;
-  color: #000000;
+  color: var(--color-text-primary);
   font-family: Pretendard, var(--default-font-family);
   font-size: 14px;
   font-weight: 500;
@@ -1165,15 +1166,15 @@ const goToCrew = () => {
   width: 100%;
   height: 59px;
   padding: 20px 10px 20px 20px;
-  background: #ffffff;
-  border-top: 1px solid #e5e7eb;
+  background: var(--color-bg-primary);
+  border-top: 1px solid var(--color-card-border);
   z-index: 42;
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
 
 .side-footer:hover {
-  background: #f9fafb;
+  background: var(--color-bg-secondary);
 }
 .ellipse {
   flex-shrink: 0;
@@ -1198,11 +1199,11 @@ const goToCrew = () => {
 }
 
 .ellipse.has-initial {
-  background: linear-gradient(135deg, #02478a 0%, #0369a1 100%);
+  background: var(--color-button-primary-bg);
 }
 
 .user-initial {
-  color: #ffffff;
+  color: var(--color-button-primary-text);
   font-family: Pretendard, var(--default-font-family);
   font-size: 12px;
   font-weight: 600;
@@ -1276,8 +1277,8 @@ const goToCrew = () => {
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
+  background: var(--color-bg-primary);
+  border-bottom: 1px solid var(--color-card-border);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -1299,25 +1300,25 @@ const goToCrew = () => {
 }
 
 .mobile-menu-toggle:hover {
-  background: #f3f4f6;
+  background: var(--color-bg-secondary);
 }
 
 /* FR-031: 터치 피드백 */
 .mobile-menu-toggle:active {
-  background: #e5e7eb;
+  background: var(--color-bg-tertiary);
   transform: scale(0.95);
 }
 
 /* FR-035: 키보드 포커스 표시 */
 .mobile-menu-toggle:focus-visible {
-  outline: 2px solid #02478a;
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
 .hamburger-icon {
   width: 20px;
   height: 2px;
-  background: #02478a;
+  background: var(--color-primary);
   position: relative;
 }
 
@@ -1327,7 +1328,7 @@ const goToCrew = () => {
   position: absolute;
   width: 20px;
   height: 2px;
-  background: #02478a;
+  background: var(--color-primary);
   left: 0;
 }
 
@@ -1340,7 +1341,7 @@ const goToCrew = () => {
 }
 
 .mobile-logo .eulgpt-mobile {
-  color: #02478a;
+  color: var(--color-primary);
   font-family: Poppins, var(--default-font-family);
   font-size: 20px;
   font-weight: 700;
@@ -1357,22 +1358,22 @@ const goToCrew = () => {
   min-height: 44px;
   cursor: pointer;
   border-radius: 8px;
-  color: #02478a;
+  color: var(--color-primary);
   transition: background-color 0.2s;
 }
 
 .mobile-new-chat-button:hover {
-  background: #f0f6ff;
+  background: var(--color-primary-light);
 }
 
 .mobile-new-chat-button:active {
-  background: #e0eeff;
+  background: var(--color-button-primary-bg);
   transform: scale(0.95);
 }
 
 /* FR-035: 키보드 포커스 표시 */
 .mobile-new-chat-button:focus-visible {
-  outline: 2px solid #02478a;
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
@@ -1404,6 +1405,7 @@ const goToCrew = () => {
 .chat-input-area {
   flex-shrink: 0;
   position: relative;
+  background: var(--color-bg-primary);
 }
 
 .help-button {
@@ -1417,8 +1419,8 @@ const goToCrew = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #FFFFFF;
-  border: 1px solid #E5E7EB;
+  background-color: var(--color-bg-primary);
+  border: 1px solid var(--color-card-border);
   border-radius: 100px;
   cursor: pointer;
   padding: 0;
@@ -1429,7 +1431,7 @@ const goToCrew = () => {
 }
 
 .help-button:hover {
-  background-color: #F3F4F6;
+  background-color: var(--color-bg-secondary);
 }
 
 .help-button svg {
@@ -1458,10 +1460,10 @@ const goToCrew = () => {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  background-color: white;
-  border: 1px solid #F3F4F6;
+  background-color: var(--color-bg-primary);
+  border: 1px solid var(--color-card-border);
   border-radius: 15px;
-  box-shadow: 1px 1px 4px 0px rgb(217, 217, 217);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   padding: 15px;
   width: 200px;
   z-index: 2000;
@@ -1478,11 +1480,11 @@ const goToCrew = () => {
 }
 
 .help-panel-item:hover {
-  background-color: rgb(240, 246, 255);
+  background-color: var(--color-bg-secondary);
 }
 
 .help-panel-text {
-  color: black;
+  color: var(--color-text-primary);
   font-size: 14px;
   font-family: Pretendard, sans-serif;
   font-weight: 500;
@@ -1503,11 +1505,11 @@ const goToCrew = () => {
 }
 
 .sidebar-resizer:hover {
-  background: rgba(59, 130, 246, 0.3);
+  background: var(--color-primary-light);
 }
 
 .sidebar-resizer.resizing {
-  background: rgba(59, 130, 246, 0.5);
+  background: var(--color-primary-light);
 }
 
 .sidebar-resizer::after {
@@ -1518,7 +1520,7 @@ const goToCrew = () => {
   transform: translateX(-50%) translateY(-50%);
   width: 2px;
   height: 40px;
-  background: #d1d5db;
+  background: var(--color-card-border);
   border-radius: 1px;
   opacity: 0;
   transition: opacity 0.2s ease;
@@ -1606,7 +1608,7 @@ const goToCrew = () => {
   .chat-input-area {
     position: sticky;
     bottom: 0;
-    background: #ffffff;
+    background: var(--color-bg-primary);
     padding-bottom: max(env(safe-area-inset-bottom), var(--keyboard-height, 0px));
     transition: padding-bottom 0.15s ease-out;
     z-index: 100;

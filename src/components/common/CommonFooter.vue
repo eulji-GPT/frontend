@@ -21,7 +21,7 @@ export default {
 <style scoped>
 .common-footer {
   align-items: center;
-  background-color: #f9fafb;
+  background-color: var(--color-footer-bg);
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -36,7 +36,7 @@ export default {
 
 .common-footer .text-wrapper {
   align-self: stretch;
-  color: #868b97;
+  color: var(--color-text-secondary);
   font-family: 'Pretendard', sans-serif;
   font-size: 0.8rem;
   font-weight: 700;
@@ -47,7 +47,7 @@ export default {
 
 .common-footer .div {
   align-self: stretch;
-  color: #868b97;
+  color: var(--color-text-secondary);
   font-family: 'Pretendard', sans-serif;
   font-size: 0.65rem;
   font-weight: 600;
@@ -58,7 +58,7 @@ export default {
 
 .common-footer .text-wrapper-2 {
   align-self: stretch;
-  color: #b0b4bb;
+  color: var(--color-text-tertiary);
   font-family: 'Pretendard', sans-serif;
   font-size: 0.6rem;
   font-weight: 400;

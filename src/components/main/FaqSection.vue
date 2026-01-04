@@ -132,7 +132,7 @@ onMounted(() => {
 <style scoped>
 .frame {
   align-items: flex-start;
-  background-color: #ffffff;
+  background-color: var(--color-bg-primary);
   display: flex;
   flex-direction: column;
   gap: 30px;
@@ -143,11 +143,12 @@ onMounted(() => {
   max-width: 1066px;
   margin: 0 auto;
   box-sizing: border-box;
+  scroll-margin-top: 84px;
 }
 
 .text-wrapper-4 {
   align-self: stretch;
-  color: #222;
+  color: var(--color-text-primary);
   font-size: 2.2rem;
   font-weight: 700;
   margin-top: -1.00px;
@@ -164,7 +165,7 @@ onMounted(() => {
 
 .faq-row {
   width: 100%;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-card-border);
   margin-bottom: 0;
 }
 
@@ -189,7 +190,7 @@ onMounted(() => {
   left: -40px;
   right: -40px;
   bottom: 0;
-  background-color: #f9fafb;
+  background-color: var(--color-bg-secondary);
   opacity: 0;
   transition: opacity 0.2s ease;
   z-index: -1;
@@ -202,7 +203,7 @@ onMounted(() => {
 .faq-q-label {
   font-size: 2rem;
   font-weight: 700;
-  color: #111;
+  color: var(--color-text-primary);
   margin-right: 2px;
   flex-shrink: 0;
 }
@@ -210,7 +211,7 @@ onMounted(() => {
 .faq-q-text {
   font-size: 1.35rem;
   font-weight: 600;
-  color: #111;
+  color: var(--color-text-primary);
   flex: 1;
   line-height: 1.4;
 }
@@ -224,14 +225,14 @@ onMounted(() => {
 
 .faq-arrow-icon {
   font-size: 1.2rem;
-  color: #888;
+  color: var(--color-text-tertiary);
   transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), color 0.2s ease;
   display: inline-block;
 }
 
 .faq-arrow-icon.open {
   transform: rotate(180deg);
-  color: #222;
+  color: var(--color-text-primary);
 }
 
 .faq-answer-wrapper {
@@ -250,7 +251,7 @@ onMounted(() => {
 
 .faq-answer-card {
   width: 100%;
-  background: #f7f9fb;
+  background: var(--color-bg-secondary);
   border-radius: 16px;
   display: flex;
   align-items: center;
@@ -270,14 +271,14 @@ onMounted(() => {
 .faq-a-label {
   font-size: 2rem;
   font-weight: 700;
-  color: #294a8d;
+  color: var(--color-primary);
   flex-shrink: 0;
 }
 
 .faq-a-text {
   font-size: 1.35rem;
   font-weight: 500;
-  color: #222;
+  color: var(--color-text-primary);
   line-height: 1.6;
   flex: 1;
   text-align: left;
@@ -287,7 +288,7 @@ onMounted(() => {
 }
 
 .faq-empty {
-  color: #aaa;
+  color: var(--color-text-disabled);
   font-size: 1.1rem;
   font-weight: 400;
   padding: 2rem 0;
@@ -306,15 +307,15 @@ onMounted(() => {
 }
 
 .faq-error .error-message {
-  color: #dc2626;
+  color: var(--color-error);
   font-size: 1rem;
   margin-bottom: 1rem;
 }
 
 .retry-button {
   padding: 10px 24px;
-  background-color: #02478A;
-  color: white;
+  background-color: var(--color-button-primary-bg);
+  color: var(--color-button-primary-text);
   border: none;
   border-radius: 8px;
   font-size: 14px;
@@ -324,7 +325,7 @@ onMounted(() => {
 }
 
 .retry-button:hover {
-  background-color: #1e40af;
+  background-color: var(--color-button-primary-hover);
 }
 
 /* 반응형 디자인 */

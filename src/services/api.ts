@@ -99,6 +99,13 @@ export const memberAPI = {
       body: JSON.stringify({ email, code }),
     });
   },
+
+  // 회원 탈퇴
+  deleteAccount: async () => {
+    return apiRequest<{ status: string; message: string }>('/member/me', {
+      method: 'DELETE',
+    });
+  },
 };
 
 // 강의실 예약 API
@@ -158,6 +165,39 @@ export const chatAPI = {
         message,
       }),
     });
+  },
+
+  // 개별 채팅 히스토리 삭제
+  deleteChat: async (chatId: string | number) => {
+    return apiRequest(`/chat/histories/${chatId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // 모든 채팅 히스토리 삭제 (루프 방식)
+  deleteAllChats: async () => {
+    try {
+      const histories = await chatAPI.getChatHistories() as any[];
+      const errors: string[] = [];
+
+      for (const history of histories) {
+        try {
+          await chatAPI.deleteChat(history.id);
+        } catch (error) {
+          console.error(`Failed to delete chat ${history.id}:`, error);
+          errors.push(`채팅 ${history.id} 삭제 실패`);
+        }
+      }
+
+      if (errors.length > 0) {
+        throw new Error(`일부 채팅 삭제 실패: ${errors.join(', ')}`);
+      }
+
+      return { message: '모든 채팅이 삭제되었습니다' };
+    } catch (error) {
+      console.error('Failed to delete all chats:', error);
+      throw error;
+    }
   },
 };
 

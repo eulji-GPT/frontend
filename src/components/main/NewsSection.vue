@@ -81,12 +81,13 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: #fff;
+  background: var(--color-bg-primary);
   border-radius: 18px;
   box-shadow: 0 2px 12px 0 rgba(79, 110, 219, 0.04);
   padding: 2.5rem 0 2.5rem 0;
   margin-top: 0;
   margin-bottom: 0;
+  scroll-margin-top: 84px;
 }
 .news-header-image {
   width: 100%;
@@ -97,7 +98,7 @@ onMounted(() => {
   padding-left: 2.5rem;
 }
 .text-wrapper-4 {
-  color: #222;
+  color: var(--color-text-primary);
   font-size: 2.2rem;
   font-weight: 700;
   margin-top: -1.00px;
@@ -121,26 +122,26 @@ onMounted(() => {
 .news-title-image {
   font-size: 1.35rem;
   font-weight: 800;
-  color: #232834;
+  color: var(--color-text-primary);
   margin-bottom: 0.1rem;
   letter-spacing: -0.01em;
 }
 .news-date-image {
   font-size: 1rem;
-  color: #b0b4bb;
+  color: var(--color-text-tertiary);
   font-weight: 600;
   margin-bottom: 0.1rem;
   letter-spacing: 0.01em;
 }
 .news-desc-image {
-  color: #4f6edb;
+  color: var(--color-primary);
   font-size: 1.05rem;
   margin-top: 0.1rem;
   font-weight: 400;
 }
 .news-empty-image {
   text-align: left;
-  color: #b0b4bb;
+  color: var(--color-text-tertiary);
   font-size: 1.1rem;
   font-weight: 400;
   padding-left: 0.2rem;
@@ -158,15 +159,15 @@ onMounted(() => {
 }
 
 .news-error .error-message {
-  color: #dc2626;
+  color: var(--color-error);
   font-size: 1rem;
   margin-bottom: 1rem;
 }
 
 .retry-button {
   padding: 10px 24px;
-  background-color: #02478A;
-  color: white;
+  background-color: var(--color-button-primary-bg);
+  color: var(--color-button-primary-text);
   border: none;
   border-radius: 8px;
   font-size: 14px;
@@ -176,7 +177,7 @@ onMounted(() => {
 }
 
 .retry-button:hover {
-  background-color: #1e40af;
+  background-color: var(--color-button-primary-hover);
 }
 @media (max-width: 900px) {
   .news-section-image {

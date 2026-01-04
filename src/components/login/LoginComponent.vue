@@ -508,7 +508,7 @@ onMounted(() => {
 
 .loading-indicator {
   margin-top: 1rem;
-  color: #02478A;
+  color: var(--color-primary);
   font-size: 0.9rem;
   font-weight: 500;
   text-align: center;
@@ -516,7 +516,7 @@ onMounted(() => {
 
 .error-message {
   margin-top: 1rem;
-  color: #dc2626;
+  color: var(--color-error);
   font-size: 0.9rem;
   text-align: center;
   background: #fee2e2;
@@ -533,11 +533,11 @@ onMounted(() => {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: #02478A;
+  color: var(--color-primary);
   font-size: 1.1rem;
   font-weight: 600;
   text-align: center;
-  background: white;
+  background: var(--color-card-bg);
   padding: 1rem 2rem;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -549,7 +549,7 @@ onMounted(() => {
   top: 60%;
   left: 50%;
   transform: translateX(-50%);
-  color: #dc2626;
+  color: var(--color-error);
   font-size: 0.9rem;
   text-align: center;
   background: #fee2e2;
@@ -622,9 +622,9 @@ onMounted(() => {
   flex-direction: column;
   gap: 15px;
   padding: 20px;
-  background: #f8fafc;
+  background: var(--color-bg-secondary);
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-card-border);
 }
 
 .form-group {
@@ -634,28 +634,29 @@ onMounted(() => {
 
 .form-input {
   padding: 12px 16px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-input-border);
   border-radius: 8px;
   font-size: 14px;
   font-family: Pretendard, sans-serif;
-  background: white;
+  background: var(--color-input-bg);
+  color: var(--color-text-primary);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .form-input:focus {
   outline: none;
-  border-color: #02478A;
+  border-color: var(--color-input-focus-border);
   box-shadow: 0 0 0 3px rgba(2, 71, 138, 0.1);
 }
 
 .form-input::placeholder {
-  color: #9ca3af;
+  color: var(--color-input-placeholder);
 }
 
 .login-submit-btn {
   padding: 12px 16px;
-  background-color: #02478A;
-  color: white;
+  background-color: var(--color-button-primary-bg);
+  color: var(--color-button-primary-text);
   border: none;
   border-radius: 8px;
   font-size: 14px;
@@ -666,12 +667,12 @@ onMounted(() => {
 }
 
 .login-submit-btn:hover:not(:disabled) {
-  background-color: #1e40af;
+  background-color: var(--color-button-primary-hover);
   transform: translateY(-1px);
 }
 
 .login-submit-btn:disabled {
-  background-color: #9ca3af;
+  background-color: var(--color-text-disabled);
   cursor: not-allowed;
   transform: none;
 }

@@ -63,7 +63,7 @@ const navigateToFeature = (feature: string) => {
   min-width: 100vw;
   min-height: 0;
   height: auto;
-  background: #F3F8FF !important;
+  background: var(--color-bg-secondary) !important;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -100,7 +100,7 @@ const navigateToFeature = (feature: string) => {
 
 .features-title {
   align-self: stretch;
-  color: var(--Primary-400, #02478A);
+  color: var(--color-primary);
   font-family: 'Pretendard', sans-serif;
   font-size: 24px;
   font-style: normal;
@@ -118,7 +118,7 @@ const navigateToFeature = (feature: string) => {
 
 .features-subtitle {
   align-self: stretch;
-  color: var(--Black, #000);
+  color: var(--color-text-primary);
   font-family: 'Pretendard', sans-serif;
   font-size: 36px;
   font-style: normal;
@@ -151,7 +151,7 @@ const navigateToFeature = (feature: string) => {
   gap: 36px;
   flex: 1;
   border-radius: 35px;
-  background: var(--Primary-400, #02478A);
+  background: var(--color-button-primary-bg);
   box-sizing: border-box;
 }
 
@@ -166,7 +166,7 @@ const navigateToFeature = (feature: string) => {
 
 .features-inner-title {
   align-self: stretch;
-  color: var(--White, #FFF);
+  color: var(--color-button-primary-text);
   font-family: 'Pretendard', sans-serif;
   font-size: 24px;
   font-style: normal;
@@ -180,7 +180,7 @@ const navigateToFeature = (feature: string) => {
 
 .features-inner-desc {
   align-self: stretch;
-  color: var(--White, #FFF);
+  color: var(--color-button-primary-text);
   font-family: 'Pretendard', sans-serif;
   font-size: 16px;
   font-style: normal;
@@ -211,7 +211,7 @@ const navigateToFeature = (feature: string) => {
   gap: 43px;
   align-self: stretch;
   border-radius: 30px;
-  background: var(--White, #FFF);
+  background: var(--color-card-bg);
   flex: 1 1 0;
   min-height: 0;
   margin-bottom: 20px;
@@ -249,7 +249,7 @@ const navigateToFeature = (feature: string) => {
 }
 
 .features-section-title {
-  color: var(--Primary-400, #02478A);
+  color: var(--color-primary);
   font-family: 'Pretendard', sans-serif;
   font-size: 24px;
   font-style: normal;
@@ -258,7 +258,7 @@ const navigateToFeature = (feature: string) => {
 }
 
 .features-section-desc {
-  color: var(--Gray-600, #1F2937);
+  color: var(--color-text-secondary);
   font-family: 'Pretendard', sans-serif;
   font-size: 14px;
   font-style: normal;
@@ -271,7 +271,7 @@ const navigateToFeature = (feature: string) => {
   width: 100%;
   height: 2px;
   margin: 8px 0 8px 0;
-  background: var(--Primary-200, #F3F8FF);
+  background: var(--color-primary-light);
   border: none;
   border-radius: 1px;
 }

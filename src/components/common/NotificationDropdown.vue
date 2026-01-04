@@ -1,6 +1,6 @@
 <template>
   <!-- Debug: isVisible = {{ isVisible }} -->
-  <div v-if="isVisible" class="notification-dropdown" :style="{ top: dropdownPosition.top, left: dropdownPosition.left }">
+  <div v-if="isVisible" class="notification-dropdown" :style="{ top: dropdownPosition.top, left: dropdownPosition.left, maxHeight: dropdownMaxHeight }">
     <div class="notification-header">
       <span class="notification-title">새로운 소식</span>
       <span class="view-all">전체보기</span>
@@ -34,6 +34,7 @@ const props = defineProps<Props>()
 
 const notifications = ref<Array<{title: string, date: string, desc: string}>>([])
 const dropdownPosition = ref({ top: '50px', left: '50px' })
+const dropdownMaxHeight = ref('400px')
 
 const loadNotifications = async () => {
   try {
@@ -54,11 +55,66 @@ const updatePosition = () => {
       if (frame12Element) {
         const rect = frame12Element.getBoundingClientRect()
         console.log('frame-12 rect:', rect)
-        dropdownPosition.value = {
-          top: `${rect.top - 450}px`, // frame-12 위쪽으로 450px (드롭다운이 더 크므로)
-          left: `${rect.left - 150}px`  // frame-12 왼쪽으로 150px
+        const panel = { width: 380, height: 400 } // 드롭다운 크기
+
+        // 기본 위치 계산 - 아이콘 바로 위에 표시
+        let top = rect.top - panel.height - 10
+        let left = rect.left - 150
+
+        // Viewport 경계 체크
+        const viewportWidth = window.innerWidth
+        const viewportHeight = window.innerHeight
+        const padding = 10 // 여백
+
+        // 상단 경계 체크 (최우선)
+        if (top < padding) {
+          // 화면 상단에 딱 붙임
+          top = padding
         }
+
+        // 최종 안전 체크: 음수 위치 방지
+        top = Math.max(top, padding)
+
+        // 좌측 경계 체크
+        if (left < padding) {
+          left = padding
+        }
+
+        // 우측 경계 체크
+        if (left + panel.width > viewportWidth - padding) {
+          left = viewportWidth - panel.width - padding
+        }
+
+        // 하단 경계 체크 (max-height 동적 조정)
+        const availableHeight = viewportHeight - top - padding
+        if (availableHeight < panel.height) {
+          // 공간이 부족하면 위치 재조정 또는 높이 제한
+          if (rect.top + rect.height + padding + panel.height < viewportHeight) {
+            // 아래쪽에 공간이 있으면 frame-12 아래로 배치
+            top = rect.top + rect.height + padding
+          } else {
+            // 아래도 부족하면 상단으로 최대한 올림
+            top = padding
+          }
+        }
+
+        // 최종 경계 체크 (절대적 안전장치)
+        top = Math.max(padding, Math.min(top, viewportHeight - padding))
+        left = Math.max(padding, Math.min(left, viewportWidth - panel.width - padding))
+
+        // 동적 max-height 계산: 뷰포트 하단까지 가용 공간
+        const availableSpace = viewportHeight - top - padding
+        const dynamicMaxHeight = Math.min(panel.height, availableSpace)
+
+        dropdownPosition.value = {
+          top: `${top}px`,
+          left: `${left}px`
+        }
+        dropdownMaxHeight.value = `${dynamicMaxHeight}px`
+
         console.log('notification dropdown position set to:', dropdownPosition.value)
+        console.log('Dynamic max-height:', dropdownMaxHeight.value)
+        console.log('Final bounds check - top:', top, 'left:', left)
       }
     })
   }
@@ -74,13 +130,14 @@ onMounted(() => {
 <style scoped>
 .notification-dropdown {
   position: fixed;
-  width: 350px;
-  max-height: 400px;
+  width: 380px;
+  /* max-height는 동적으로 설정됨 (inline style) */
   background-color: white;
+  box-sizing: border-box;
   border: solid 1px rgb(243, 244, 246);
   border-radius: 20px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 1500; /* 모달보다 아래에 표시 */
+  z-index: 100000; /* 최상위 레이어 */
   overflow-y: auto;
   padding: 20px;
   display: flex;
@@ -155,6 +212,8 @@ onMounted(() => {
   font-weight: 500;
   line-height: 1.4;
   flex: 1;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .notification-date {

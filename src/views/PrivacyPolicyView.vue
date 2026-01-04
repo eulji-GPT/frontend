@@ -7,7 +7,7 @@
         <pre class="policy-text">{{ policyText }}</pre>
       </div>
 
-      <button @click="goHome" class="home-button">
+      <button @click="goHome" class="home-button" aria-label="메인 페이지로 이동">
         홈으로
       </button>
     </div>
@@ -15,35 +15,25 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useUser } from '../composables/useUser';
 
 const router = useRouter();
+const { userName } = useUser();
 
-// 현재 날짜 또는 회원가입 날짜 (localStorage에서 가져오기)
-const agreementDate = computed(() => {
+// 회원가입 날짜 (localStorage에서 한 번만 읽기)
+const agreementDate = ref('');
+
+onMounted(() => {
   const savedDate = localStorage.getItem('agreement_date');
   if (savedDate) {
-    return savedDate;
+    agreementDate.value = savedDate;
+  } else {
+    // 실제 동의일이 없으면 현재 날짜 표시 (저장하지 않음)
+    const today = new Date();
+    agreementDate.value = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
   }
-  // 없으면 현재 날짜 저장
-  const today = new Date();
-  const formattedDate = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
-  localStorage.setItem('agreement_date', formattedDate);
-  return formattedDate;
-});
-
-const userName = computed(() => {
-  try {
-    const userProfile = localStorage.getItem('dev_user_profile');
-    if (userProfile) {
-      const profile = JSON.parse(userProfile);
-      return profile.nickname || profile.name || '이용자';
-    }
-  } catch {
-    // ignore
-  }
-  return '이용자';
 });
 
 const policyText = computed(() => `EULGPT 개인정보 처리 및 데이터 활용 동의서
@@ -239,7 +229,7 @@ const goHome = () => {
 <style scoped>
 .privacy-policy-view {
   min-height: 100vh;
-  background-color: #F3F4F6;
+  background-color: var(--color-bg-primary);
   padding: 40px 20px;
   font-family: Pretendard, sans-serif;
 }
@@ -247,16 +237,16 @@ const goHome = () => {
 .policy-container {
   max-width: 800px;
   margin: 0 auto;
-  background-color: #FFFFFF;
+  background-color: var(--color-card-bg);
   border-radius: 20px;
   padding: 40px;
-  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0px 4px 20px var(--color-shadow);
 }
 
 .policy-title {
   font-size: 28px;
   font-weight: 700;
-  color: #02478A;
+  color: var(--color-primary);
   margin-bottom: 32px;
   text-align: center;
 }
@@ -266,15 +256,15 @@ const goHome = () => {
   overflow-y: auto;
   margin-bottom: 32px;
   padding: 20px;
-  background-color: #F0F6FF;
+  background-color: var(--color-bg-secondary);
   border-radius: 12px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--color-border);
 }
 
 .policy-text {
   font-size: 14px;
   line-height: 1.8;
-  color: #1F2937;
+  color: var(--color-text-primary);
   white-space: pre-wrap;
   word-wrap: break-word;
   font-family: Pretendard, sans-serif;
@@ -284,22 +274,22 @@ const goHome = () => {
 .home-button {
   width: 100%;
   padding: 13px 60px;
-  background-color: #02478A;
-  color: #F0F6FF;
+  background-color: var(--color-primary);
+  color: white;
   border: none;
   border-radius: 12px;
   font-size: 16px;
   font-weight: 600;
   font-family: Pretendard, sans-serif;
   cursor: pointer;
-  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+  box-shadow: 0px 4px 4px var(--color-shadow);
   transition: all 0.2s ease;
 }
 
 .home-button:hover {
-  background-color: #013C74;
+  background-color: var(--color-primary-hover);
   transform: translateY(-1px);
-  box-shadow: 0px 6px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0px 6px 8px var(--color-shadow-hover);
 }
 
 .home-button:active {
@@ -312,17 +302,17 @@ const goHome = () => {
 }
 
 .policy-content::-webkit-scrollbar-track {
-  background: #E5E7EB;
+  background: var(--color-border);
   border-radius: 4px;
 }
 
 .policy-content::-webkit-scrollbar-thumb {
-  background: #02478A;
+  background: var(--color-primary);
   border-radius: 4px;
 }
 
 .policy-content::-webkit-scrollbar-thumb:hover {
-  background: #013C74;
+  background: var(--color-primary-hover);
 }
 
 /* 반응형 디자인 */

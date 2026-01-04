@@ -187,7 +187,7 @@ const handleKakaoLogin = () => {
 <style scoped>
 .root-wrapper {
   min-height: 100vh;
-  background-color: white;
+  background-color: var(--color-bg-primary);
   position: relative;
   font-family: 'Pretendard', -apple-system, Roboto, Helvetica, sans-serif;
 }
@@ -208,7 +208,7 @@ const handleKakaoLogin = () => {
 }
 
 .footer-text {
-  color: rgb(156, 163, 175);
+  color: var(--color-text-tertiary);
   text-overflow: ellipsis;
   font-size: 10px;
   font-family: Pretendard, sans-serif;
@@ -217,7 +217,7 @@ const handleKakaoLogin = () => {
 }
 
 .footer-separator {
-  color: rgb(156, 163, 175);
+  color: var(--color-text-tertiary);
   text-overflow: ellipsis;
   font-size: 10px;
   font-family: Pretendard, sans-serif;
@@ -227,7 +227,7 @@ const handleKakaoLogin = () => {
 }
 
 .footer-copyright {
-  color: rgb(156, 163, 175);
+  color: var(--color-text-tertiary);
   text-overflow: ellipsis;
   font-size: 10px;
   font-family: Pretendard, sans-serif;
@@ -253,7 +253,7 @@ const handleKakaoLogin = () => {
   gap: 40px;
   width: 407px;
   height: 1300px; /* 수동으로 높이 조정 가능 */
-  background-color: white;
+  background-color: var(--color-bg-primary);
   box-sizing: border-box;
   margin: 0 auto; /* 중앙 정렬 추가 */
 }
@@ -269,7 +269,7 @@ const handleKakaoLogin = () => {
 }
 
 .login-title {
-  color: black;
+  color: var(--color-text-primary);
   text-overflow: ellipsis;
   font-size: 24px;
   font-family: Pretendard, sans-serif;
@@ -294,7 +294,7 @@ const handleKakaoLogin = () => {
   justify-content: flex-start;
   flex-direction: row;
   align-items: center;
-  border: solid 1px rgb(229, 231, 235);
+  border: solid 1px var(--color-card-border);
   border-radius: 10px;
   align-self: stretch;
   box-sizing: border-box;
@@ -306,7 +306,7 @@ const handleKakaoLogin = () => {
   justify-content: space-between;
   flex-direction: row;
   align-items: center;
-  border: solid 1px rgb(229, 231, 235);
+  border: solid 1px var(--color-card-border);
   border-radius: 10px;
   align-self: stretch;
   box-sizing: border-box;
@@ -314,7 +314,7 @@ const handleKakaoLogin = () => {
 }
 
 .input-field {
-  color: rgb(156, 163, 175);
+  color: var(--color-text-tertiary);
   font-size: 16px;
   font-family: Pretendard, sans-serif;
   font-weight: 500;
@@ -326,14 +326,14 @@ const handleKakaoLogin = () => {
 }
 
 .input-field:focus {
-  color: black;
+  color: var(--color-text-primary);
 }
 
 .eye-button {
   background: none;
   border: none;
   cursor: pointer;
-  color: rgb(156, 163, 175);
+  color: var(--color-text-tertiary);
   padding: 0;
   display: flex;
   align-items: center;
@@ -347,7 +347,7 @@ const handleKakaoLogin = () => {
   gap: 8px;
   border-radius: 12px;
   align-self: stretch;
-  background-color: rgb(240, 246, 255);
+  background-color: var(--color-primary-light);
   box-sizing: border-box;
   padding: 14px 60px;
   border: none;
@@ -356,7 +356,7 @@ const handleKakaoLogin = () => {
 }
 
 .login-button:hover:not(:disabled) {
-  background-color: rgb(219, 234, 254);
+  background-color: var(--color-button-primary-bg);
 }
 
 .login-button:disabled {
@@ -365,7 +365,7 @@ const handleKakaoLogin = () => {
 }
 
 .button-text {
-  color: rgb(2, 71, 138);
+  color: var(--color-primary);
   text-overflow: ellipsis;
   font-size: 18px;
   font-family: Pretendard, sans-serif;
@@ -385,7 +385,7 @@ const handleKakaoLogin = () => {
 
 .divider-line {
   height: 0px;
-  border-top: solid 1px rgb(229, 231, 235);
+  border-top: solid 1px var(--color-card-border);
   align-self: stretch;
 }
 
@@ -437,7 +437,7 @@ const handleKakaoLogin = () => {
 }
 
 .link-text {
-  color: rgb(156, 163, 175);
+  color: var(--color-text-tertiary);
   text-overflow: ellipsis;
   font-size: 14px;
   font-family: Pretendard, sans-serif;

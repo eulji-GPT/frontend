@@ -241,8 +241,8 @@ const removeImage = (index: number) => {
   gap: 12px;
   max-width: min(770px, 100%);
   width: 100%;
-  background-color: #F8FBFF;
-  border: 1px solid #F3F4F6;
+  background-color: var(--color-input-bg);
+  border: 1px solid var(--color-input-border);
   border-radius: 15px;
   padding: 12px 16px;
   box-sizing: border-box;
@@ -254,9 +254,9 @@ const removeImage = (index: number) => {
 
 /* 로딩 중 입력창 스타일 */
 .chat-input-box.loading {
-  background-color: #f0f4f8;
-  border-color: #02478A;
-  box-shadow: 0 0 0 2px rgba(2, 71, 138, 0.1);
+  background-color: var(--color-input-bg);
+  border-color: var(--color-input-focus-border);
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.1);
 }
 
 /* Placeholder Text Container */
@@ -279,7 +279,7 @@ textarea {
   border: none;
   outline: none;
   background: transparent;
-  color: #9CA3AF;
+  color: var(--color-input-placeholder);
   font-family: 'Pretendard', sans-serif;
   font-size: 16px;
   font-weight: 500;
@@ -294,12 +294,12 @@ textarea {
 }
 
 textarea:focus {
-  color: #000000;
+  color: var(--color-input-text);
   outline: none;
 }
 
 textarea::placeholder {
-  color: #9CA3AF;
+  color: var(--color-input-placeholder);
 }
 
 textarea:disabled {
@@ -326,8 +326,8 @@ textarea:disabled {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #FFFFFF;
-  border: 1px solid #E5E7EB;
+  background-color: var(--color-bg-primary);
+  border: 1px solid var(--color-input-border);
   border-radius: 100px;
   cursor: pointer;
   padding: 6px;
@@ -342,17 +342,17 @@ textarea:disabled {
 }
 
 .input-state-button:hover {
-  background-color: #F3F4F6;
+  background-color: var(--color-bg-secondary);
 }
 
 .input-state-button:focus {
   outline: none;
-  border: 1px solid #E5E7EB;
+  border: 1px solid var(--color-input-border);
 }
 
 /* FR-031: 터치 피드백 */
 .input-state-button:active {
-  background-color: #E5E7EB;
+  background-color: var(--color-bg-tertiary);
   transform: scale(0.95);
 }
 
@@ -366,8 +366,8 @@ textarea:disabled {
   justify-content: center;
   align-items: center;
   gap: 4px;
-  background-color: #E5E7EB;
-  border: 1px solid #E5E7EB;
+  background-color: var(--color-bg-tertiary);
+  border: 1px solid var(--color-input-border);
   border-radius: 100px;
   cursor: pointer;
   padding: 6px;
@@ -382,12 +382,12 @@ textarea:disabled {
 }
 
 .input-state-button-send:hover {
-  background-color: #D1D5DB;
+  background-color: var(--color-button-secondary-hover);
 }
 
 /* FR-031: 터치 피드백 */
 .input-state-button-send:active {
-  background-color: #9CA3AF;
+  background-color: var(--color-text-tertiary);
   transform: scale(0.95);
 }
 
@@ -397,7 +397,7 @@ textarea:disabled {
 
 /* FR-035: 키보드 포커스 표시 */
 .input-state-button-send:focus-visible {
-  outline: 2px solid #02478a;
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
@@ -426,8 +426,8 @@ textarea:disabled {
 
 /* Send Button States */
 .input-state-button-send.can-send {
-  background-color: #02478A;
-  border: 1px solid #02478A;
+  background-color: var(--color-button-primary-bg);
+  border: 1px solid var(--color-button-primary-bg);
 }
 
 .input-state-button-send.can-send .send-icon {
@@ -435,7 +435,7 @@ textarea:disabled {
 }
 
 .input-state-button-send.can-send:hover {
-  background-color: #013C74;
+  background-color: var(--color-button-primary-hover);
 }
 
 .input-state-button-send.disabled {
@@ -444,8 +444,8 @@ textarea:disabled {
 }
 
 .input-state-button-send.loading {
-  background-color: #02478A;
-  border: 1px solid #02478A;
+  background-color: var(--color-button-primary-bg);
+  border: 1px solid var(--color-button-primary-bg);
   cursor: wait;
   animation: pulse-button 1.5s ease-in-out infinite;
 }
@@ -501,7 +501,7 @@ textarea:disabled {
 
 .disclaimer-text {
   max-width: 450px;
-  color: var(--Gray-300, #9CA3AF);
+  color: var(--color-text-tertiary);
   text-align: center;
   font-family: Pretendard;
   font-size: 10px;
@@ -525,7 +525,7 @@ textarea:disabled {
   width: 110px;
   height: 110px;
   overflow: hidden;
-  border: solid 1px rgb(240, 246, 255);
+  border: solid 1px var(--color-primary-light);
   border-radius: 20px;
   position: relative;
   display: flex;
