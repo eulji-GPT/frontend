@@ -153,7 +153,7 @@ function goToChatApp() {
   gap: 8px;
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
   border-radius: 30px;
-  background-color: #000;
+  background-color: #02478A;
   box-sizing: border-box;
   padding: 13px 60px;
   color: white;
@@ -169,13 +169,13 @@ function goToChatApp() {
 }
 
 .floating-start-btn:hover {
-  background-color: rgb(2, 71, 138);
+  background-color: #0356a8;
   box-shadow: 0px 6px 8px 0px rgba(2, 71, 138, 0.35);
   transform: translateY(-1px);
 }
 
 .floating-start-btn:active {
-  background-color: rgb(1, 60, 116);
+  background-color: #013c74;
   box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.15);
   transform: translateY(0);
 }
