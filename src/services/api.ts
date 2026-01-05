@@ -395,3 +395,104 @@ export const adminAPI = {
     });
   },
 };
+
+// Bug Report API 타입
+export interface BugReportSubmitResponse {
+  success: boolean;
+  message: string;
+  report_id: number;
+}
+
+export interface BugReportResponse {
+  id: number;
+  title: string;
+  description: string;
+  reproduction_steps: string;
+  category: string;
+  screenshot_url: string | null;
+  user_id: number;
+  user_email: string;
+  user_name: string;
+  created_at: string;
+  updated_at: string | null;
+}
+
+export interface BugReportListResponse {
+  total: number;
+  bug_reports: BugReportResponse[];
+}
+
+// Bug Report API
+export const bugReportAPI = {
+  // 버그 제보 생성 (FormData 사용)
+  createBugReport: async (formData: FormData): Promise<BugReportSubmitResponse> => {
+    const url = `${API_BASE_URL}/api/bug-reports/`;
+
+    // 토큰 가져오기
+    const token = localStorage.getItem('accessToken');
+    const headers: Record<string, string> = {};
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    // FormData는 Content-Type을 자동으로 설정하므로 헤더에 포함하지 않음
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Bug report creation failed:', error);
+      throw error;
+    }
+  },
+
+  // 버그 제보 목록 조회 (Admin only)
+  getBugReports: async (params: {
+    skip?: number;
+    limit?: number;
+    category?: string;
+  } = {}): Promise<BugReportListResponse> => {
+    const queryParams = new URLSearchParams();
+    if (params.skip !== undefined) queryParams.append('skip', params.skip.toString());
+    if (params.limit !== undefined) queryParams.append('limit', params.limit.toString());
+    if (params.category) queryParams.append('category', params.category);
+
+    const queryString = queryParams.toString();
+    const endpoint = `/api/bug-reports/${queryString ? `?${queryString}` : ''}`;
+
+    return apiRequest<BugReportListResponse>(endpoint, {
+      method: 'GET',
+    });
+  },
+
+  // 버그 제보 상세 조회 (Admin only)
+  getBugReport: async (bugReportId: number): Promise<BugReportResponse> => {
+    return apiRequest<BugReportResponse>(`/api/bug-reports/${bugReportId}`, {
+      method: 'GET',
+    });
+  },
+
+  // 내 버그 제보 목록 조회
+  getMyBugReports: async (): Promise<BugReportResponse[]> => {
+    return apiRequest<BugReportResponse[]>('/api/bug-reports/my/reports', {
+      method: 'GET',
+    });
+  },
+
+  // 버그 제보 삭제 (Admin only)
+  deleteBugReport: async (bugReportId: number): Promise<void> => {
+    return apiRequest<void>(`/api/bug-reports/${bugReportId}`, {
+      method: 'DELETE',
+    });
+  },
+};

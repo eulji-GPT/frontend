@@ -40,6 +40,11 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/bug-report',
+    component: () => import('../views/BugReportView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/ready/:service',
     component: () => import('../components/common/ReadyBar.vue'),
     props: true

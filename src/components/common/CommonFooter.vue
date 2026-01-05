@@ -1,6 +1,10 @@
 <template>
   <div :class="['common-footer', className]">
-    <div class="text-wrapper">개인정보처리방침</div>
+    <div class="footer-links">
+      <router-link to="/privacy-policy" class="text-wrapper link">개인정보처리방침</router-link>
+      <span class="separator">|</span>
+      <router-link to="/bug-report" class="text-wrapper link">버그 제보</router-link>
+    </div>
     <p class="div">Copyright ⓒ EULGPT. All Rights Reserved</p>
     <div class="text-wrapper-2">E-mail: EULJGPT@gmail.com</div>
   </div>
@@ -34,15 +38,34 @@ export default {
   margin: 0 auto;
 }
 
+.common-footer .footer-links {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .common-footer .text-wrapper {
-  align-self: stretch;
   color: var(--color-text-secondary);
   font-family: 'Pretendard', sans-serif;
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.01em;
   line-height: 1.3;
-  position: relative;
+  text-decoration: none;
+}
+
+.common-footer .text-wrapper.link {
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.common-footer .text-wrapper.link:hover {
+  color: #02478A;
+}
+
+.common-footer .separator {
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
 }
 
 .common-footer .div {
