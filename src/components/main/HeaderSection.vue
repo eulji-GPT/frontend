@@ -59,6 +59,12 @@
         <router-link to="/signup" @click="closeMobileMenu">회원가입</router-link>
       </div>
     </div>
+
+    <!-- 다크모드 베타 경고 모달 -->
+    <DarkModeBetaWarning
+      :is-visible="showDarkModeWarning"
+      @confirm="confirmDarkMode"
+    />
   </header>
 </template>
 
@@ -69,6 +75,7 @@ import eulLogo from '../../assets/eul_logo.svg'
 import { isAuthenticated, logout } from '../../utils/auth'
 import { getApiBaseUrl } from '../../utils/ports-config'
 import { useTheme } from '../../composables/useTheme'
+import DarkModeBetaWarning from '../common/DarkModeBetaWarning.vue'
 
 const emit = defineEmits<{
   (e: 'scrollToSection', id: string): void
@@ -86,16 +93,50 @@ const userName = ref('')
 // 테마 컴포저블
 const { currentTheme, effectiveTheme, setTheme } = useTheme()
 
+// 다크모드 경고 관련
+const DARK_MODE_ACKNOWLEDGED_KEY = 'dark_mode_beta_acknowledged'
+const showDarkModeWarning = ref(false)
+const pendingTheme = ref<'light' | 'dark' | 'system' | null>(null)
+
 // 테마 토글 함수
 function toggleTheme() {
+  let targetTheme: 'light' | 'dark' | 'system'
+
   if (currentTheme.value === 'light') {
-    setTheme('dark')
+    targetTheme = 'dark'
   } else if (currentTheme.value === 'dark') {
-    setTheme('light')
+    targetTheme = 'light'
   } else {
     // 시스템 모드인 경우, 현재 표시된 테마의 반대로 전환
-    setTheme(effectiveTheme.value === 'dark' ? 'light' : 'dark')
+    targetTheme = effectiveTheme.value === 'dark' ? 'light' : 'dark'
   }
+
+  // 다크모드로 전환 시 경고 체크
+  const isDarkModeAcknowledged = localStorage.getItem(DARK_MODE_ACKNOWLEDGED_KEY) === 'true'
+
+  if (targetTheme === 'dark' && !isDarkModeAcknowledged) {
+    // 아직 베타 경고를 본 적이 없으면 경고 표시
+    pendingTheme.value = targetTheme
+    showDarkModeWarning.value = true
+  } else {
+    // 이미 경고를 확인했거나 라이트 모드로 전환하는 경우 바로 적용
+    setTheme(targetTheme)
+  }
+}
+
+// 다크모드 베타 경고 확인
+const confirmDarkMode = () => {
+  // 경고 확인 상태 저장
+  localStorage.setItem(DARK_MODE_ACKNOWLEDGED_KEY, 'true')
+
+  // 보류 중이던 테마 적용
+  if (pendingTheme.value) {
+    setTheme(pendingTheme.value)
+  }
+
+  // 상태 초기화
+  showDarkModeWarning.value = false
+  pendingTheme.value = null
 }
 
 // 사용자 정보 가져오기
