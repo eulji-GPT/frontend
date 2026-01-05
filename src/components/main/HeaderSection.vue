@@ -94,7 +94,6 @@ const userName = ref('')
 const { currentTheme, effectiveTheme, setTheme } = useTheme()
 
 // 다크모드 경고 관련
-const DARK_MODE_ACKNOWLEDGED_KEY = 'dark_mode_beta_acknowledged'
 const showDarkModeWarning = ref(false)
 const pendingTheme = ref<'light' | 'dark' | 'system' | null>(null)
 
@@ -111,24 +110,18 @@ function toggleTheme() {
     targetTheme = effectiveTheme.value === 'dark' ? 'light' : 'dark'
   }
 
-  // 다크모드로 전환 시 경고 체크
-  const isDarkModeAcknowledged = localStorage.getItem(DARK_MODE_ACKNOWLEDGED_KEY) === 'true'
-
-  if (targetTheme === 'dark' && !isDarkModeAcknowledged) {
-    // 아직 베타 경고를 본 적이 없으면 경고 표시
+  // 다크모드로 전환 시 항상 경고 표시
+  if (targetTheme === 'dark') {
     pendingTheme.value = targetTheme
     showDarkModeWarning.value = true
   } else {
-    // 이미 경고를 확인했거나 라이트 모드로 전환하는 경우 바로 적용
+    // 라이트 모드로 전환하는 경우 바로 적용
     setTheme(targetTheme)
   }
 }
 
 // 다크모드 베타 경고 확인
 const confirmDarkMode = () => {
-  // 경고 확인 상태 저장
-  localStorage.setItem(DARK_MODE_ACKNOWLEDGED_KEY, 'true')
-
   // 보류 중이던 테마 적용
   if (pendingTheme.value) {
     setTheme(pendingTheme.value)
