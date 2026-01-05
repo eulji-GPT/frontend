@@ -289,6 +289,12 @@
       @confirm="confirmDeleteAccount"
       @cancel="cancelDeleteAccount"
     />
+
+    <!-- 다크모드 베타 경고 모달 -->
+    <DarkModeBetaWarning
+      :is-visible="showDarkModeWarning"
+      @confirm="confirmDarkMode"
+    />
   </div>
 </template>
 
@@ -300,6 +306,7 @@ import { getApiBaseUrl } from '../../utils/ports-config'
 import { chatAPI, memberAPI } from '../../services/api'
 import { useTheme } from '../../composables/useTheme'
 import CommonDeleteModal from './CommonDeleteModal.vue'
+import DarkModeBetaWarning from './DarkModeBetaWarning.vue'
 
 defineProps<{
   isVisible: boolean
@@ -320,6 +327,11 @@ const fileInput = ref<HTMLInputElement | null>(null)
 // 삭제 모달 상태
 const showDeleteDataModal = ref(false)
 const showDeleteAccountModal = ref(false)
+
+// 다크모드 베타 경고 상태
+const showDarkModeWarning = ref(false)
+const pendingTheme = ref<'light' | 'dark' | 'system' | null>(null)
+const DARK_MODE_ACKNOWLEDGED_KEY = 'dark_mode_beta_acknowledged'
 
 // Pro 인증 관련 상태
 const showProVerification = ref(false)
@@ -600,7 +612,32 @@ const handleLibraryCheck = () => {
 
 // 테마 변경
 const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
-  setThemeMode(theme)
+  // 다크모드 또는 시스템 모드(시스템이 다크일 수 있음)로 전환 시 경고 체크
+  const isDarkModeAcknowledged = localStorage.getItem(DARK_MODE_ACKNOWLEDGED_KEY) === 'true'
+
+  if ((theme === 'dark' || theme === 'system') && !isDarkModeAcknowledged) {
+    // 아직 베타 경고를 본 적이 없으면 경고 표시
+    pendingTheme.value = theme
+    showDarkModeWarning.value = true
+  } else {
+    // 이미 경고를 확인했거나 라이트 모드로 전환하는 경우 바로 적용
+    setThemeMode(theme)
+  }
+}
+
+// 다크모드 베타 경고 확인
+const confirmDarkMode = () => {
+  // 경고 확인 상태 저장
+  localStorage.setItem(DARK_MODE_ACKNOWLEDGED_KEY, 'true')
+
+  // 보류 중이던 테마 적용
+  if (pendingTheme.value) {
+    setThemeMode(pendingTheme.value)
+  }
+
+  // 상태 초기화
+  showDarkModeWarning.value = false
+  pendingTheme.value = null
 }
 
 // 전체 데이터 삭제
