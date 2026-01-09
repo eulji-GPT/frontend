@@ -134,6 +134,8 @@ const autoGrow = () => {
 
 // 키보드 이벤트 처리 (Shift+Enter: 줄바꿈, Enter: 전송)
 const handleKeydown = (event: KeyboardEvent) => {
+  if (event.isComposing) return;
+
   if (event.key === 'Enter') {
     // Shift+Enter 또는 모바일에서 줄바꿈 키: 줄바꿈 허용
     if (event.shiftKey) {
