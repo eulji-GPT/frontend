@@ -114,7 +114,7 @@ router.beforeEach((to, _from, next) => {
   if (to.meta.requiresAuth) {
     if (!isAuthenticated()) {
       // 인증되지 않았으면 로그인 페이지로 리다이렉트
-      console.log('인증되지 않은 사용자 - 로그인 페이지로 이동')
+      console.log('Unauthenticated user - redirecting to login')
       next({
         path: '/login',
         query: { redirect: to.fullPath } // 로그인 후 돌아갈 경로 저장
@@ -124,7 +124,7 @@ router.beforeEach((to, _from, next) => {
 
     // requiresAdmin 메타 필드가 true인 경로 체크
     if (to.meta.requiresAdmin && !isAdmin()) {
-      console.log('관리자 권한이 없는 사용자 - 메인 페이지로 이동')
+      console.log('Non-admin user - redirecting to main page')
       next({ path: '/' })
       return
     }

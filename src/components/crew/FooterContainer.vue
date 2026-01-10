@@ -92,6 +92,7 @@ const goToApply = () => {
   position: absolute;
   top: 148px;
   width: 550px;
+  z-index: 10;
 }
 
 .hero-content {

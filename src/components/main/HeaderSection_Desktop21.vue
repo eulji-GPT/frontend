@@ -64,7 +64,12 @@ function goToHome() {
 }
 
 function scrollToSection(id: string) {
-  emit('scrollToSection', id)
+  // If not on main page, navigate to home first then scroll to section
+  if (router.currentRoute.value.path !== '/') {
+    router.push({ path: '/', hash: `#${id}` })
+  } else {
+    emit('scrollToSection', id)
+  }
 }
 
 function handleLogout() {
@@ -73,7 +78,12 @@ function handleLogout() {
 }
 
 function scrollToMobileSection(id: string) {
-  emit('scrollToSection', id)
+  // If not on main page, navigate to home first then scroll to section
+  if (router.currentRoute.value.path !== '/') {
+    router.push({ path: '/', hash: `#${id}` })
+  } else {
+    emit('scrollToSection', id)
+  }
   closeMobileMenu()
 }
 

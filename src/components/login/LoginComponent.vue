@@ -118,10 +118,10 @@ const errorMessage = ref('');
 const testBackendConnection = async () => {
   try {
     const response = await healthAPI.checkHealth();
-    console.log('백엔드 연결 성공:', response);
+    console.log('Backend connection successful');
     return true;
   } catch (error) {
-    console.error('백엔드 연결 실패:', error);
+    console.error('Backend connection failed:', error);
     errorMessage.value = '서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.';
     return false;
   }
@@ -187,7 +187,7 @@ const submitLogin = async () => {
       password: loginForm.value.password
     });
     
-    console.log('로그인 성공:', result);
+    console.log('Login successful');
     
     // 메인 페이지로 이동 (또는 채팅 페이지)
     router.push('/');

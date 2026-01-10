@@ -30,8 +30,8 @@ onMounted(async () => {
       throw new Error('인가 코드를 받지 못했습니다.');
     }
 
-    console.log('카카오 인가 코드:', code);
-    console.log('카카오 state:', state);
+    console.log('Kakao authorization code received');
+    console.log('Kakao state:', state);
 
     // 계정 연동 요청인 경우 (state가 'link:'로 시작)
     isLinkingRequest = !!(state && state.startsWith('link:'));
@@ -54,7 +54,7 @@ onMounted(async () => {
     }
 
     const data = await response.json();
-    console.log('카카오 응답:', data);
+    console.log('Kakao response received');
 
     // 카카오 계정 연동 성공
     if (data.status === 'link_success') {
@@ -93,7 +93,7 @@ onMounted(async () => {
     throw new Error('알 수 없는 응답 형식입니다.');
 
   } catch (error) {
-    console.error('카카오 로그인 오류:', error);
+    console.error('Kakao login error:', error);
     const errorMessage = error instanceof Error ? error.message : '카카오 로그인 중 오류가 발생했습니다.';
     alert(errorMessage);
 
