@@ -20,7 +20,7 @@
         >
           <div class="mode-header">
             <div class="mode-name">{{ mode.name }}</div>
-            <div v-if="mode.key === 'cot'" class="cot-badge">Beta</div>
+            <div v-if="mode.key === 'cot' || mode.key === 'rag'" class="cot-badge">Beta</div>
             <div v-if="mode.key === 'rag' && !isProUser && isRagFreeEventActive()" class="event-badge">3월까지 무료</div>
             <div v-if="mode.key === 'rag' && !isProUser && !isRagFreeEventActive()" class="pro-badge">PRO</div>
           </div>

@@ -91,6 +91,16 @@ export function useChat() {
       .trim();
   };
 
+  // 모드별 모델 이름 반환
+  const getModelName = (mode: ChatMode): string => {
+    const modelNames: Record<ChatMode, string> = {
+      'unified': '통합 모델',
+      'cot': '깊은 추론 모델',
+      'rag': '대학 정보 검색 모델'
+    };
+    return modelNames[mode] || '통합 모델';
+  };
+
   // 메시지 업데이트를 위한 헬퍼 함수 (Vue 반응성 보장)
   const updateMessage = (chatId: string, messageIndex: number, updates: Partial<ChatMessage>) => {
     const chat = chatHistory.value.find(c => c.id === chatId);
@@ -922,7 +932,8 @@ export function useChat() {
           isLoading: false,
           isStreaming: false,
           currentStep: undefined,
-          cotSteps: undefined
+          cotSteps: undefined,
+          modelName: getModelName(chatMode.value)  // 모델 이름 설정
         };
       }
       
@@ -1477,6 +1488,7 @@ export function useChat() {
       isStreaming: false,
       hasError: false,
       currentStep: modeMessages[chatMode.value] || "답변을 생성하고 있습니다...",
+      modelName: getModelName(chatMode.value)  // 모델 이름 설정
     });
 
     // Vue 반응성을 위해 messages.value 즉시 업데이트 (로딩 메시지가 바로 보이도록)
@@ -1554,7 +1566,8 @@ export function useChat() {
           timestamp: new Date(),
           isLoading: false,
           isStreaming: false,
-          hasError: true
+          hasError: true,
+          modelName: getModelName(chatMode.value)  // 모델 이름 설정
         };
       }
     } finally {
