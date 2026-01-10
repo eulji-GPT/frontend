@@ -1616,11 +1616,11 @@ const goToCrew = () => {
     position: relative;
     top: 0;
     left: 0;
-    padding: 12px 16px;
+    padding: 20px 24px 12px 24px;
   }
 
   .help-button {
-    bottom: 20px;
+    bottom: 80px;
     right: 16px;
   }
 
@@ -1636,7 +1636,7 @@ const goToCrew = () => {
 
   /* 키보드가 열렸을 때 메시지 영역 조정 + FR-032: 부드러운 스크롤 */
   .chat-messages-container {
-    padding-bottom: calc(var(--keyboard-height, 0px) + 16px);
+    padding-bottom: calc(var(--keyboard-height, 0px) + 8px);
     transition: padding-bottom 0.15s ease-out;
     -webkit-overflow-scrolling: touch; /* iOS 부드러운 스크롤 */
     scroll-behavior: smooth;
@@ -1645,7 +1645,7 @@ const goToCrew = () => {
 
   /* 키보드가 열렸을 때 도움말 버튼 위치 조정 */
   .help-button {
-    bottom: calc(20px + var(--keyboard-height, 0px));
+    bottom: calc(80px + var(--keyboard-height, 0px));
     transition: bottom 0.15s ease-out;
   }
 }

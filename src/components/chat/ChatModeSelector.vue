@@ -729,4 +729,13 @@ document.addEventListener('click', (e) => {
     font-size: 15px;
   }
 }
+
+/* 모바일 반응형: 모드 선택 버튼 중앙 정렬 */
+@media (max-width: 640px) {
+  .mode-selector-header {
+    justify-content: center;
+    width: 100%;
+    max-width: 100%;
+  }
+}
 </style>
