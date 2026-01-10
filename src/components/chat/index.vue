@@ -110,20 +110,6 @@
               @sendMessage="handleSendMessage"
               @stopResponse="stopResponse"
             />
-            <div v-if="showHelpPanel" class="help-panel">
-              <div class="help-panel-item">
-                <span class="help-panel-text">자주 묻는 질문</span>
-              </div>
-              <div class="help-panel-item">
-                <span class="help-panel-text">가이드</span>
-              </div>
-            </div>
-            <button class="help-button" @click="toggleHelpPanel" title="도움말">
-              <svg width="8" height="15" viewBox="0 0 8 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="4" cy="11.5" r="0.5" fill="black"/>
-                <path d="M4 1C2.34315 1 1 2.34315 1 4H2C2 2.89543 2.89543 2 4 2C5.10457 2 6 2.89543 6 4C6 5.10457 5.10457 6 4 6V9H5V6C6.65685 6 8 4.65685 8 3C8 1.34315 6.65685 0 5 0H4V1Z" fill="black"/>
-              </svg>
-            </button>
           </div>
         </div>
 
@@ -439,7 +425,6 @@ const minSidebarWidth = 200;
 const maxSidebarWidth = 500;
 const showNotificationDropdown = ref(false);
 const showInfoPanel = ref(false);
-const showHelpPanel = ref(false);
 const showMyPageModal = ref(false);
 const userProfileImage = ref<string | null>(null);
 const userName = ref<string>('');
@@ -741,18 +726,7 @@ const toggleInfoPanel = (event: Event) => {
   console.log('Info icon clicked!');
   showInfoPanel.value = !showInfoPanel.value;
   showNotificationDropdown.value = false; // 다른 패널 닫기
-  showHelpPanel.value = false; // 다른 패널 닫기
   console.log('Info panel toggled:', showInfoPanel.value);
-};
-
-const toggleHelpPanel = (event: Event) => {
-  event.preventDefault();
-  event.stopPropagation();
-  console.log('Help button clicked!');
-  showHelpPanel.value = !showHelpPanel.value;
-  showNotificationDropdown.value = false; // 다른 패널 닫기
-  showInfoPanel.value = false; // 다른 패널 닫기
-  console.log('Help panel toggled:', showHelpPanel.value);
 };
 
 const toggleMyPageModal = () => {
@@ -1426,76 +1400,6 @@ const goToCrew = () => {
   background: var(--color-bg-primary);
 }
 
-.help-button {
-  position: absolute;
-  bottom: 30px;
-  right: 30px;
-  width: 34px;
-  height: 34px;
-  min-width: 34px;
-  min-height: 34px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--color-bg-primary);
-  border: 1px solid var(--color-card-border);
-  border-radius: 100px;
-  cursor: pointer;
-  padding: 0;
-  box-sizing: border-box;
-  transition: background-color 0.2s ease;
-  z-index: 101;
-  overflow: visible;
-}
-
-.help-button:hover {
-  background-color: var(--color-bg-secondary);
-}
-
-.help-button svg {
-  width: 10px;
-  height: 16px;
-  display: block;
-}
-
-.help-panel {
-  position: absolute;
-  bottom: 44px;
-  right: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  background-color: var(--color-bg-primary);
-  border: 1px solid var(--color-card-border);
-  border-radius: 15px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  padding: 15px;
-  width: 200px;
-  z-index: 2000;
-}
-
-.help-panel-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.help-panel-item:hover {
-  background-color: var(--color-bg-secondary);
-}
-
-.help-panel-text {
-  color: var(--color-text-primary);
-  font-size: 14px;
-  font-family: Pretendard, sans-serif;
-  font-weight: 500;
-  line-height: 23px;
-}
-
 /* Sidebar resizer */
 .sidebar-resizer {
   position: absolute;
@@ -1604,11 +1508,6 @@ const goToCrew = () => {
     padding: 20px 24px 12px 24px;
   }
 
-  .help-button {
-    bottom: 80px;
-    right: 16px;
-  }
-
   /* 키보드 오버레이 대응 */
   .chat-input-area {
     position: sticky;
@@ -1626,12 +1525,6 @@ const goToCrew = () => {
     -webkit-overflow-scrolling: touch; /* iOS 부드러운 스크롤 */
     scroll-behavior: smooth;
     overscroll-behavior: contain; /* 스크롤 체이닝 방지 */
-  }
-
-  /* 키보드가 열렸을 때 도움말 버튼 위치 조정 */
-  .help-button {
-    bottom: calc(80px + var(--keyboard-height, 0px));
-    transition: bottom 0.15s ease-out;
   }
 }
 
