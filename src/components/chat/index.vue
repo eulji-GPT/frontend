@@ -110,22 +110,20 @@
               @sendMessage="handleSendMessage"
               @stopResponse="stopResponse"
             />
-            <div class="help-button-container">
-              <div v-if="showHelpPanel" class="help-panel">
-                <div class="help-panel-item">
-                  <span class="help-panel-text">자주 묻는 질문</span>
-                </div>
-                <div class="help-panel-item">
-                  <span class="help-panel-text">가이드</span>
-                </div>
+            <div v-if="showHelpPanel" class="help-panel">
+              <div class="help-panel-item">
+                <span class="help-panel-text">자주 묻는 질문</span>
               </div>
-              <button class="help-button" @click="toggleHelpPanel" title="도움말">
-                <svg width="8" height="15" viewBox="0 0 8 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="4" cy="11.5" r="0.5" fill="black"/>
-                  <path d="M4 1C2.34315 1 1 2.34315 1 4H2C2 2.89543 2.89543 2 4 2C5.10457 2 6 2.89543 6 4C6 5.10457 5.10457 6 4 6V9H5V6C6.65685 6 8 4.65685 8 3C8 1.34315 6.65685 0 5 0H4V1Z" fill="black"/>
-                </svg>
-              </button>
+              <div class="help-panel-item">
+                <span class="help-panel-text">가이드</span>
+              </div>
             </div>
+            <button class="help-button" @click="toggleHelpPanel" title="도움말">
+              <svg width="8" height="15" viewBox="0 0 8 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="4" cy="11.5" r="0.5" fill="black"/>
+                <path d="M4 1C2.34315 1 1 2.34315 1 4H2C2 2.89543 2.89543 2 4 2C5.10457 2 6 2.89543 6 4C6 5.10457 5.10457 6 4 6V9H5V6C6.65685 6 8 4.65685 8 3C8 1.34315 6.65685 0 5 0H4V1Z" fill="black"/>
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -1458,19 +1456,6 @@ const goToCrew = () => {
   width: 10px;
   height: 16px;
   display: block;
-}
-
-.help-button-container {
-  position: absolute;
-  bottom: 30px;
-  right: 30px;
-  z-index: 101;
-}
-
-.help-button-container .help-button {
-  position: relative;
-  bottom: auto;
-  right: auto;
 }
 
 .help-panel {
