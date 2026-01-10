@@ -154,6 +154,12 @@
       :isVisible="showMyPageModal"
       @close="toggleMyPageModal"
     />
+
+    <!-- RAG Event Popup -->
+    <RagEventPopup
+      @close="handleRagEventClose"
+      @tryRag="handleTryRag"
+    />
   </div>
 </template>
 
@@ -170,6 +176,7 @@ import ArtifactPanel from './ArtifactPanel.vue';
 import NotificationDropdown from '../common/NotificationDropdown.vue';
 import InfoPanel from '../common/InfoPanel.vue';
 import MyPageModal from '../common/MyPageModal.vue';
+import RagEventPopup from '../common/RagEventPopup.vue';
 import { useChat } from '../../composables/useChat';
 import type { ChatMode, Artifact, ArtifactVersion } from '../../composables/useChat';
 import eulLogo from '../../assets/eul_logo.svg';
@@ -221,6 +228,17 @@ const handleSelectChat = (chatId: string) => {
 
 const handleModeChange = (mode: ChatMode) => {
   setChatMode(mode);
+};
+
+// RAG 이벤트 팝업 핸들러
+const handleRagEventClose = () => {
+  console.log('RAG 이벤트 팝업 닫힘');
+};
+
+const handleTryRag = () => {
+  console.log('RAG 모드 체험하기 클릭');
+  // RAG 모드로 전환
+  setChatMode('rag');
 };
 
 // 화면 상태 관리

@@ -21,7 +21,8 @@
           <div class="mode-header">
             <div class="mode-name">{{ mode.name }}</div>
             <div v-if="mode.key === 'cot'" class="cot-badge">Beta</div>
-            <div v-if="mode.key === 'rag' && !isProUser" class="pro-badge">PRO</div>
+            <div v-if="mode.key === 'rag' && !isProUser && isRagFreeEventActive()" class="event-badge">3월까지 무료</div>
+            <div v-if="mode.key === 'rag' && !isProUser && !isRagFreeEventActive()" class="pro-badge">PRO</div>
           </div>
           <div class="mode-description">{{ mode.description }}</div>
         </div>
@@ -115,8 +116,8 @@ const toggleSelector = () => {
 }
 
 const selectMode = (mode: ChatMode) => {
-  // RAG 모드 선택 시 PRO 인증 체크
-  if (mode === 'rag' && !props.isProUser) {
+  // RAG 모드 선택 시 PRO 인증 체크 (3월 31일까지 무료 오픈)
+  if (mode === 'rag' && !props.isProUser && !isRagFreeEventActive()) {
     showProModal.value = true
     isOpen.value = false
     return
@@ -124,6 +125,13 @@ const selectMode = (mode: ChatMode) => {
 
   emit('modeChange', mode)
   isOpen.value = false
+}
+
+// 3월 31일까지 RAG 무료 이벤트 활성화 여부 체크
+const isRagFreeEventActive = () => {
+  const now = new Date()
+  const eventEndDate = new Date('2026-03-31T23:59:59')
+  return now <= eventEndDate
 }
 
 const closeProModal = () => {
@@ -503,6 +511,28 @@ document.addEventListener('click', (e) => {
   font-family: Pretendard, sans-serif;
   flex-shrink: 0;
   box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+}
+
+.event-badge {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 3px 8px 4px;
+  border-radius: 10px;
+  font-family: Pretendard, sans-serif;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(255, 107, 107, 0.3);
+  animation: pulse-badge 2s ease-in-out infinite;
+}
+
+@keyframes pulse-badge {
+  0%, 100% {
+    box-shadow: 0 2px 4px rgba(255, 107, 107, 0.3);
+  }
+  50% {
+    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.6);
+  }
 }
 
 /* PRO 모달 스타일 */
