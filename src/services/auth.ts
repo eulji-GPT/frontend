@@ -126,7 +126,7 @@ export class AuthService {
       const response = await memberAPI.getProfile();
       return response as User;
     } catch (error) {
-      console.error('사용자 정보 조회 실패:', error);
+      console.error('Failed to fetch user info:', error);
       throw error;
     }
   }

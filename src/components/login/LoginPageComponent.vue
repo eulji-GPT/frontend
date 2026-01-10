@@ -153,7 +153,7 @@ const handleLogin = async () => {
         setUserInfo(userInfo)
       }
     } catch (e) {
-      console.error('사용자 정보 조회 실패:', e)
+      console.error('Failed to fetch user info:', e)
     }
 
     // redirect 쿼리 파라미터가 있으면 그 경로로, 없으면 메인 페이지로 이동

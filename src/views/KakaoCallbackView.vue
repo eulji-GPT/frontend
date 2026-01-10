@@ -82,7 +82,7 @@ onMounted(async () => {
           setUserInfo(userInfo);
         }
       } catch (e) {
-        console.error('사용자 정보 조회 실패:', e);
+        console.error('Failed to fetch user info:', e);
       }
 
       alert('카카오 로그인에 성공했습니다!');

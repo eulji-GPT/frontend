@@ -388,7 +388,7 @@ const fetchUserInfo = async () => {
           profileImage.value = data.profile_image_url
         }
 
-        console.log('✅ 개발 환경 사용자 정보:', data)
+        console.log('Dev environment user info:', data)
       }
       return
     }
@@ -401,7 +401,7 @@ const fetchUserInfo = async () => {
     })
 
     if (!response.ok) {
-      throw new Error('사용자 정보를 가져오는데 실패했습니다.')
+      throw new Error('Failed to fetch user information')
     }
 
     const data = await response.json()
@@ -412,9 +412,9 @@ const fetchUserInfo = async () => {
       profileImage.value = data.profile_image_url
     }
 
-    console.log('사용자 정보:', data)
+    console.log('User info:', data)
   } catch (error) {
-    console.error('사용자 정보 로드 오류:', error)
+    console.error('User info load error:', error)
   }
 }
 
