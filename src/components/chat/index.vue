@@ -181,6 +181,8 @@ import { useChat } from '../../composables/useChat';
 import type { ChatMode, Artifact, ArtifactVersion } from '../../composables/useChat';
 import eulLogo from '../../assets/eul_logo.svg';
 import { getApiBaseUrl } from '@/utils/ports-config';
+import { createLogger } from '../../utils/logger';
+const log = createLogger('Chat');
 
 const router = useRouter();
 const route = useRoute();
@@ -232,11 +234,11 @@ const handleModeChange = (mode: ChatMode) => {
 
 // RAG 이벤트 팝업 핸들러
 const handleRagEventClose = () => {
-  console.log('RAG 이벤트 팝업 닫힘');
+  log.info('RAG event popup closed');
 };
 
 const handleTryRag = () => {
-  console.log('RAG 모드 체험하기 클릭');
+  log.info('Try RAG mode clicked');
   // RAG 모드로 전환
   setChatMode('rag');
 };
@@ -246,13 +248,13 @@ const currentView = ref<'chat'>('chat');
 
 // 피드백 처리
 const handleMessageFeedback = (type: 'good' | 'bad', messageId: string) => {
-  console.log(`메시지 피드백 처리: ${type}`, messageId);
+  log.debug(`Message feedback: ${type}`, messageId);
   // TODO: 피드백 데이터를 서버에 전송하거나 로컬 저장소에 저장
 };
 
 // 답변 재생성 처리
 const handleMessageRegenerate = (messageId: string) => {
-  console.log('답변 재생성 처리:', messageId);
+  log.debug('Regenerate answer:', messageId);
   
   try {
     // messageId에서 인덱스 추출 (예: "1-1234567890" -> 1)
@@ -260,13 +262,13 @@ const handleMessageRegenerate = (messageId: string) => {
     const currentChat = chatHistory.value.find(c => c.id === currentChatId.value);
     
     if (!currentChat || !currentChat.messages[messageIndex]) {
-      console.error('재생성할 메시지를 찾을 수 없습니다.');
+      log.error('Message to regenerate not found');
       return;
     }
     
     // 해당 메시지가 봇 메시지인지 확인
     if (currentChat.messages[messageIndex].isUser) {
-      console.error('사용자 메시지는 재생성할 수 없습니다.');
+      log.error('Cannot regenerate user message');
       return;
     }
     
@@ -280,11 +282,11 @@ const handleMessageRegenerate = (messageId: string) => {
     }
     
     if (!userMessage) {
-      console.error('재생성을 위한 사용자 메시지를 찾을 수 없습니다.');
+      log.error('User message for regeneration not found');
       return;
     }
     
-    console.log('🔄 답변 재생성 시작:', userMessage.substring(0, 50) + '...');
+    log.info('Starting answer regeneration:', userMessage.substring(0, 50) + '...');
     
     // 기존 봇 메시지를 로딩 상태로 변경
     currentChat.messages[messageIndex] = {
@@ -304,26 +306,26 @@ const handleMessageRegenerate = (messageId: string) => {
     handleSend(inputValue);
     
   } catch (error) {
-    console.error('답변 재생성 오류:', error);
+    log.error('Answer regeneration error:', error);
   }
 };
 
 // 아티팩트 열기 처리
 const handleOpenArtifact = (messageId: string) => {
-  console.log('아티팩트 열기 요청:', messageId);
+  log.debug('Open artifact request:', messageId);
   selectedArtifactMessageId.value = messageId;
   showArtifactPanel.value = true;
 };
 
 // 메시지 재시도 처리 (에러 발생 시)
 const handleRetryMessage = (messageIndex: number) => {
-  console.log('메시지 재시도 요청:', messageIndex);
+  log.debug('Message retry request:', messageIndex);
 
   try {
     const currentChat = chatHistory.value.find(c => c.id === currentChatId.value);
 
     if (!currentChat || !currentChat.messages[messageIndex]) {
-      console.error('재시도할 메시지를 찾을 수 없습니다.');
+      log.error('Message to retry not found');
       return;
     }
 
@@ -339,11 +341,11 @@ const handleRetryMessage = (messageIndex: number) => {
     }
 
     if (!userMessage) {
-      console.error('재시도를 위한 사용자 메시지를 찾을 수 없습니다.');
+      log.error('User message for retry not found');
       return;
     }
 
-    console.log('🔄 메시지 재시도 시작:', userMessage.substring(0, 50) + '...');
+    log.info('Starting message retry:', userMessage.substring(0, 50) + '...');
 
     // 에러 상태의 봇 메시지를 로딩 상태로 변경
     currentChat.messages[messageIndex] = {
@@ -364,12 +366,12 @@ const handleRetryMessage = (messageIndex: number) => {
     handleSend(inputValue);
 
   } catch (error) {
-    console.error('메시지 재시도 오류:', error);
+    log.error('Message retry error:', error);
   }
 };
 
 // 디버깅을 위한 messages 로그
-console.log('현재 메시지들:', messages.value);
+log.debug('Current messages:', messages.value);
 
 const isMobile = ref(false);
 const sidebarVisible = ref(true);
@@ -513,7 +515,7 @@ const handleCloseArtifact = () => {
 };
 
 const handleUpdateArtifact = (updatedArtifact: Artifact) => {
-  console.log('아티팩트 업데이트:', updatedArtifact);
+  log.debug('Artifact updated:', updatedArtifact);
 
   // 가장 최근 아티팩트가 있는 메시지 찾기
   for (let i = messages.value.length - 1; i >= 0; i--) {
@@ -524,14 +526,14 @@ const handleUpdateArtifact = (updatedArtifact: Artifact) => {
 
       // 채팅 히스토리 저장
       saveChatHistory();
-      console.log('✅ 아티팩트가 업데이트되었습니다.');
+      log.info('Artifact updated successfully');
       break;
     }
   }
 };
 
 const handleRegenerateArtifact = async (artifact: Artifact) => {
-  console.log('🔄 아티팩트 재생성 요청');
+  log.info('Artifact regeneration requested');
 
   // 재생성 요청 메시지 추가
   const regenerateMessage = `"${artifact.title}" 아티팩트를 완전히 새롭게 재작성해주세요. 이전 내용과는 다른 관점이나 추가 정보를 포함하여 더 풍부한 내용으로 작성해주세요.`;

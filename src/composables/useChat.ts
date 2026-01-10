@@ -1,4 +1,6 @@
 import { ref, onMounted, nextTick } from 'vue';
+import { createLogger } from '../utils/logger';
+const log = createLogger('useChat');
 import { isAuthenticated, apiRequest } from '../utils/auth';
 
 export interface RagSource {
@@ -299,12 +301,12 @@ export function useChat() {
     if (requiresDetailedResponse(message)) {
       const reportStyleInstruction = `마크다운 제목(# ## ###)을 사용하여 체계적으로 답변하세요. 질문: ${message}`;
 
-      console.log("📋 [STRUCTURED MODE] 구조화된 답변 요청");
-      console.log("🔍 [STRUCTURED MODE] 원본 질문:", message);
+      log.debug("Structured mode: Requesting formatted response");
+      log.debug("Structured mode: Original question:", message);
       return reportStyleInstruction;
     }
 
-    console.log("💬 [NORMAL MODE] 일반 답변 모드");
+    log.debug("Normal mode: Standard response");
     return message;
   };
 
@@ -329,14 +331,14 @@ export function useChat() {
     // 로그인된 사용자인 경우 백엔드에서 로드
     if (isAuthenticated()) {
       try {
-        console.log('📥 백엔드에서 채팅 히스토리 로드 중...');
+        log.info("Loading chat history from backend...");
         const response = await apiRequest(`${BACKEND_BASE_URL}/chat/history`, {
           method: 'GET'
         });
 
         if (response.ok) {
           const histories = await response.json();
-          console.log('✅ 채팅 히스토리 로드 완료:', histories.length, '개');
+          log.info("Chat history loaded successfully:", histories.length, '개');
 
           // 백엔드 데이터를 프론트엔드 형식으로 변환 (UUID는 이미 string)
           chatHistory.value = histories.map((h: any) => ({
@@ -348,7 +350,7 @@ export function useChat() {
           return;
         }
       } catch (error) {
-        console.error('❌ 채팅 히스토리 로드 실패:', error);
+        log.error("Failed to load chat history:", error);
         // 에러 발생 시 로컬스토리지로 fallback
       }
     }
@@ -390,7 +392,7 @@ export function useChat() {
         return data.session_id;
       }
     } catch (error) {
-      console.error('백엔드 세션 생성 실패:', error);
+      log.error("Failed to create backend session:", error);
     }
     return null;
   }
@@ -399,7 +401,7 @@ export function useChat() {
     // 로그인된 사용자인 경우 백엔드에 채팅 히스토리 생성
     if (isAuthenticated()) {
       try {
-        console.log('📝 백엔드에 새 채팅 히스토리 생성 중...');
+        log.info("Creating new chat history in backend...");
         const response = await apiRequest(`${BACKEND_BASE_URL}/chat/history`, {
           method: 'POST',
           body: JSON.stringify({ title: '새 대화' })
@@ -407,7 +409,7 @@ export function useChat() {
 
         if (response.ok) {
           const chatHistoryData = await response.json();
-          console.log('✅ 채팅 히스토리 생성 완료:', chatHistoryData);
+          log.info("Chat history created:", chatHistoryData);
 
           const backendSessionId = await createBackendSession();
 
@@ -420,11 +422,11 @@ export function useChat() {
           chatHistory.value.unshift(newChat);
           currentChatId.value = newChat.id;
           messages.value = newChat.messages;
-          console.log('✅ 새 대화 생성 완료 (UUID):', newChat.id);
+          log.info("New chat created (UUID):", newChat.id);
           return;
         }
       } catch (error) {
-        console.error('❌ 채팅 히스토리 생성 실패:', error);
+        log.error("Failed to create chat history:", error);
         // 에러 발생 시 로컬 방식으로 fallback
       }
     }
@@ -443,7 +445,7 @@ export function useChat() {
     messages.value = newChat.messages;
 
     if (backendSessionId) {
-      console.log('새 백엔드 세션 생성됨:', backendSessionId);
+      log.info("New backend session created:", backendSessionId);
     }
   }
 
@@ -455,14 +457,14 @@ export function useChat() {
       // 로그인된 사용자인 경우 항상 백엔드에서 최신 메시지 로드
       if (isAuthenticated()) {
         try {
-          console.log(`📥 채팅 메시지 로드 중... (ID: ${id})`);
+          log.info(`Loading chat messages... (ID: ${id})`);
           const response = await apiRequest(`${BACKEND_BASE_URL}/chat/history/${id}`, {
             method: 'GET'
           });
 
           if (response.ok) {
             const chatDetail = await response.json();
-            console.log('✅ 채팅 메시지 로드 완료:', chatDetail.chatmessage?.length || 0, '개');
+            log.info("Chat messages loaded:", chatDetail.chatmessage?.length || 0, '개');
 
             // 백엔드 메시지를 프론트엔드 형식으로 변환
             chat.messages = (chatDetail.chatmessage || []).map((msg: any) => ({
@@ -476,10 +478,10 @@ export function useChat() {
 
             // messages.value를 반드시 업데이트 (Vue 반응성)
             messages.value = [...chat.messages];
-            console.log('✅ messages.value 업데이트 완료:', messages.value.length, '개');
+            log.debug("messages.value updated:", messages.value.length, '개');
           }
         } catch (error) {
-          console.error('❌ 채팅 메시지 로드 실패:', error);
+          log.error("Failed to load chat messages:", error);
           // 실패 시에도 빈 배열로 초기화
           chat.messages = [];
           messages.value = [];
@@ -495,16 +497,16 @@ export function useChat() {
     // 로그인된 사용자인 경우 백엔드에서 삭제
     if (isAuthenticated()) {
       try {
-        console.log(`🗑️ 채팅 히스토리 삭제 중... (ID: ${id})`);
+        log.info(`Deleting chat history... (ID: ${id})`);
         const response = await apiRequest(`${BACKEND_BASE_URL}/chat/history/${id}`, {
           method: 'DELETE'
         });
 
         if (response.ok) {
-          console.log('✅ 채팅 히스토리 삭제 완료');
+          log.info("Chat history deleted successfully");
         }
       } catch (error) {
-        console.error('❌ 채팅 히스토리 삭제 실패:', error);
+        log.error("Failed to delete chat history:", error);
         // 에러가 나도 로컬에서는 삭제 진행
       }
     }
@@ -600,7 +602,7 @@ export function useChat() {
                   break;
                 }
               } catch (parseError) {
-                console.warn('제목 생성 JSON 파싱 실패:', line, parseError);
+                log.warn("Failed to parse title generation JSON:", line, parseError);
               }
             }
           }
@@ -612,7 +614,7 @@ export function useChat() {
         }
       }
     } catch (error) {
-      console.error('제목 생성 실패:', error);
+      log.error("Failed to generate title:", error);
     }
 
     // AI 요약 실패 시 기본값 반환: 메시지의 첫 20자 사용
@@ -622,7 +624,7 @@ export function useChat() {
   async function callFastAPICotChat(message: string, messageIndex: number) {
     const apiUrl = getAPIUrl('cot');
     console.log("🧠 CoT FastAPI 스트리밍 호출 시작:", apiUrl);
-    console.log("📤 CoT 전송 메시지:", message);
+    log.debug("CoT message to send:", message);
     
     // 새로운 AbortController 생성
     currentController = new AbortController();
@@ -644,11 +646,11 @@ export function useChat() {
         })
       });
 
-      console.log("📥 CoT 스트리밍 응답 상태:", response.status, response.statusText);
+      log.debug("CoT streaming response status:", response.status, response.statusText);
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("❌ CoT HTTP 오류 응답:", errorText);
+        log.error("CoT HTTP error response:", errorText);
         throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
       }
 
@@ -803,7 +805,7 @@ export function useChat() {
 
                     // 마지막 청크인 경우
                     if (data.is_last_chunk) {
-                      console.log(`✅ [STREAMING] 마지막 청크 처리 완료`);
+                      log.debug("Streaming: Last chunk processed");
                     }
                   }
                   else if (data.type === 'final_answer_complete' && currentChat.messages[messageIndex]) {
@@ -840,7 +842,7 @@ export function useChat() {
                   }
                   else if (data.type === 'error') {
                     // 오류 발생 시 즉시 스트리밍 중단하고 오류 메시지 표시
-                    console.error('CoT 처리 오류:', data.error_details || data.error);
+                    log.error("CoT processing error:", data.error_details || data.error);
                     
                     if (currentChat.messages[messageIndex]) {
                       currentChat.messages[messageIndex].isStreaming = false;
@@ -882,7 +884,7 @@ export function useChat() {
                   }
                 }
               } catch (parseError) {
-                console.warn("JSON 파싱 오류:", parseError, "라인:", line);
+                log.warn("JSON parsing error:", parseError, "line:", line);
               }
             }
           }
@@ -894,15 +896,15 @@ export function useChat() {
       
       if (error.name === 'AbortError') {
         errorMessage = 'CoT 추론이 취소되었습니다.';
-        console.log('⏹️ CoT 요청이 취소되었습니다');
+        log.info("CoT request was cancelled");
       } else if (error instanceof TypeError && error.message.includes('fetch')) {
         errorMessage = 'CoT 서버와 연결할 수 없습니다. 잠시 후 다시 시도해주세요.';
-        console.error('🔌 CoT 서버 연결 실패');
+        log.error("CoT server connection failed");
       } else {
-        console.error('❌ CoT 스트리밍 오류:', error.message);
+        log.error("CoT streaming error:", error.message);
         
         // 오류 발생시 일반 모드로 폴백
-        console.log('🔄 CoT 실패로 인한 일반 모드 폴백 시작...');
+        log.info("Falling back to general mode due to CoT failure...");
         
         if (currentChat.messages[messageIndex]) {
           currentChat.messages[messageIndex].text = '🔄 CoT 모드에서 오류가 발생했습니다. 일반 모드로 자동 전환합니다...';
@@ -916,7 +918,7 @@ export function useChat() {
           chatMode.value = originalMode;
           return;
         } catch (fallbackError) {
-          console.error('❌ 일반 모드 폴백도 실패:', fallbackError);
+          log.error("General mode fallback also failed:", fallbackError);
           errorMessage = '🚫 CoT와 일반 모드 모두 실패했습니다. 잠시 후 다시 시도해주세요.';
         }
       }
@@ -942,13 +944,13 @@ export function useChat() {
   async function callFastAPIChat(message: string, messageIndex: number) {
     const apiUrl = getAPIUrl(chatMode.value);
     console.log("🚀 FastAPI 호출 시작:", apiUrl, "(모드:", chatMode.value, ")");
-    console.log("📤 원본 메시지:", message);
+    log.debug("Original message:", message);
 
     // 메시지 전처리: 상세 답변이 필요한 경우 보고서 스타일 지침 추가
     const preparedMessage = prepareMessageForAI(message, chatMode.value);
     if (preparedMessage !== message) {
       console.log("📝 ✅ 보고서 스타일 지침 추가됨 - AI에게 전문 보고서 형식으로 답변하도록 지시");
-      console.log("📋 전처리된 메시지 길이:", preparedMessage.length, "자");
+      log.debug("Preprocessed message length:", preparedMessage.length, "chars");
     } else {
       console.log("💬 일반 모드로 전송");
     }
@@ -963,7 +965,7 @@ export function useChat() {
     }
 
     try {
-      console.log("🔄 fetch 요청 시작...");
+      log.debug("Starting fetch request...");
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
@@ -977,11 +979,11 @@ export function useChat() {
         )
       });
 
-      console.log("📥 응답 상태:", response.status, response.statusText);
+      log.debug("Response status:", response.status, response.statusText);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("❌ HTTP 오류 응답:", errorText);
+        log.error("HTTP error response:", errorText);
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
@@ -1056,7 +1058,7 @@ export function useChat() {
               throw new Error(data.error);
             }
           } catch (parseError) {
-            console.warn("JSON 파싱 실패:", line, parseError);
+            log.warn("JSON parsing failed:", line, parseError);
           }
         }
       }
@@ -1127,7 +1129,7 @@ export function useChat() {
       }
 
     } catch (error) {
-      console.error('❌ FastAPI 호출 오류:', error);
+      log.error("FastAPI call error:", error);
       
       let errorMessage = '죄송합니다. 오류가 발생했습니다.';
       
@@ -1290,7 +1292,7 @@ export function useChat() {
     const preparedMessage = prepareMessageForAI(message, chatMode.value);
     if (preparedMessage !== message) {
       console.log("📝 ✅ 이미지 분석용 보고서 스타일 지침 추가됨");
-      console.log("📋 전처리된 메시지 길이:", preparedMessage.length, "자");
+      log.debug("Preprocessed message length:", preparedMessage.length, "chars");
     } else {
       console.log("💬 일반 모드로 전송");
     }
@@ -1324,7 +1326,7 @@ export function useChat() {
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("❌ HTTP 오류 응답:", errorText);
+        log.error("HTTP error response:", errorText);
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 

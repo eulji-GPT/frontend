@@ -10,6 +10,14 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [vue()],
     envDir: process.cwd(), // 현재 디렉토리의 .env 파일 사용
+    build: {
+      minify: 'esbuild',
+      // Remove console logs in production (keep error and warn)
+      esbuild: mode === 'production' ? {
+        drop: ['console'],
+        pure: ['console.log', 'console.debug', 'console.info'],
+      } : {},
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src')

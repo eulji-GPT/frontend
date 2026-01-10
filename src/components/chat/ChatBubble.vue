@@ -176,7 +176,7 @@ const getFilePreview = (file: File) => {
     }
     return '';
   } catch (error) {
-    console.error('파일 미리보기 생성 실패:', error);
+    console.error('File preview generation failed:', error);
     return '';
   }
 };
@@ -359,7 +359,7 @@ const streamingRenderedContent = computed(() => {
 
       return typeof result === 'string' ? result.trim() : result;
     } catch (error) {
-      console.error('마크다운 변환 오류:', error);
+      console.error('Markdown conversion error:', error);
       return content;
     }
   }
@@ -368,19 +368,19 @@ const streamingRenderedContent = computed(() => {
 
 // 피드백 처리 함수
 const handleFeedback = (type: string, messageId: string) => {
-  console.log(`피드백 수신: ${type}`, messageId);
+  console.log(`Feedback received: ${type}`, messageId);
   emit('feedback', type, messageId);
 };
 
 // 답변 재생성 처리 함수
 const handleRegenerate = (messageId: string) => {
-  console.log('답변 재생성 요청:', messageId);
+  console.log('Regenerate request:', messageId);
   emit('regenerate', messageId);
 };
 
 // 아티팩트 열기 처리 함수
 const handleOpenArtifact = () => {
-  console.log('아티팩트 열기 요청:', props.messageId);
+  console.log('Open artifact request:', props.messageId);
   emit('openArtifact', props.messageId);
 };
 

@@ -1,3 +1,6 @@
+import { createLogger } from '../utils/logger';
+const log = createLogger('API');
+
 // API 기본 설정 및 서비스
 import { getApiBaseUrl } from '../utils/ports-config';
 
