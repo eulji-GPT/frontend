@@ -13,7 +13,7 @@
               </div>
             </div>
           </div>
-          <div class="apply-button">
+          <div class="apply-button" @click="goToApply">
             <span class="button-text">지원하기</span>
           </div>
         </div>
@@ -31,6 +31,13 @@
 </template>
 
 <script setup lang="ts">
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+const goToApply = () => {
+  router.push('/crew/apply')
+}
 </script>
 
 <style scoped>

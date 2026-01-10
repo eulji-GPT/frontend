@@ -232,6 +232,8 @@
               <div class="settings-info wide">
                 <div class="settings-title">고객 지원</div>
                 <div class="settings-links">
+                  <span class="link" @click="handleBugReport">버그 신고</span>
+                  <span class="separator">|</span>
                   <span class="link" @click="handleNewsLink">새로운 소식</span>
                   <span class="separator">|</span>
                   <span class="link" @click="handleFaqLink">자주 묻는 질문</span>
@@ -664,6 +666,11 @@ const cancelDeleteData = () => {
 }
 
 // 고객 지원 링크
+const handleBugReport = () => {
+  emit('close')
+  router.push('/bug-report')
+}
+
 const handleNewsLink = async () => {
   emit('close')
   await router.push('/')
@@ -684,9 +691,14 @@ const handleFaqLink = async () => {
   }
 }
 
-const handleGuideLink = () => {
-  // 가이드 페이지가 없으므로 무시
-  console.log('가이드 페이지는 아직 준비되지 않았습니다.')
+const handleGuideLink = async () => {
+  emit('close')
+  await router.push('/')
+  await nextTick()
+  const introSection = document.querySelector('#intro')
+  if (introSection) {
+    introSection.scrollIntoView({ behavior: 'smooth' })
+  }
 }
 
 // 서비스 정보 링크

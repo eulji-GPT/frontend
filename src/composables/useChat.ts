@@ -1592,8 +1592,8 @@ export function useChat() {
   function getChatModeInfo() {
     const modeInfo: Record<ChatMode, { name: string; description: string }> = {
       unified: { name: '통합 채팅', description: '범용 AI 대화' },
-      cot: { name: '단계별 추론', description: 'Chain of Thought 방식' },
-      rag: { name: '을지대 정보검색', description: '을지대학교 공식 자료 기반 정보 검색' }
+      cot: { name: '깊은 추론 모델', description: 'Chain of Thought 방식' },
+      rag: { name: '대학 정보 검색 모델', description: '을지대학교 공식 자료 기반 정보 검색' }
     };
     return modeInfo[chatMode.value];
   }

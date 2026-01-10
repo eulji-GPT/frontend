@@ -94,13 +94,13 @@ const availableModes = [
   },
   {
     key: 'cot' as ChatMode,
-    name: 'COT 모델',
+    name: '깊은 추론 모델',
     description: 'Chain of Thought 방식으로\n단계별 심층 분석을 제공해요',
     icon: '🧠'
   },
   {
     key: 'rag' as ChatMode,
-    name: 'RAG 모델',
+    name: '대학 정보 검색 모델',
     description: '을지대학교 공식 자료를 검색하여\n정확한 정보를 제공합니다',
     icon: '🔍'
   }
