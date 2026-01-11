@@ -539,53 +539,53 @@ export interface SettingsSaveResponse {
 
 // AI Settings API
 export const aiSettingsAPI = {
-  // GET /api/admin/ai-settings - 모든 설정 조회
+  // GET /admin/ai-settings - 모든 설정 조회
   getAllSettings: (): Promise<AISettingsResponse> => {
-    return apiRequest<AISettingsResponse>('/api/admin/ai-settings', {
+    return apiRequest<AISettingsResponse>('/admin/ai-settings', {
       method: 'GET'
     });
   },
 
-  // GET /api/admin/ai-settings/prompts - 프롬프트 5개 조회
+  // GET /admin/ai-settings/prompts - 프롬프트 5개 조회
   getPrompts: (): Promise<PromptSettings> => {
-    return apiRequest<PromptSettings>('/api/admin/ai-settings/prompts', {
+    return apiRequest<PromptSettings>('/admin/ai-settings/prompts', {
       method: 'GET'
     });
   },
 
-  // PUT /api/admin/ai-settings/prompts/{name} - 프롬프트 수정
+  // PUT /admin/ai-settings/prompts/{name} - 프롬프트 수정
   updatePrompt: (name: string, template: string): Promise<SettingsSaveResponse> => {
-    return apiRequest<SettingsSaveResponse>(`/api/admin/ai-settings/prompts/${name}`, {
+    return apiRequest<SettingsSaveResponse>(`/admin/ai-settings/prompts/${name}`, {
       method: 'PUT',
       body: JSON.stringify({ template })
     });
   },
 
-  // GET /api/admin/ai-settings/rag-config - RAG 설정 조회
+  // GET /admin/ai-settings/rag-config - RAG 설정 조회
   getRAGConfig: (): Promise<RAGConfig> => {
-    return apiRequest<RAGConfig>('/api/admin/ai-settings/rag-config', {
+    return apiRequest<RAGConfig>('/admin/ai-settings/rag-config', {
       method: 'GET'
     });
   },
 
-  // PUT /api/admin/ai-settings/rag-config - RAG 설정 수정
+  // PUT /admin/ai-settings/rag-config - RAG 설정 수정
   updateRAGConfig: (config: RAGConfig): Promise<SettingsSaveResponse> => {
-    return apiRequest<SettingsSaveResponse>('/api/admin/ai-settings/rag-config', {
+    return apiRequest<SettingsSaveResponse>('/admin/ai-settings/rag-config', {
       method: 'PUT',
       body: JSON.stringify(config)
     });
   },
 
-  // GET /api/admin/ai-settings/model-params - 모델 파라미터 조회
+  // GET /admin/ai-settings/model-params - 모델 파라미터 조회
   getModelParams: (): Promise<ModelParams> => {
-    return apiRequest<ModelParams>('/api/admin/ai-settings/model-params', {
+    return apiRequest<ModelParams>('/admin/ai-settings/model-params', {
       method: 'GET'
     });
   },
 
-  // PUT /api/admin/ai-settings/model-params - 모델 파라미터 수정
+  // PUT /admin/ai-settings/model-params - 모델 파라미터 수정
   updateModelParams: (params: ModelParams): Promise<SettingsSaveResponse> => {
-    return apiRequest<SettingsSaveResponse>('/api/admin/ai-settings/model-params', {
+    return apiRequest<SettingsSaveResponse>('/admin/ai-settings/model-params', {
       method: 'PUT',
       body: JSON.stringify(params)
     });
