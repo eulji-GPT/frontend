@@ -7,13 +7,18 @@
       <div class="templates-panel">
         <div class="panel-header">
           <h3>프롬프트 템플릿</h3>
-          <button class="refresh-btn" @click="loadTemplates" :disabled="loading">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="23 4 23 10 17 10"></polyline>
-              <polyline points="1 20 1 14 7 14"></polyline>
-              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-            </svg>
-          </button>
+          <div class="header-actions">
+            <button class="apply-recommended-btn" @click="applyRecommendedParams" :disabled="loading" title="추천 설정 자동 적용">
+              ✨
+            </button>
+            <button class="refresh-btn" @click="loadTemplates" :disabled="loading">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div v-if="loading" class="loading-state">
@@ -666,6 +671,67 @@ const restartServices = async () => {
   }
 }
 
+// 추천 파라미터 자동 적용
+const applyRecommendedParams = async () => {
+  if (!confirm('모든 프롬프트에 추천 파라미터를 적용하시겠습니까?\n\n각 모드에 최적화된 설정이 자동으로 적용됩니다.')) return
+
+  loading.value = true
+
+  // 추천 파라미터
+  const recommendedParams = {
+    university: { temperature: 0.3, max_tokens: 2048, top_p: 0.9 },
+    study: { temperature: 0.5, max_tokens: 3072, top_p: 0.9 },
+    career: { temperature: 0.7, max_tokens: 2560, top_p: 0.9 },
+    cot: { temperature: 0.4, max_tokens: 4096, top_p: 0.85 },
+    general: { temperature: 0.7, max_tokens: 2048, top_p: 0.9 }
+  }
+
+  try {
+    let successCount = 0
+    let failCount = 0
+
+    // 각 프롬프트에 추천 파라미터 적용
+    for (const [promptName, params] of Object.entries(recommendedParams)) {
+      try {
+        await aiSettingsAPI.updatePromptParams(promptName, params)
+
+        // 로컬 상태 업데이트
+        promptParams.value[promptName] = {
+          temperature: params.temperature,
+          topP: params.top_p,
+          maxTokens: params.max_tokens
+        }
+        useCustomParams.value[promptName] = true
+
+        successCount++
+      } catch (error) {
+        console.error(`Failed to apply params for ${promptName}:`, error)
+        failCount++
+      }
+    }
+
+    // 결과 알림
+    if (failCount === 0) {
+      showToast(`✨ 추천 파라미터가 모두 적용되었습니다! (${successCount}개)`, 'success')
+
+      // 서비스 재시작 제안
+      setTimeout(() => {
+        if (confirm('AI 서비스를 재시작하여 변경사항을 적용하시겠습니까?')) {
+          restartServices()
+        }
+      }, 1000)
+    } else {
+      showToast(`일부 설정 적용에 실패했습니다. (성공: ${successCount}, 실패: ${failCount})`, 'warning')
+    }
+
+  } catch (error) {
+    console.error('추천 파라미터 적용 실패:', error)
+    showToast('추천 파라미터 적용에 실패했습니다', 'error')
+  } finally {
+    loading.value = false
+  }
+}
+
 onMounted(() => {
   loadTemplates()
 })
@@ -714,6 +780,43 @@ onMounted(() => {
   font-weight: 600;
   color: #1f2937;
   margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.apply-recommended-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+.apply-recommended-btn:hover:not(:disabled) {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.apply-recommended-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  animation: none;
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
 }
 
 .refresh-btn {
