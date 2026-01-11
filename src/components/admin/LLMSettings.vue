@@ -30,7 +30,10 @@
             @click="selectTemplate(key)"
           >
             <div class="template-info">
-              <span class="template-name">{{ getTemplateName(key) }}</span>
+              <span class="template-name">
+                {{ getTemplateName(key) }}
+                <span v-if="useCustomParams[key]" class="custom-badge" title="개별 파라미터 사용 중">⚙️</span>
+              </span>
               <span class="template-key">{{ key }}</span>
             </div>
             <div class="template-icon">
@@ -49,6 +52,11 @@
               <span class="template-badge">{{ selectedTemplate }}</span>
             </div>
             <div class="editor-actions">
+              <button class="action-btn restart" @click="restartServices" :disabled="loading" title="AI 서비스 재시작">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
+                </svg>
+              </button>
               <button class="action-btn reset" @click="resetTemplate" title="초기화">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
@@ -83,22 +91,34 @@
 
           <!-- 모델 설정 -->
           <div class="model-settings">
-            <h4>모델 설정</h4>
-            <div class="settings-grid">
+            <div class="settings-header">
+              <h4>모델 설정</h4>
+              <label class="custom-params-toggle">
+                <input
+                  type="checkbox"
+                  v-model="useCustomParams[selectedTemplate]"
+                  @change="toggleCustomParams(selectedTemplate)"
+                />
+                <span>이 프롬프트만의 개별 파라미터 사용</span>
+              </label>
+            </div>
+
+            <!-- 전역 파라미터 (개별 파라미터 미사용 시) -->
+            <div v-if="!useCustomParams[selectedTemplate]" class="settings-grid">
               <div class="setting-item">
-                <label>Temperature</label>
+                <label>Temperature (전역)</label>
                 <input
                   type="range"
                   v-model.number="modelSettings.temperature"
                   min="0"
-                  max="2"
+                  max="1"
                   step="0.1"
                   @input="markAsChanged"
                 />
                 <span class="setting-value">{{ modelSettings.temperature.toFixed(1) }}</span>
               </div>
               <div class="setting-item">
-                <label>Top-P</label>
+                <label>Top-P (전역)</label>
                 <input
                   type="range"
                   v-model.number="modelSettings.topP"
@@ -110,7 +130,7 @@
                 <span class="setting-value">{{ modelSettings.topP.toFixed(2) }}</span>
               </div>
               <div class="setting-item">
-                <label>Max Tokens</label>
+                <label>Max Tokens (전역)</label>
                 <input
                   type="number"
                   v-model.number="modelSettings.maxTokens"
@@ -120,6 +140,49 @@
                   @input="markAsChanged"
                 />
               </div>
+            </div>
+
+            <!-- 개별 파라미터 (사용 시) -->
+            <div v-else class="settings-grid">
+              <div class="setting-item custom-param">
+                <label>Temperature (개별)</label>
+                <input
+                  type="range"
+                  v-model.number="promptParams[selectedTemplate].temperature"
+                  min="0"
+                  max="1"
+                  step="0.1"
+                  @input="markAsChanged"
+                />
+                <span class="setting-value custom">{{ promptParams[selectedTemplate].temperature.toFixed(1) }}</span>
+              </div>
+              <div class="setting-item custom-param">
+                <label>Top-P (개별)</label>
+                <input
+                  type="range"
+                  v-model.number="promptParams[selectedTemplate].topP"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  @input="markAsChanged"
+                />
+                <span class="setting-value custom">{{ promptParams[selectedTemplate].topP.toFixed(2) }}</span>
+              </div>
+              <div class="setting-item custom-param">
+                <label>Max Tokens (개별)</label>
+                <input
+                  type="number"
+                  v-model.number="promptParams[selectedTemplate].maxTokens"
+                  min="100"
+                  max="8000"
+                  step="100"
+                  @input="markAsChanged"
+                />
+              </div>
+            </div>
+
+            <div v-if="useCustomParams[selectedTemplate]" class="custom-param-notice">
+              ℹ️ 이 프롬프트는 개별 파라미터를 사용합니다. 전역 설정과 독립적으로 작동합니다.
             </div>
           </div>
 
@@ -357,6 +420,24 @@ const modelSettings = reactive<ModelSettings>({
   maxTokens: 4000
 })
 
+// 프롬프트별 개별 파라미터
+const promptParams = ref<Record<string, ModelSettings | null>>({
+  university: null,
+  study: null,
+  career: null,
+  cot: null,
+  general: null
+})
+
+// 프롬프트별 개별 파라미터 사용 여부
+const useCustomParams = ref<Record<string, boolean>>({
+  university: false,
+  study: false,
+  career: false,
+  cot: false,
+  general: false
+})
+
 const ragSettings = reactive<RAGConfig>({
   initial_top_k: 15,
   final_top_k: 5,
@@ -424,10 +505,30 @@ const loadTemplates = async () => {
     modelSettings.topP = modelParamsData.top_p
     modelSettings.maxTokens = modelParamsData.max_tokens
 
+    // 각 프롬프트별 개별 파라미터 로드
+    for (const key of Object.keys(templates.value)) {
+      try {
+        const params = await aiSettingsAPI.getPromptParams(key)
+        if (params && (params.temperature !== undefined || params.max_tokens !== undefined || params.top_p !== undefined)) {
+          // 개별 파라미터가 설정되어 있으면 로드
+          promptParams.value[key] = {
+            temperature: params.temperature ?? modelSettings.temperature,
+            topP: params.top_p ?? modelSettings.topP,
+            maxTokens: params.max_tokens ?? modelSettings.maxTokens
+          }
+          useCustomParams.value[key] = true
+        }
+      } catch (error) {
+        // 개별 파라미터가 없는 경우 무시 (전역 파라미터 사용)
+        console.log(`No custom params for ${key}`)
+      }
+    }
+
     console.log('✅ 설정 로드 완료:', {
       prompts: Object.keys(promptsData).length,
       ragConfig: ragConfigData,
-      modelParams: modelParamsData
+      modelParams: modelParamsData,
+      customParams: Object.keys(promptParams.value).filter(k => useCustomParams.value[k]).length
     })
   } catch (error) {
     console.error('설정 로드 실패:', error)
@@ -472,13 +573,23 @@ const confirmSave = async () => {
   if (!selectedTemplate.value) return
 
   try {
-    // 1. 프롬프트 템플릿 업데이트
+    // 1. 프롬프트 템플릿 + 개별 파라미터 업데이트
+    const currentParams = promptParams.value[selectedTemplate.value]
+    const shouldUseCustom = useCustomParams.value[selectedTemplate.value]
+
     const promptResponse = await aiSettingsAPI.updatePrompt(
       selectedTemplate.value,
-      editingPrompt.value
+      {
+        template: editingPrompt.value,
+        params: shouldUseCustom && currentParams ? {
+          temperature: currentParams.temperature,
+          max_tokens: currentParams.maxTokens,
+          top_p: currentParams.topP
+        } : undefined
+      }
     )
 
-    // 2. 모델 파라미터 업데이트
+    // 2. 전역 모델 파라미터 업데이트
     const modelParamsResponse = await aiSettingsAPI.updateModelParams({
       temperature: modelSettings.temperature,
       max_tokens: modelSettings.maxTokens,
@@ -523,6 +634,36 @@ const showToast = (message: string, type: 'success' | 'error' | 'warning') => {
   setTimeout(() => {
     toast.show = false
   }, 3000)
+}
+
+// 개별 파라미터 토글
+const toggleCustomParams = async (promptName: string) => {
+  const enabled = useCustomParams.value[promptName]
+
+  if (enabled && !promptParams.value[promptName]) {
+    // 처음 활성화하는 경우: 전역 파라미터 복사
+    promptParams.value[promptName] = {
+      temperature: modelSettings.temperature,
+      topP: modelSettings.topP,
+      maxTokens: modelSettings.maxTokens
+    }
+  }
+}
+
+// 서버 재시작
+const restartServices = async () => {
+  if (!confirm('AI 서비스를 재시작하시겠습니까?')) return
+
+  loading.value = true
+  try {
+    const response = await aiSettingsAPI.restartServices()
+    showToast(response.message || 'AI 서비스가 재시작되었습니다', 'success')
+  } catch (error) {
+    console.error('서버 재시작 실패:', error)
+    showToast('서버 재시작에 실패했습니다', 'error')
+  } finally {
+    loading.value = false
+  }
 }
 
 onMounted(() => {
@@ -633,6 +774,14 @@ onMounted(() => {
   font-size: 14px;
   font-weight: 600;
   color: #1f2937;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.custom-badge {
+  font-size: 12px;
+  opacity: 0.8;
 }
 
 .template-key {
@@ -715,6 +864,21 @@ onMounted(() => {
   color: #374151;
 }
 
+.action-btn.restart {
+  background: #10b981;
+  border-color: #10b981;
+  color: #fff;
+}
+
+.action-btn.restart:hover:not(:disabled) {
+  background: #059669;
+}
+
+.action-btn.restart:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .action-btn.reset:hover {
   background: #fef3c7;
   border-color: #f59e0b;
@@ -789,11 +953,63 @@ onMounted(() => {
   margin-bottom: 16px;
 }
 
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
 .model-settings h4 {
   font-size: 14px;
   font-weight: 600;
   color: #374151;
-  margin: 0 0 16px 0;
+  margin: 0;
+}
+
+.custom-params-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 8px 12px;
+  background: #fff;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  transition: all 0.2s;
+  font-size: 13px;
+}
+
+.custom-params-toggle:hover {
+  border-color: #02478A;
+  background: #f0f9ff;
+}
+
+.custom-params-toggle input[type="checkbox"] {
+  accent-color: #02478A;
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.custom-param-notice {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: #dbeafe;
+  border-left: 3px solid #02478A;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #1e40af;
+}
+
+.setting-item.custom-param label {
+  color: #02478A;
+  font-weight: 600;
+}
+
+.setting-value.custom {
+  color: #059669;
+  font-weight: 700;
 }
 
 .settings-grid {

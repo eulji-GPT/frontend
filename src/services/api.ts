@@ -535,6 +535,18 @@ export interface AISettingsResponse {
 export interface SettingsSaveResponse {
   status: string;  // "success" or "partial"
   warning?: string;  // 207 시 warning 메시지
+  message?: string;  // 성공 메시지
+}
+
+export interface PromptParams {
+  temperature?: number;
+  max_tokens?: number;
+  top_p?: number;
+}
+
+export interface PromptWithParamsUpdate {
+  template: string;
+  params?: PromptParams;
 }
 
 // AI Settings API
@@ -553,11 +565,26 @@ export const aiSettingsAPI = {
     });
   },
 
-  // PUT /admin/ai-settings/prompts/{name} - 프롬프트 수정
-  updatePrompt: (name: string, template: string): Promise<SettingsSaveResponse> => {
+  // PUT /admin/ai-settings/prompts/{name} - 프롬프트 + 파라미터 수정
+  updatePrompt: (name: string, data: PromptWithParamsUpdate): Promise<SettingsSaveResponse> => {
     return apiRequest<SettingsSaveResponse>(`/admin/ai-settings/prompts/${name}`, {
       method: 'PUT',
-      body: JSON.stringify({ template })
+      body: JSON.stringify(data)
+    });
+  },
+
+  // GET /admin/ai-settings/prompts/{name}/params - 프롬프트별 파라미터 조회
+  getPromptParams: (name: string): Promise<PromptParams> => {
+    return apiRequest<PromptParams>(`/admin/ai-settings/prompts/${name}/params`, {
+      method: 'GET'
+    });
+  },
+
+  // PUT /admin/ai-settings/prompts/{name}/params - 프롬프트별 파라미터 수정
+  updatePromptParams: (name: string, params: PromptParams): Promise<SettingsSaveResponse> => {
+    return apiRequest<SettingsSaveResponse>(`/admin/ai-settings/prompts/${name}/params`, {
+      method: 'PUT',
+      body: JSON.stringify(params)
     });
   },
 
@@ -588,6 +615,13 @@ export const aiSettingsAPI = {
     return apiRequest<SettingsSaveResponse>('/admin/ai-settings/model-params', {
       method: 'PUT',
       body: JSON.stringify(params)
+    });
+  },
+
+  // POST /admin/restart-services - AI 서비스 재시작
+  restartServices: (): Promise<SettingsSaveResponse> => {
+    return apiRequest<SettingsSaveResponse>('/admin/restart-services', {
+      method: 'POST'
     });
   }
 };
