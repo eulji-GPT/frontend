@@ -662,7 +662,15 @@ const restartServices = async () => {
   loading.value = true
   try {
     const response = await aiSettingsAPI.restartServices()
-    showToast(response.message || 'AI 서비스가 재시작되었습니다', 'success')
+
+    // Handle both full success (200) and partial success (207)
+    if (response.status === 'success') {
+      showToast(response.message || 'AI 서비스가 재시작되었습니다', 'success')
+    } else if (response.status === 'partial') {
+      showToast(response.message || '설정 저장됨 (재시작 실패)', 'warning')
+    } else {
+      showToast(response.message || 'AI 서비스가 재시작되었습니다', 'success')
+    }
   } catch (error) {
     console.error('서버 재시작 실패:', error)
     showToast('서버 재시작에 실패했습니다', 'error')
