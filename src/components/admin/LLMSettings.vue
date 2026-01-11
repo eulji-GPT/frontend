@@ -123,6 +123,106 @@
             </div>
           </div>
 
+          <!-- RAG 설정 -->
+          <div class="rag-settings">
+            <h4>RAG 설정</h4>
+            <div class="settings-grid">
+              <div class="setting-item">
+                <label>Initial Top-K (검색 결과 수)</label>
+                <input
+                  type="range"
+                  v-model.number="ragSettings.initial_top_k"
+                  min="5"
+                  max="50"
+                  step="5"
+                  @input="markAsChanged"
+                />
+                <span class="setting-value">{{ ragSettings.initial_top_k }}</span>
+              </div>
+              <div class="setting-item">
+                <label>Final Top-K (최종 문서 수)</label>
+                <input
+                  type="range"
+                  v-model.number="ragSettings.final_top_k"
+                  min="1"
+                  max="20"
+                  step="1"
+                  @input="markAsChanged"
+                />
+                <span class="setting-value">{{ ragSettings.final_top_k }}</span>
+              </div>
+              <div class="setting-item">
+                <label>Alpha (Dense 가중치)</label>
+                <input
+                  type="range"
+                  v-model.number="ragSettings.alpha"
+                  min="0"
+                  max="1"
+                  step="0.1"
+                  @input="markAsChanged"
+                />
+                <span class="setting-value">{{ ragSettings.alpha.toFixed(1) }}</span>
+              </div>
+            </div>
+
+            <!-- 검색 방법 선택 -->
+            <div class="search-method-section">
+              <label class="section-label">검색 방법</label>
+              <div class="radio-group">
+                <label class="radio-label">
+                  <input
+                    type="radio"
+                    v-model="ragSettings.search_method"
+                    value="dense"
+                    @change="markAsChanged"
+                  />
+                  <span>Dense (의미 기반)</span>
+                </label>
+                <label class="radio-label">
+                  <input
+                    type="radio"
+                    v-model="ragSettings.search_method"
+                    value="sparse"
+                    @change="markAsChanged"
+                  />
+                  <span>Sparse (키워드 기반)</span>
+                </label>
+                <label class="radio-label">
+                  <input
+                    type="radio"
+                    v-model="ragSettings.search_method"
+                    value="hybrid"
+                    @change="markAsChanged"
+                  />
+                  <span>Hybrid (혼합)</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- 리랭커 옵션 -->
+            <div class="reranker-section">
+              <label class="section-label">리랭커 옵션</label>
+              <div class="checkbox-group">
+                <label class="checkbox-label">
+                  <input
+                    type="checkbox"
+                    v-model="ragSettings.use_reranker"
+                    @change="markAsChanged"
+                  />
+                  <span>기본 리랭커 사용</span>
+                </label>
+                <label class="checkbox-label">
+                  <input
+                    type="checkbox"
+                    v-model="ragSettings.use_llm_reranker"
+                    @change="markAsChanged"
+                  />
+                  <span>LLM 리랭커 사용 (느리지만 정확)</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
           <!-- 변수 힌트 -->
           <div class="variable-hints">
             <h4>사용 가능한 변수</h4>
@@ -168,6 +268,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
+import { aiSettingsAPI } from '@/services/api'
+import type { RAGConfig, ModelParams } from '@/services/api'
 
 interface ModelSettings {
   temperature: number
@@ -255,10 +357,19 @@ const modelSettings = reactive<ModelSettings>({
   maxTokens: 4000
 })
 
+const ragSettings = reactive<RAGConfig>({
+  initial_top_k: 15,
+  final_top_k: 5,
+  search_method: 'hybrid',
+  alpha: 0.5,
+  use_reranker: true,
+  use_llm_reranker: false
+})
+
 const toast = reactive({
   show: false,
   message: '',
-  type: 'success' as 'success' | 'error'
+  type: 'success' as 'success' | 'error' | 'warning'
 })
 
 // 템플릿 이름 매핑
@@ -295,22 +406,32 @@ const getTemplateVariables = (key: string) => templateVariables[key] || []
 const loadTemplates = async () => {
   loading.value = true
   try {
-    // 로컬 스토리지에서 저장된 템플릿 로드
-    const saved = localStorage.getItem('llm_templates')
-    if (saved) {
-      templates.value = { ...defaultTemplates, ...JSON.parse(saved) }
-    } else {
-      templates.value = { ...defaultTemplates }
-    }
+    // Backend API에서 모든 설정 동시 로드
+    const [promptsData, ragConfigData, modelParamsData] = await Promise.all([
+      aiSettingsAPI.getPrompts(),
+      aiSettingsAPI.getRAGConfig(),
+      aiSettingsAPI.getModelParams()
+    ])
 
-    // 모델 설정 로드
-    const savedSettings = localStorage.getItem('llm_model_settings')
-    if (savedSettings) {
-      const parsed = JSON.parse(savedSettings)
-      Object.assign(modelSettings, parsed)
-    }
+    // 프롬프트 템플릿 적용
+    templates.value = { ...defaultTemplates, ...promptsData }
+
+    // RAG 설정 적용
+    Object.assign(ragSettings, ragConfigData)
+
+    // 모델 파라미터 적용
+    modelSettings.temperature = modelParamsData.temperature
+    modelSettings.topP = modelParamsData.top_p
+    modelSettings.maxTokens = modelParamsData.max_tokens
+
+    console.log('✅ 설정 로드 완료:', {
+      prompts: Object.keys(promptsData).length,
+      ragConfig: ragConfigData,
+      modelParams: modelParamsData
+    })
   } catch (error) {
-    console.error('템플릿 로드 실패:', error)
+    console.error('설정 로드 실패:', error)
+    showToast('설정 로드에 실패했습니다. 기본값을 사용합니다.', 'error')
     templates.value = { ...defaultTemplates }
   } finally {
     loading.value = false
@@ -351,25 +472,50 @@ const confirmSave = async () => {
   if (!selectedTemplate.value) return
 
   try {
-    // 템플릿 저장
+    // 1. 프롬프트 템플릿 업데이트
+    const promptResponse = await aiSettingsAPI.updatePrompt(
+      selectedTemplate.value,
+      editingPrompt.value
+    )
+
+    // 2. 모델 파라미터 업데이트
+    const modelParamsResponse = await aiSettingsAPI.updateModelParams({
+      temperature: modelSettings.temperature,
+      max_tokens: modelSettings.maxTokens,
+      top_p: modelSettings.topP
+    })
+
+    // 3. RAG 설정 업데이트
+    const ragConfigResponse = await aiSettingsAPI.updateRAGConfig(ragSettings)
+
+    // 로컬 상태 업데이트
     templates.value[selectedTemplate.value] = editingPrompt.value
-    localStorage.setItem('llm_templates', JSON.stringify(templates.value))
-
-    // 모델 설정 저장
-    localStorage.setItem('llm_model_settings', JSON.stringify(modelSettings))
-
     originalPrompt.value = editingPrompt.value
     hasChanges.value = false
     showSaveModal.value = false
 
-    showToast('프롬프트가 저장되었습니다', 'success')
+    // 207 Multi-Status 응답 처리
+    const has207 = [promptResponse, modelParamsResponse, ragConfigResponse]
+      .some(r => r.status === 'partial')
+
+    if (has207) {
+      showToast('설정이 저장되었으나 AI 서비스 반영에 실패했습니다. 수동 재시작이 필요할 수 있습니다.', 'warning')
+    } else {
+      showToast('모든 설정이 성공적으로 저장되었습니다', 'success')
+    }
+
+    console.log('✅ 설정 저장 완료:', {
+      prompt: promptResponse.status,
+      modelParams: modelParamsResponse.status,
+      ragConfig: ragConfigResponse.status
+    })
   } catch (error) {
     console.error('저장 실패:', error)
-    showToast('저장에 실패했습니다', 'error')
+    showToast('저장에 실패했습니다. 다시 시도해주세요.', 'error')
   }
 }
 
-const showToast = (message: string, type: 'success' | 'error') => {
+const showToast = (message: string, type: 'success' | 'error' | 'warning') => {
   toast.message = message
   toast.type = type
   toast.show = true
@@ -687,6 +833,102 @@ onMounted(() => {
   text-align: center;
 }
 
+/* RAG 설정 */
+.rag-settings {
+  background: #fef3c7;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.rag-settings h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 16px 0;
+}
+
+.section-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 12px;
+}
+
+.search-method-section,
+.reranker-section {
+  margin-top: 20px;
+}
+
+.radio-group {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 10px 16px;
+  background: #fff;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.radio-label:hover {
+  border-color: #02478A;
+  background: #f0f9ff;
+}
+
+.radio-label input[type="radio"] {
+  accent-color: #02478A;
+  cursor: pointer;
+}
+
+.radio-label span {
+  font-size: 14px;
+  color: #374151;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 10px 16px;
+  background: #fff;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.checkbox-label:hover {
+  border-color: #02478A;
+  background: #f0f9ff;
+}
+
+.checkbox-label input[type="checkbox"] {
+  accent-color: #02478A;
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+}
+
+.checkbox-label span {
+  font-size: 14px;
+  color: #374151;
+}
+
 /* 변수 힌트 */
 .variable-hints {
   background: #f0f9ff;
@@ -834,6 +1076,10 @@ onMounted(() => {
 
 .toast.error {
   background: #ef4444;
+}
+
+.toast.warning {
+  background: #f59e0b;
 }
 
 @keyframes slideIn {
