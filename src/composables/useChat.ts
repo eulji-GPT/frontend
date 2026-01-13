@@ -64,7 +64,9 @@ export function useChat() {
   const currentChatId = ref<string | null>(null);
   const isLoading = ref(false);
   const isStreaming = ref(false);
-  const chatMode = ref<ChatMode>('unified');
+  // localStorage에서 chatMode 초기화 (기본값: 'unified')
+  const savedChatMode = localStorage.getItem('chatMode') as ChatMode | null;
+  const chatMode = ref<ChatMode>(savedChatMode && ['unified', 'cot', 'rag'].includes(savedChatMode) ? savedChatMode : 'unified');
   let currentController: AbortController | null = null;
   
   // RAG 시스템 상태
@@ -1585,6 +1587,10 @@ export function useChat() {
 
     const previousMode = chatMode.value;
     chatMode.value = mode;
+
+    // localStorage에 chatMode 저장
+    localStorage.setItem('chatMode', mode);
+
     log.debug("Chat mode changed:", previousMode, "to", mode);
 
     // 현재 채팅에 메시지가 있으면 새 채팅 세션 시작
