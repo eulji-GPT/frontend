@@ -843,11 +843,11 @@ onUpdated(() => {
   height: 0;
 }
 
-/* 공백만 있는 단락 (렌더링 후 빈 것처럼 보이는 것들) */
-:deep(.markdown-content p:has(> br:only-child)) {
+/* 공백만 있는 단락 규칙 제거 - greeting 응답에서 오작동 발생 */
+/* :deep(.markdown-content p:has(> br:only-child)) {
   display: none;
   margin: 0;
-}
+} */
 
 /* br 태그는 마크다운에서 줄바꿈을 위해 필요 */
 :deep(.markdown-content br) {

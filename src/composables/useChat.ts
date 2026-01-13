@@ -1215,21 +1215,12 @@ export function useChat() {
           // 텍스트 정규화 적용
           const normalizedAnswer = normalizeWhitespace(data.answer);
 
-          // 🔍 DEBUG: 응답 텍스트 확인
-          console.log('🔍 [RAG DEBUG] Original answer:', data.answer);
-          console.log('🔍 [RAG DEBUG] Normalized answer:', normalizedAnswer);
-          console.log('🔍 [RAG DEBUG] Answer length:', normalizedAnswer.length);
-          console.log('🔍 [RAG DEBUG] Prompt type:', data.prompt_type_used);
-
           currentChat.messages[messageIndex].text = normalizedAnswer;
           currentChat.messages[messageIndex].isLoading = false;
           currentChat.messages[messageIndex].isStreaming = false;
           currentChat.messages[messageIndex].currentStep = undefined;
           currentChat.messages[messageIndex].hasError = false;
           currentChat.messages[messageIndex].modelName = "대학 정보 검색";  // RAG 모드 모델 이름
-
-          // 🔍 DEBUG: 메시지 저장 확인
-          console.log('🔍 [RAG DEBUG] Message saved:', currentChat.messages[messageIndex]);
 
           // RAG 소스 정보 추가 (정보 제공 요청 시에만)
           // 인사말, 범위 외 질문, 검색 품질 낮은 경우는 참고문서를 표시하지 않음
