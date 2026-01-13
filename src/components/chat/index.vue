@@ -90,9 +90,6 @@
       <div class="chat-content-wrapper">
         <!-- 일반 채팅 화면 -->
         <div v-if="currentView === 'chat'" class="chat-main-area" @click="handleMessageAreaClick">
-          <div class="rag-initializer-container">
-            <RagInitializer />
-          </div>
           <div class="chat-messages-container">
             <ChatMessageArea
               :messages="messages"
@@ -154,7 +151,6 @@ import ChatHistory from './ChatHistory.vue';
 import ChatMessageArea from './ChatMessageArea.vue';
 import ChatInput from './ChatInput.vue';
 import ChatModeSelector from './ChatModeSelector.vue';
-import RagInitializer from './RagInitializer.vue';
 import SourceSidebar from './SourceSidebar.vue';
 import ArtifactPanel from './ArtifactPanel.vue';
 import NotificationDropdown from '../common/NotificationDropdown.vue';
