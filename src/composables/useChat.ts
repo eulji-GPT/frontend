@@ -1221,8 +1221,11 @@ export function useChat() {
           currentChat.messages[messageIndex].hasError = false;
           currentChat.messages[messageIndex].modelName = "대학 정보 검색";  // RAG 모드 모델 이름
 
-          // RAG 소스 정보 추가 (백엔드에서 받은 실제 데이터 사용)
-          if (data.sources && Array.isArray(data.sources) && data.sources.length > 0) {
+          // RAG 소스 정보 추가 (정보 제공 요청 시에만)
+          // 인사말, 범위 외 질문, 검색 품질 낮은 경우는 참고문서를 표시하지 않음
+          const shouldShowSources = !['greeting', 'out_of_scope', 'low_relevance'].includes(data.prompt_type_used || '');
+
+          if (shouldShowSources && data.sources && Array.isArray(data.sources) && data.sources.length > 0) {
             currentChat.messages[messageIndex].ragSources = data.sources.map((source: any) => ({
               title: source.title || '제목 없음',
               content: source.content || '',
