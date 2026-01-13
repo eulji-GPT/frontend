@@ -1242,6 +1242,9 @@ export function useChat() {
           // RAG 메타데이터 표시 (처리시간, 검색된 문서 수 등)
           log.debug(`RAG performance: ${data.processing_time?.toFixed(2)}s, docs: ${data.search_results_count}, prompt: ${data.prompt_type_used}`);
 
+          // Vue 반응성을 위해 messages.value 업데이트 (화면에 응답이 표시되도록)
+          messages.value = [...currentChat.messages];
+
           // AI 메시지를 노션에 저장
           await saveMessageToNotion(currentChat.id, false, normalizedAnswer);
         }
@@ -1276,8 +1279,11 @@ export function useChat() {
         currentChat.messages[messageIndex].isStreaming = false;
         currentChat.messages[messageIndex].currentStep = undefined;
         currentChat.messages[messageIndex].hasError = true;
+
+        // Vue 반응성을 위해 messages.value 업데이트 (에러 메시지가 표시되도록)
+        messages.value = [...currentChat.messages];
       }
-      
+
       isStreaming.value = false;
     } finally {
       currentController = null;
