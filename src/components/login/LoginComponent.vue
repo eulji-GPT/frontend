@@ -18,22 +18,10 @@
       </span>
 
       <div class="frame-2147227518">
-        <div class="frame-2147227608">
-          <div class="button-pc" @click="handleEulgptSignup">
-            <div class="frame-2147227341">
-              <div class="frame-2147227341-inner">
-                <span class="text-white">EULGPT 계정으로 회원가입</span>
-              </div>
-            </div>
-          </div>
-          <div class="frame-2147227609">
-            <span class="eulgpt-text">EULGPT로 가입하면 프리미엄 이용이 가능해요</span>
-            <div class="union-icon">✨</div>
-          </div>
-        </div>
+        <!-- EULGPT 계정 회원가입 섹션 완전 제거 (카카오 전용) -->
 
         <div class="frame-2147227519">
-          <div class="line-103"></div>
+          <!-- 구분선 완전 제거 (카카오 버튼만 있으므로 불필요) -->
           <div class="frame-2147227518-inner">
             <div class="button-pc-yellow" @click="handleKakaoLogin">
               <div class="frame-2147227341-inner">
@@ -41,14 +29,10 @@
                 <span class="text-black">카카오 계정으로 회원가입</span>
               </div>
             </div>
-            <div class="frame-2147227520">
-              <span class="text-gray" @click="handleLogin">로그인</span>
-              <span class="dot">•</span>
-              <span class="text-gray" @click="handleFindAccount">내 계정 찾기</span>
-            </div>
-            
-            <!-- 로그인 폼 -->
-            <form v-if="showLoginForm" class="login-form" @submit.prevent="submitLogin">
+            <!-- 이메일 로그인 및 계정 찾기 링크 완전 제거 -->
+
+            <!-- 이메일 로그인 폼 완전 제거 -->
+            <form v-if="false" class="login-form" @submit.prevent="submitLogin">
               <div class="form-group">
                 <label for="login-email" class="visually-hidden">이메일</label>
                 <input

@@ -25,44 +25,13 @@
             내가 찾던 정보, <br/>
             이제 쉽게 만나요.
           </span>
-          <div class="form-container">
-            <div class="input-group">
-              <input 
-                v-model="email" 
-                type="email" 
-                placeholder="이메일" 
-                class="input-field"
-              />
-            </div>
-            <div class="password-group">
-              <input 
-                v-model="password" 
-                :type="showPassword ? 'text' : 'password'" 
-                placeholder="비밀번호" 
-                class="input-field"
-              />
-              <button @click="togglePassword" class="eye-button">
-                <svg v-if="showPassword" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c4.42 0 8 2.79 10 7a13.16 13.16 0 0 1-1.67 2.68" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12c2 4.21 5.58 7 10 7a9.74 9.74 0 0 0 5.39-1.61" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <line x1="2" y1="2" x2="22" y2="22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <svg v-else width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </button>
-            </div>
-          </div>
+          <!-- 이메일 로그인 폼 완전 제거 (카카오 로그인 전용) -->
         </div>
 
-        <button class="login-button" @click="handleLogin" :disabled="isLoading">
-          <span class="button-text">{{ isLoading ? '로그인 중...' : '로그인' }}</span>
-        </button>
+        <!-- 이메일 로그인 버튼 완전 제거 -->
 
         <div class="divider-section">
-          <div class="divider-line"></div>
+          <!-- 구분선 제거 (카카오 로그인만 있으므로 불필요) -->
           <div class="alternative-login">
             <button class="kakao-button" @click="handleKakaoLogin">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -70,11 +39,7 @@
               </svg>
               <span class="kakao-text">카카오 계정으로 로그인</span>
             </button>
-            <div class="bottom-links">
-              <span class="link-text" @click="() => router.push('/signup')">회원가입</span>
-              <span class="separator">•</span>
-              <span class="link-text">내 계정 찾기</span>
-            </div>
+            <!-- 하단 링크 완전 제거 (카카오 로그인 전용) -->
           </div>
         </div>
       </div>
