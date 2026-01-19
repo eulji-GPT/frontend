@@ -11,12 +11,13 @@ lerna-debug.log*
 .env.local
 .env.*.local
 
-.claude
-#tool
-assistant
-.claude
+# Development tool directories
+.claude/
+.playwright-mcp/
 .mcp.json
-.playwright-mcp
+
+# CI/CD (use Railway/Vercel instead)
+.github/
 
 temp-assets
 
@@ -26,8 +27,8 @@ dist-ssr
 *.local
 
 # Editor directories and files
-.vscode/*
-!.vscode/extensions.json
+.vscode/
+.idea
 .idea
 .DS_Store
 *.suo
