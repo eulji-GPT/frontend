@@ -135,12 +135,6 @@
       :isVisible="showMyPageModal"
       @close="toggleMyPageModal"
     />
-
-    <!-- RAG Event Popup -->
-    <RagEventPopup
-      @close="handleRagEventClose"
-      @tryRag="handleTryRag"
-    />
   </div>
 </template>
 
@@ -156,7 +150,6 @@ import ArtifactPanel from './ArtifactPanel.vue';
 import NotificationDropdown from '../common/NotificationDropdown.vue';
 import InfoPanel from '../common/InfoPanel.vue';
 import MyPageModal from '../common/MyPageModal.vue';
-import RagEventPopup from '../common/RagEventPopup.vue';
 import { useChat } from '../../composables/useChat';
 import type { ChatMode, Artifact, ArtifactVersion } from '../../composables/useChat';
 import eulLogo from '../../assets/eul_logo.svg';
@@ -210,17 +203,6 @@ const handleSelectChat = (chatId: string) => {
 
 const handleModeChange = (mode: ChatMode) => {
   setChatMode(mode);
-};
-
-// RAG 이벤트 팝업 핸들러
-const handleRagEventClose = () => {
-  log.info('RAG event popup closed');
-};
-
-const handleTryRag = () => {
-  log.info('Try RAG mode clicked');
-  // RAG 모드로 전환
-  setChatMode('rag');
 };
 
 // 화면 상태 관리
@@ -830,6 +812,14 @@ onMounted(() => {
     window.visualViewport.addEventListener('scroll', handleVisualViewportResize);
   }
 
+  // URL 파라미터에서 chatId 읽기 (B: UUID 추가)
+  const chatIdFromUrl = route.params.chatId as string | undefined;
+  if (chatIdFromUrl) {
+    // URL에 chatId가 있으면 해당 채팅 선택
+    log.info(`Loading chat from URL: ${chatIdFromUrl}`);
+    selectChat(chatIdFromUrl);
+  }
+
   // 카카오 계정 연동 결과 처리
   const kakaoLinkResult = route.query.kakao_link as string;
   if (kakaoLinkResult) {
@@ -841,8 +831,8 @@ onMounted(() => {
       const errorMessage = route.query.message as string || '카카오 연동에 실패했습니다.';
       alert(errorMessage);
     }
-    // URL에서 쿼리 파라미터 제거
-    router.replace({ path: '/chat', query: {} });
+    // URL에서 쿼리 파라미터 제거 (chatId는 유지)
+    router.replace({ path: `/chat${chatIdFromUrl ? '/' + chatIdFromUrl : ''}`, query: {} });
   }
 });
 

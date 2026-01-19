@@ -35,9 +35,10 @@ const routes = [
     component: () => import('../components/login/SignupCompleteComponent.vue')
   },
   {
-    path: '/chat',
+    path: '/chat/:chatId?',
     component: () => import('../components/chat/index.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
+    props: true
   },
   {
     path: '/bug-report',
@@ -110,6 +111,21 @@ const router = createRouter({
 
 // 인증 가드 추가
 router.beforeEach((to, _from, next) => {
+  // 이메일 회원가입 라우트 차단 (카카오 전용)
+  const blockedEmailSignupRoutes = [
+    '/signup-email',
+    '/signup-agreement',
+    '/signup-password',
+    '/signup-form',
+    '/signup-complete'
+  ]
+
+  if (blockedEmailSignupRoutes.includes(to.path)) {
+    console.log('Email signup route blocked - redirecting to /signup')
+    next({ path: '/signup' })
+    return
+  }
+
   // requiresAuth 메타 필드가 true인 경로 체크
   if (to.meta.requiresAuth) {
     if (!isAuthenticated()) {

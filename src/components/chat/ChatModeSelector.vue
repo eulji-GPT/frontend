@@ -20,8 +20,6 @@
         >
           <div class="mode-header">
             <div class="mode-name">{{ mode.name }}</div>
-            <div v-if="mode.key === 'rag'" class="cot-badge">Beta</div>
-            <div v-if="mode.key === 'rag' && !isProUser" class="pro-badge">PRO</div>
           </div>
           <div class="mode-description">{{ mode.description }}</div>
         </div>

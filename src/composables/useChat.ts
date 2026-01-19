@@ -1,4 +1,5 @@
 import { ref, onMounted, nextTick } from 'vue';
+import { useRouter } from 'vue-router';
 import { createLogger } from '../utils/logger';
 const log = createLogger('useChat');
 import { isAuthenticated, apiRequest } from '../utils/auth';
@@ -59,6 +60,7 @@ export interface ChatSession {
 export type ChatMode = 'unified' | 'cot' | 'rag';
 
 export function useChat() {
+  const router = useRouter();
   const messages = ref<ChatMessage[]>([]);
   const chatHistory = ref<ChatSession[]>([]);
   const currentChatId = ref<string | null>(null);
@@ -434,6 +436,10 @@ export function useChat() {
           chatHistory.value.unshift(newChat);
           currentChatId.value = newChat.id;
           messages.value = newChat.messages;
+
+          // URL 업데이트 (UUID 포함)
+          router.push(`/chat/${newChat.id}`);
+
           log.info("New chat created (UUID):", newChat.id);
           return;
         }
@@ -456,6 +462,9 @@ export function useChat() {
     chatHistory.value.unshift(newChat);
     messages.value = newChat.messages;
 
+    // URL 업데이트 (UUID 포함)
+    router.push(`/chat/${newChat.id}`);
+
     if (backendSessionId) {
       log.info("New backend session created:", backendSessionId);
     }
@@ -465,6 +474,23 @@ export function useChat() {
     const chat = chatHistory.value.find(c => c.id === id);
     if (chat) {
       currentChatId.value = id;
+
+      // URL 업데이트 (UUID 포함)
+      if (router.currentRoute.value.params.chatId !== id) {
+        router.push(`/chat/${id}`);
+      }
+
+      // 🔧 세션 ID 복원 또는 생성 (Option 3: 맥락 유지)
+      if (!chat.sessionId) {
+        const backendSessionId = await createBackendSession();
+        if (backendSessionId) {
+          chat.sessionId = backendSessionId;
+          log.info(`Session created for existing chat ${id}: ${backendSessionId}`);
+          saveChatHistory(); // localStorage 업데이트
+        }
+      } else {
+        log.debug(`Using existing session for chat ${id}: ${chat.sessionId}`);
+      }
 
       // 로그인된 사용자인 경우 항상 백엔드에서 최신 메시지 로드
       if (isAuthenticated()) {
