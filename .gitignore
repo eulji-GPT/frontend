@@ -8,7 +8,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 # Environment files (로컬 환경 변수만 무시, development/production은 커밋)
-# .env.local은 팀 공유를 위해 커밋합니다
+.env.local
 .env.*.local
 
 # Development tool directories
@@ -25,7 +25,6 @@ node_modules
 dist
 dist-ssr
 *.local
-!.env.local
 
 # Editor directories and files
 .vscode/
