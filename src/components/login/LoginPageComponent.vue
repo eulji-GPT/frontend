@@ -30,8 +30,41 @@
 
         <!-- 이메일 로그인 버튼 완전 제거 -->
 
+        <!-- 개발 환경 전용: 이메일 로그인 폼 -->
+        <div v-if="isDevelopment" class="form-container">
+          <div class="input-group">
+            <input
+              v-model="email"
+              type="email"
+              class="input-field"
+              placeholder="이메일 ID"
+              @keyup.enter="handleLogin"
+            />
+          </div>
+          <div class="password-group">
+            <input
+              v-model="password"
+              :type="showPassword ? 'text' : 'password'"
+              class="input-field"
+              placeholder="비밀번호"
+              @keyup.enter="handleLogin"
+            />
+            <button type="button" class="eye-button" @click="togglePassword">
+              {{ showPassword ? '👁️' : '👁️‍🗨️' }}
+            </button>
+          </div>
+          <button
+            class="login-button"
+            @click="handleLogin"
+            :disabled="isLoading"
+          >
+            <span class="button-text">{{ isLoading ? '로그인 중...' : '로그인' }}</span>
+          </button>
+        </div>
+
         <div class="divider-section">
-          <!-- 구분선 제거 (카카오 로그인만 있으므로 불필요) -->
+          <!-- 구분선: 이메일 로그인이 있을 때만 표시 -->
+          <div v-if="isDevelopment" class="divider-line"></div>
           <div class="alternative-login">
             <button class="kakao-button" @click="handleKakaoLogin">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -39,7 +72,6 @@
               </svg>
               <span class="kakao-text">카카오 계정으로 로그인</span>
             </button>
-            <!-- 하단 링크 완전 제거 (카카오 로그인 전용) -->
           </div>
         </div>
       </div>
@@ -48,7 +80,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import ToastNotification from '../common/ToastNotification.vue'
 import HeaderSection from '../main/HeaderSection.vue'
@@ -58,6 +90,25 @@ import { getApiBaseUrl } from '@/utils/ports-config'
 const router = useRouter()
 
 const API_BASE_URL = getApiBaseUrl()
+
+// 개발 환경 감지 (이메일 로그인은 개발 환경에서만 표시)
+const isDevelopment = computed(() => {
+  const envForceEnable = import.meta.env.VITE_ENABLE_EMAIL_LOGIN === 'true'
+  const isDevMode = import.meta.env.DEV
+  const isLocalhost = window.location.hostname === 'localhost' ||
+                      window.location.hostname === '127.0.0.1'
+  const isDevEnvironment = envForceEnable || isDevMode || isLocalhost
+
+  console.log('[Dev Check]', {
+    envForceEnable,
+    isDevMode,
+    isLocalhost,
+    hostname: window.location.hostname,
+    result: isDevEnvironment
+  })
+
+  return isDevEnvironment
+})
 
 const email = ref('')
 const password = ref('')

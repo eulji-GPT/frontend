@@ -29,10 +29,15 @@
                 <span class="text-black">카카오 계정으로 회원가입</span>
               </div>
             </div>
-            <!-- 이메일 로그인 및 계정 찾기 링크 완전 제거 -->
+            <!-- 개발 환경 전용: 이메일 로그인 토글 버튼 -->
+            <div v-if="isDevelopment" class="frame-2147227520">
+              <span class="text-gray" @click="handleLogin">
+                {{ showLoginForm ? '로그인 폼 닫기' : '이메일로 로그인' }}
+              </span>
+            </div>
 
-            <!-- 이메일 로그인 폼 완전 제거 -->
-            <form v-if="false" class="login-form" @submit.prevent="submitLogin">
+            <!-- 개발 환경 전용: 이메일 로그인 폼 -->
+            <form v-if="isDevelopment && showLoginForm" class="login-form" @submit.prevent="submitLogin">
               <div class="form-group">
                 <label for="login-email" class="visually-hidden">이메일</label>
                 <input
@@ -81,7 +86,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import HeaderSection from '../main/HeaderSection.vue';
 import { AuthService } from '../../services/auth';
@@ -89,6 +94,26 @@ import { healthAPI } from '../../services/api';
 
 const router = useRouter();
 const authService = AuthService.getInstance();
+
+// 개발 환경 감지 (이메일 로그인은 개발 환경에서만 표시)
+// 환경변수 또는 localhost 접속 시 개발 환경으로 간주
+const isDevelopment = computed(() => {
+  const envForceEnable = import.meta.env.VITE_ENABLE_EMAIL_LOGIN === 'true';
+  const isDevMode = import.meta.env.DEV;
+  const isLocalhost = window.location.hostname === 'localhost' ||
+                      window.location.hostname === '127.0.0.1';
+  const isDevEnvironment = envForceEnable || isDevMode || isLocalhost;
+
+  console.log('[Dev Check]', {
+    envForceEnable,
+    isDevMode,
+    isLocalhost,
+    hostname: window.location.hostname,
+    result: isDevEnvironment
+  });
+
+  return isDevEnvironment;
+});
 
 // 환경변수에서 카카오 설정 가져오기
 const KAKAO_REST_API_KEY = import.meta.env.VITE_KAKAO_REST_API_KEY || '6946f5fc07f24c4ab3e161bab6de3b4a';
