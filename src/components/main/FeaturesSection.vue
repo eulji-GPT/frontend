@@ -2,8 +2,10 @@
 <section class="features-section" id="features">
     <div class="features-container">
       <div class="features-frame">
+        <div class="features-total-ct">
         <div class="features-title">유용한 기능</div>
         <div class="features-subtitle">캠퍼스 생활의 모든 순간, 을GPT로 더 똑똑하고 간편하게</div>
+        </div>
         <div class="features-content-frame">
           <div class="Frame2147227299">
             <img class="features-inner-svg" src="../../assets/FeaturesSection/Frame 2147227347.svg" alt="Frame 2147227347" />
@@ -62,7 +64,8 @@ const navigateToFeature = (feature: string) => {
   width: 100%;
   min-height: 0;
   height: auto;
-  background: var(--color-bg-secondary) !important;
+  /* background: var(--color-bg-secondary) !important; */
+  background: #f3f8ff;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -97,6 +100,11 @@ const navigateToFeature = (feature: string) => {
   align-self: stretch;
 }
 
+.features-total-ct {
+  display : flex;
+  flex-direction: column;
+  width : 85%;
+}
 .features-title {
   align-self: stretch;
   color: var(--color-primary);
@@ -108,6 +116,7 @@ const navigateToFeature = (feature: string) => {
   margin-bottom: 0;
   margin-top: 0;
   padding-left: 0;
+  width : 100%;
 }
 
 .features-section {
