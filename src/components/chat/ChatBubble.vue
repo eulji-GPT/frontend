@@ -635,15 +635,11 @@ onUpdated(() => {
   border: 1px solid var(--color-card-border);
   background: var(--color-chat-user-bg);
   color: var(--color-text-primary);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
   position: relative;
   font-weight: 500;
 }
 
-.chat-bubble.right:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(240, 246, 255, 0.4);
-}
+
 
 /* 유저 메시지 말풍선 꼬리 */
 .chat-bubble.right::after {

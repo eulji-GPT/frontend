@@ -44,9 +44,10 @@
           <div v-else-if="isLoading" class="loading-spinner"></div>
 
           <!-- 일반 전송 아이콘 -->
+
           <img
             v-else
-            :src="InputStateButtonSend"
+            :src="canSend ? InputWhiteButtonSend : InputStateButtonSend"
             alt="메시지 전송"
             class="button-icon send-icon"
           />
@@ -63,6 +64,7 @@
 import { ref, watch, onMounted, nextTick, computed } from 'vue';
 import InputStateButtonExpand from '../../assets/cc0acd97f17fd3260d7ac3a32e5ec4c9e1920795.svg';
 import InputStateButtonSend from '../../assets/ca93ae547828bc0ceff64d80fb5daa58d62c8c7f.svg';
+import InputWhiteButtonSend from './icon/white_send.svg?url';
 
 const props = defineProps<{
   isLoading: boolean;
@@ -426,8 +428,8 @@ textarea:disabled {
 
 /* Send Button States */
 .input-state-button-send.can-send {
-  background-color: var(--color-button-primary-bg);
-  border: 1px solid var(--color-button-primary-bg);
+  background-color: #1F2937;
+  border: 1px solid #1F2937;
 }
 
 .input-state-button-send.can-send .send-icon {
