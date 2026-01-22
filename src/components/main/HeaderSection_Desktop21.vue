@@ -4,12 +4,6 @@
       <div class="logo-text" @click="goToHome" style="cursor: pointer;">
         <img :src="eulLogo" alt="EULGPT 로고" class="logo-img" />
       </div>
-      <ul class="nav-list">
-        <li><a href="#intro" @click.prevent="scrollToSection('intro')">서비스 소개</a></li>
-        <li><a href="#features" @click.prevent="scrollToSection('features')">유용한 기능</a></li>
-        <li><a href="#faq" @click.prevent="scrollToSection('faq')">자주 묻는 질문</a></li>
-        <li><a href="#news" @click.prevent="scrollToSection('news')">새로운 소식</a></li>
-      </ul>
       <div class="auth-links">
         <template v-if="!isLoggedIn">
           <router-link to="/login">로그인</router-link>
@@ -177,6 +171,7 @@ header.header {
   color: #ffffff;
   font-weight: 600;
   font-size: 16px;
+  margin-top: 10px;
 }
 
 .logout-btn {
