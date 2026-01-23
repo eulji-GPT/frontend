@@ -15,8 +15,6 @@
           <div class="chatbot-menu-item" :class="{'collapsed': isCollapsed }">
             <div class="frame-3" :class="{'collapsed': isCollapsed }" @click="goToCrew">
               <div class="group-4">
-                <div class="group-5"></div>
-                <div class="frame-6"><span class="day">DAY</span></div>
               </div>
               <span class="empty-classroom-check" v-show="showCollapsibleContent" >빈 강의실 확인</span>
             </div>
@@ -1081,34 +1079,18 @@ const goToCrew = () => {
   z-index: 19;
 }
 
+
+
 .group-4 {
   flex-shrink: 0;
   position: relative;
   width: 25px;
   height: 27.004px;
-  z-index: 20;
+  background: url('./icon/캘린더.svg') no-repeat center;
+  background-size: cover;
+  z-index: 29;
 }
-.group-5 {
-  position: relative;
-  width: 14.078px;
-  height: 9.751px;
-  margin: 0 0 0 5.582px;
-  background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-31/CcpStAfx5O.png)
-    no-repeat center;
-  background-size: 100% 100%;
-  z-index: 21;
-  border-radius: 6.251px;
-}
-.frame-6 {
-  position: relative;
-  width: 25px;
-  height: 25px;
-  margin: -4.751px 0 0 0;
-  background: var(--color-primary-light);
-  z-index: 22;
-  overflow: visible;
-  border-radius: 6.251px;
-}
+
 .day {
   display: flex;
   align-items: center;
