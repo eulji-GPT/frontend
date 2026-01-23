@@ -314,6 +314,7 @@ button {
   background-size: cover;
   z-index: 16;
   overflow: hidden;
+  display: none;
 }
 .frame-2 {
   display: flex;
@@ -642,7 +643,7 @@ button {
   border-radius: 50%;
 }
 .frame-12 {
-  display: flex;
+  display: none;
   align-items: flex-end;
   justify-content: center;
   flex-wrap: nowrap;

@@ -1018,6 +1018,7 @@ const goToCrew = () => {
   background-size: cover;
   z-index: 16;
   overflow: hidden;
+  display: none;
 }
 .frame-2 {
   display: flex;
@@ -1258,7 +1259,7 @@ const goToCrew = () => {
   text-transform: uppercase;
 }
 .frame-12 {
-  display: flex;
+  display: none;
   align-items: flex-end;
   justify-content: center;
   flex-wrap: nowrap;
@@ -1633,6 +1634,7 @@ const goToCrew = () => {
   .edit-icon {
     width: 20px;
     height: 20px;
+    display: none;
   }
 
   .chatbot-menu-item {
@@ -1677,6 +1679,7 @@ const goToCrew = () => {
   .edit-icon {
     width: 18px;
     height: 18px;
+    display: none;
   }
 
   .chat-content-col {
