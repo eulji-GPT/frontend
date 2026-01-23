@@ -36,7 +36,10 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 const goToApply = () => {
-  router.push('/crew/apply')
+  router.push('/crew/apply').then(() => {
+    window.scrollTo(0, 0)
+    // 또는 부드러운 스크롤: window.scrollTo({ top: 0, behavior: 'smooth' })
+  })
 }
 </script>
 
@@ -68,7 +71,6 @@ const goToApply = () => {
   width: 100%;
   max-width: 1440px;
   margin: 0 auto;
-  padding: 0;
 }
 
 .group {
