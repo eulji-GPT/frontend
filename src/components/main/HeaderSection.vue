@@ -35,7 +35,7 @@
           <router-link to="/signup">회원가입</router-link>
         </template>
         <template v-else>
-          <span class="user-info" @click="handleOpenMyPage" style="cursor: pointer;">안녕하세요!<br>{{ userName }}님</span>
+          <span class="user-info" @click="handleOpenMyPage" style="cursor: pointer;">{{ userName }}님</span>
           <button @click="handleLogout" class="logout-btn">로그아웃</button>
         </template>
       </div>
@@ -375,6 +375,7 @@ header.header {
   color: var(--color-primary);
   font-weight: 600;
   font-size: 16px;
+  margin-top: 9px;
 }
 
 .logout-btn {

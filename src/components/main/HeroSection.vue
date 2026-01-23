@@ -135,7 +135,7 @@ function goToChatApp() {
 
 /* 플로팅 버튼 스타일 */
 .floating-btn-wrapper {
-  position: fixed;
+  position: absolute;
   bottom: 40px;
   left: 50%;
   transform: translateX(-50%);
@@ -152,7 +152,7 @@ function goToChatApp() {
   gap: 8px;
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
   border-radius: 30px;
-  background-color: #02478A;
+  background-color: black;
   box-sizing: border-box;
   padding: 13px 60px;
   color: white;
