@@ -35,7 +35,7 @@
           <router-link to="/signup">회원가입</router-link>
         </template>
         <template v-else>
-          <span class="user-info" @click="handleOpenMyPage" style="cursor: pointer;">안녕하세요!<br>{{ userName }}님</span>
+          <span class="user-info" @click="handleOpenMyPage" style="cursor: pointer;">{{ userName }}님</span>
           <button @click="handleLogout" class="logout-btn">로그아웃</button>
         </template>
       </div>
@@ -159,12 +159,12 @@ const fetchUserInfo = async () => {
 
     if (response.ok) {
       const data = await response.json()
-      console.log('사용자 정보:', data)
+      console.log('User info:', data)
       userName.value = data.nickname || data.name || '사용자'
       console.log('설정된 userName:', userName.value)
     }
   } catch (error) {
-    console.error('사용자 정보 로드 오류:', error)
+    console.error('User info load error:', error)
   }
 }
 
@@ -375,6 +375,7 @@ header.header {
   color: var(--color-primary);
   font-weight: 600;
   font-size: 16px;
+  margin-top: 9px;
 }
 
 .logout-btn {

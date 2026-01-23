@@ -25,7 +25,8 @@
   width: 100%;
   min-height: 100vh;
   height: auto;
-  background: var(--color-bg-secondary);
+  /* background: var(--color-bg-secondary); */
+  background: #f3f8ff;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -37,11 +38,11 @@
 
 .intro-content {
   display: flex;
-  width: 72.5vw; /* 1044/1440 * 100 */
+  width: 75vw; /* 1044/1440 * 100 */
   align-items: center;
   justify-content: space-between;
-  gap: 3rem;
-  max-width: 1044px;
+  gap: 48px;
+  max-width: 1080px;
   padding: 2rem 0;
 }
 
@@ -51,6 +52,7 @@
   gap: 1.5rem;
   flex: 1;
   align-self: stretch;
+  justify-content: center;
 }
 
 .intro-header {
@@ -61,7 +63,7 @@
   font-weight: 600;
   line-height: 140%;
   margin: 0;
-  width: 46.94vw;
+  width: 40vw;
   max-width: 676px;
   height: calc(1.4em * 1); /* 1줄 고정 높이 */
   display: flex;
@@ -79,7 +81,7 @@
   font-weight: 700;
   line-height: 150%;
   margin: 0;
-  width: 46.94vw;
+  width: 40vw;
   max-width: 676px;
   height: calc(1.5em * 3); /* 3줄 고정 높이 */
   display: flex;

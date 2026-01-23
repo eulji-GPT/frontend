@@ -1,3 +1,6 @@
+import { createLogger } from '../utils/logger';
+const log = createLogger('API');
+
 // API 기본 설정 및 서비스
 import { getApiBaseUrl } from '../utils/ports-config';
 
@@ -495,4 +498,130 @@ export const bugReportAPI = {
       method: 'DELETE',
     });
   },
+};
+
+// ==================== AI Settings API ====================
+
+// AI Settings 타입 정의
+export interface PromptSettings {
+  university: string;
+  study: string;
+  career: string;
+  cot: string;
+  general: string;
+}
+
+export interface RAGConfig {
+  initial_top_k: number;
+  final_top_k: number;
+  search_method: 'dense' | 'sparse' | 'hybrid';
+  alpha: number;
+  use_reranker: boolean;
+  use_llm_reranker: boolean;
+}
+
+export interface ModelParams {
+  temperature: number;
+  max_tokens: number;
+  top_p: number;
+}
+
+export interface AISettingsResponse {
+  prompts: PromptSettings;
+  rag_config: RAGConfig;
+  model_params: ModelParams;
+}
+
+export interface SettingsSaveResponse {
+  status: string;  // "success" or "partial"
+  warning?: string;  // 207 시 warning 메시지
+  message?: string;  // 성공 메시지
+}
+
+export interface PromptParams {
+  temperature?: number;
+  max_tokens?: number;
+  top_p?: number;
+}
+
+export interface PromptWithParamsUpdate {
+  template: string;
+  params?: PromptParams;
+}
+
+// AI Settings API
+export const aiSettingsAPI = {
+  // GET /admin/ai-settings - 모든 설정 조회
+  getAllSettings: (): Promise<AISettingsResponse> => {
+    return apiRequest<AISettingsResponse>('/admin/ai-settings', {
+      method: 'GET'
+    });
+  },
+
+  // GET /admin/ai-settings/prompts - 프롬프트 5개 조회
+  getPrompts: (): Promise<PromptSettings> => {
+    return apiRequest<PromptSettings>('/admin/ai-settings/prompts', {
+      method: 'GET'
+    });
+  },
+
+  // PUT /admin/ai-settings/prompts/{name} - 프롬프트 + 파라미터 수정
+  updatePrompt: (name: string, data: PromptWithParamsUpdate): Promise<SettingsSaveResponse> => {
+    return apiRequest<SettingsSaveResponse>(`/admin/ai-settings/prompts/${name}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  },
+
+  // GET /admin/ai-settings/prompts/{name}/params - 프롬프트별 파라미터 조회
+  getPromptParams: (name: string): Promise<PromptParams> => {
+    return apiRequest<PromptParams>(`/admin/ai-settings/prompts/${name}/params`, {
+      method: 'GET'
+    });
+  },
+
+  // PUT /admin/ai-settings/prompts/{name}/params - 프롬프트별 파라미터 수정
+  updatePromptParams: (name: string, params: PromptParams): Promise<SettingsSaveResponse> => {
+    return apiRequest<SettingsSaveResponse>(`/admin/ai-settings/prompts/${name}/params`, {
+      method: 'PUT',
+      body: JSON.stringify(params)
+    });
+  },
+
+  // GET /admin/ai-settings/rag-config - RAG 설정 조회
+  getRAGConfig: (): Promise<RAGConfig> => {
+    return apiRequest<RAGConfig>('/admin/ai-settings/rag-config', {
+      method: 'GET'
+    });
+  },
+
+  // PUT /admin/ai-settings/rag-config - RAG 설정 수정
+  updateRAGConfig: (config: RAGConfig): Promise<SettingsSaveResponse> => {
+    return apiRequest<SettingsSaveResponse>('/admin/ai-settings/rag-config', {
+      method: 'PUT',
+      body: JSON.stringify(config)
+    });
+  },
+
+  // GET /admin/ai-settings/model-params - 모델 파라미터 조회
+  getModelParams: (): Promise<ModelParams> => {
+    return apiRequest<ModelParams>('/admin/ai-settings/model-params', {
+      method: 'GET'
+    });
+  },
+
+  // PUT /admin/ai-settings/model-params - 모델 파라미터 수정
+  updateModelParams: (params: ModelParams): Promise<SettingsSaveResponse> => {
+    return apiRequest<SettingsSaveResponse>('/admin/ai-settings/model-params', {
+      method: 'PUT',
+      body: JSON.stringify(params)
+    });
+  },
+
+  // POST /admin/restart-services - AI 서비스 재시작
+  restartServices: (): Promise<SettingsSaveResponse> => {
+    return apiRequest<SettingsSaveResponse>('/admin/restart-services', {
+      method: 'POST'
+    });
+  }
 };

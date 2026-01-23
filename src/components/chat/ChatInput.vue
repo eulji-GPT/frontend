@@ -23,8 +23,14 @@
           placeholder="무엇이든 물어보세요."
           v-model="inputValue"
           @keydown="handleKeydown"
+          @compositionstart="handleCompositionStart"
+          @compositionend="handleCompositionEnd"
+          @blur="handleBlur"
           @input="autoGrow"
           :disabled="isLoading"
+          :aria-label="isLoading ? 'AI 응답 생성 중' : '채팅 메시지 입력'"
+          :aria-busy="isLoading"
+          aria-multiline="true"
           rows="1"
         ></textarea>
       </div>
@@ -81,6 +87,8 @@ const inputValue = ref('');
 const selectedImages = ref<Array<{ file: File; preview: string; type: 'image' | 'pdf' }>>([]);
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
 const imageInput = ref<HTMLInputElement | null>(null);
+const isComposing = ref(false);
+const isSending = ref(false);
 
 // 포커스 관리 - 외부에서 접근 가능하도록 expose
 const focusInput = () => {
@@ -134,12 +142,31 @@ const autoGrow = () => {
   }
 };
 
+// Composition Event 핸들러 (한글 IME 조합 상태 추적)
+const handleCompositionStart = () => {
+  isComposing.value = true;
+};
+
+const handleCompositionEnd = () => {
+  isComposing.value = false;
+};
+
+const handleBlur = () => {
+  // 입력창이 focus를 잃으면 조합 상태 강제 리셋
+  // ESC 키, 탭 전환 등으로 compositionend가 발생하지 않는 경우 대비
+  isComposing.value = false;
+};
+
 // 키보드 이벤트 처리 (Shift+Enter: 줄바꿈, Enter: 전송)
 const handleKeydown = (event: KeyboardEvent) => {
   if (event.key === 'Enter') {
     // Shift+Enter 또는 모바일에서 줄바꿈 키: 줄바꿈 허용
     if (event.shiftKey) {
-      // 기본 동작 유지 (줄바꿈)
+      return;
+    }
+
+    // 한글 IME 조합 중이면 전송하지 않음
+    if (event.isComposing === true || isComposing.value) {
       return;
     }
 
@@ -157,17 +184,38 @@ onMounted(() => {
 });
 
 const onSend = () => {
-  if ((inputValue.value.trim() || selectedImages.value.length > 0) && !props.isLoading && !props.isStreaming) {
+  // 재진입 방지: 이미 전송 중이면 무시
+  if (isSending.value) {
+    return;
+  }
+
+  // 전송 조건 체크 (플래그 설정 전에 먼저 검증)
+  if (!(inputValue.value.trim() || selectedImages.value.length > 0)
+      || props.isLoading || props.isStreaming) {
+    return;
+  }
+
+  // 전송 플래그 설정 (조건 통과 후)
+  isSending.value = true;
+
+  try {
     const images = selectedImages.value.map(img => img.file);
     emit('sendMessage', inputValue.value, images.length > 0 ? images : undefined);
     inputValue.value = '';
     selectedImages.value = [];
+
     // Reset height after sending
     nextTick(() => {
       if (textareaRef.value) {
         textareaRef.value.style.height = 'auto';
       }
+      // 전송 완료 후 플래그 해제
+      isSending.value = false;
     });
+  } catch (error) {
+    // 예외 발생 시에도 플래그 해제
+    isSending.value = false;
+    throw error;
   }
 };
 

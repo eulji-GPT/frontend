@@ -1,15 +1,9 @@
 <template>
   <header class="header">
     <nav class="nav">
-      <div class="logo-text">
+      <div class="logo-text" @click="goToHome" style="cursor: pointer;">
         <img :src="eulLogo" alt="EULGPT 로고" class="logo-img" />
       </div>
-      <ul class="nav-list">
-        <li><a href="#intro" @click.prevent="scrollToSection('intro')">서비스 소개</a></li>
-        <li><a href="#features" @click.prevent="scrollToSection('features')">유용한 기능</a></li>
-        <li><a href="#faq" @click.prevent="scrollToSection('faq')">자주 묻는 질문</a></li>
-        <li><a href="#news" @click.prevent="scrollToSection('news')">새로운 소식</a></li>
-      </ul>
       <div class="auth-links">
         <template v-if="!isLoggedIn">
           <router-link to="/login">로그인</router-link>
@@ -45,9 +39,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import eulLogo from '../../assets/eul_logo.svg'
 import { isAuthenticated, logout } from '../../utils/auth'
 
+const router = useRouter()
 const emit = defineEmits(['scrollToSection'])
 const isMobileMenuOpen = ref(false)
 const isLoggedIn = ref(false)
@@ -57,8 +53,17 @@ onMounted(() => {
   isLoggedIn.value = isAuthenticated()
 })
 
+function goToHome() {
+  router.push('/')
+}
+
 function scrollToSection(id: string) {
-  emit('scrollToSection', id)
+  // If not on main page, navigate to home first then scroll to section
+  if (router.currentRoute.value.path !== '/') {
+    router.push({ path: '/', hash: `#${id}` })
+  } else {
+    emit('scrollToSection', id)
+  }
 }
 
 function handleLogout() {
@@ -67,7 +72,12 @@ function handleLogout() {
 }
 
 function scrollToMobileSection(id: string) {
-  emit('scrollToSection', id)
+  // If not on main page, navigate to home first then scroll to section
+  if (router.currentRoute.value.path !== '/') {
+    router.push({ path: '/', hash: `#${id}` })
+  } else {
+    emit('scrollToSection', id)
+  }
   closeMobileMenu()
 }
 
@@ -161,6 +171,7 @@ header.header {
   color: #ffffff;
   font-weight: 600;
   font-size: 16px;
+  margin-top: 10px;
 }
 
 .logout-btn {

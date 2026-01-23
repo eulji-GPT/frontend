@@ -106,12 +106,14 @@ const handleSendVerification = async () => {
   }
 
   try {
+    // 이메일 정규화: 공백 제거 + 소문자 변환
+    const normalizedEmail = email.value.trim().toLowerCase();
+    email.value = normalizedEmail; // 정규화된 값으로 업데이트
+
     // 기존 타이머가 있으면 정리
     if (timer) {
       clearInterval(timer);
     }
-
-    console.log('이메일 중복 확인 중:', email.value);
 
     // 1. 이메일 중복 확인
     const checkResponse = await fetch(`${API_BASE_URL}/member/check-email`, {
@@ -119,16 +121,15 @@ const handleSendVerification = async () => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ email: email.value }),
+      body: JSON.stringify({ email: normalizedEmail }),
     });
 
     if (!checkResponse.ok) {
       const errorData = await checkResponse.json();
+      console.error('Email duplicate check failed:', errorData);
       alert(errorData.detail || '이미 사용 중인 이메일입니다.');
       return;
     }
-
-    console.log('인증번호 발송 요청:', email.value);
 
     // 2. 인증번호 발송
     const response = await fetch(`${API_BASE_URL}/member/send-verification`, {
@@ -136,16 +137,16 @@ const handleSendVerification = async () => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ email: email.value }),
+      body: JSON.stringify({ email: normalizedEmail }),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
+      console.error('Verification send failed:', errorData);
       throw new Error(errorData.detail || '인증번호 전송에 실패했습니다.');
     }
 
     const result = await response.json();
-    console.log('인증번호 전송 성공:', result);
 
     // 이메일 전송이 성공한 후에만 타이머 시작
     if (result.email_sent) {
@@ -159,7 +160,7 @@ const handleSendVerification = async () => {
     }
 
   } catch (error) {
-    console.error('인증번호 전송 오류:', error);
+    console.error('Verification send error:', error);
     const errorMessage = error instanceof Error ? error.message : '인증번호 전송에 실패했습니다. 다시 시도해주세요.';
     alert(errorMessage);
   }
@@ -176,7 +177,21 @@ const handleNext = async () => {
   }
 
   try {
-    console.log('인증번호 확인 중:', { email: email.value, code: verificationCode.value });
+    // 이메일 정규화: 공백 제거 + 소문자 변환
+    const normalizedEmail = email.value.trim().toLowerCase();
+
+    // parseInt 전 검증
+    const parsedCode = parseInt(verificationCode.value);
+
+    if (isNaN(parsedCode)) {
+      alert('유효하지 않은 인증번호 형식입니다.');
+      return;
+    }
+
+    const requestBody = {
+      email: normalizedEmail,
+      code: parsedCode
+    };
 
     // 백엔드 API 호출
     const response = await fetch(`${API_BASE_URL}/member/verify-code`, {
@@ -184,19 +199,16 @@ const handleNext = async () => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        email: email.value,
-        code: parseInt(verificationCode.value)
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
+      console.error('Verification failed:', errorData);
       throw new Error(errorData.detail || '인증번호가 올바르지 않습니다.');
     }
 
     const result = await response.json();
-    console.log('인증번호 확인 성공:', result);
 
     // 이메일을 localStorage에 저장
     localStorage.setItem('signup_email', email.value);
@@ -205,7 +217,7 @@ const handleNext = async () => {
     router.push('/signup-agreement');
 
   } catch (error) {
-    console.error('인증번호 확인 오류:', error);
+    console.error('Verification error:', error);
     const errorMessage = error instanceof Error ? error.message : '인증번호 확인에 실패했습니다. 다시 시도해주세요.';
     alert(errorMessage);
   }

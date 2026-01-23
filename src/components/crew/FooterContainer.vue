@@ -13,7 +13,7 @@
               </div>
             </div>
           </div>
-          <div class="apply-button">
+          <div class="apply-button" @click="goToApply">
             <span class="button-text">지원하기</span>
           </div>
         </div>
@@ -31,6 +31,16 @@
 </template>
 
 <script setup lang="ts">
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+const goToApply = () => {
+  router.push('/crew/apply').then(() => {
+    window.scrollTo(0, 0)
+    // 또는 부드러운 스크롤: window.scrollTo({ top: 0, behavior: 'smooth' })
+  })
+}
 </script>
 
 <style scoped>
@@ -61,7 +71,6 @@
   width: 100%;
   max-width: 1440px;
   margin: 0 auto;
-  padding: 0;
 }
 
 .group {
@@ -85,6 +94,7 @@
   position: absolute;
   top: 148px;
   width: 550px;
+  z-index: 10;
 }
 
 .hero-content {

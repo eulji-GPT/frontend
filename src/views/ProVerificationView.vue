@@ -498,7 +498,7 @@ const refreshUserInfo = async () => {
 
     if (response.ok) {
       const userData = await response.json()
-      console.log('[DEBUG] 사용자 정보 갱신 완료:', userData)
+      console.log('[DEBUG] User info refreshed:', userData)
 
       // 로컬 스토리지에 Pro 상태 저장 (선택사항)
       if (userData.is_pro) {
@@ -506,7 +506,7 @@ const refreshUserInfo = async () => {
       }
     }
   } catch (error) {
-    console.error('사용자 정보 갱신 실패:', error)
+    console.error('Failed to refresh user info:', error)
   }
 }
 

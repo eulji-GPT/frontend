@@ -96,96 +96,8 @@
                 <span v-else class="linked-badge">연동됨 ✓</span>
               </div>
             </div>
-            <div class="premium-section" :class="{ 'verification-active': showProVerification }">
-              <div class="premium-card">
-                <div class="premium-content" v-if="!showProVerification && !userInfo?.is_pro">
-                  <div class="premium-info">
-                    <div class="premium-brand">
-                      <div class="brand-group">
-                        <span class="eulgpt-text">EULGPT</span>
-                        <div class="union-icon"></div>
-                      </div>
-                    </div>
-                    <span class="premium-description">이메일을 인증 시, 더 많은 기능</span>
-                  </div>
-                  <button class="verify-button" @click="startProVerification">
-                    <span class="verify-text">인증</span>
-                  </button>
-                </div>
-
-                <!-- Pro 인증이 완료된 경우 -->
-                <div class="premium-content" v-if="userInfo?.is_pro">
-                  <div class="premium-info">
-                    <div class="premium-brand">
-                      <div class="brand-group">
-                        <span class="eulgpt-text">EULGPT</span>
-                        <div class="union-icon"></div>
-                      </div>
-                    </div>
-                    <span class="premium-description">✨ Pro 계정 활성화됨</span>
-                  </div>
-                  <div class="pro-badge">
-                    <span class="pro-text">PRO</span>
-                  </div>
-                </div>
-
-                <!-- 이메일 인증 UI -->
-                <div class="pro-verification-form" v-if="showProVerification && !userInfo?.is_pro">
-                  <div class="verification-header">
-                    <span class="verification-title">을지대 이메일 인증</span>
-                    <button class="close-verification" @click="cancelProVerification">✕</button>
-                  </div>
-
-                  <div class="email-verification-section">
-                    <div class="email-input-row">
-                      <input
-                        v-model="proEmail"
-                        type="email"
-                        placeholder="이메일 (@g.eulji.ac.kr)"
-                        class="pro-email-input"
-                        :disabled="isProVerificationSent"
-                      />
-                      <button
-                        class="send-code-button"
-                        @click="handleSendProVerification"
-                        :disabled="isProVerificationSent"
-                      >
-                        <span>{{ isProVerificationSent ? '전송됨' : '인증번호' }}</span>
-                      </button>
-                    </div>
-
-                    <div v-if="isProVerificationSent" class="verification-code-row">
-                      <input
-                        v-model="proVerificationCode"
-                        type="text"
-                        placeholder="인증번호 6자리"
-                        class="pro-code-input"
-                        maxlength="6"
-                      />
-                      <span class="timer-text">{{ formattedProTime }}</span>
-                    </div>
-
-                    <button
-                      class="complete-verification-button"
-                      @click="handleCompleteProVerification"
-                      :disabled="!isProVerificationSent || !proVerificationCode"
-                    >
-                      <span>인증 완료</span>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Premium Logo - 인증 폼이 아닐 때만 표시 -->
-                <div class="premium-logo" v-if="!showProVerification">
-                  <div class="logo-group">
-                    <span class="eulgpt-large">EULGPT</span>
-                    <div class="union-large"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
-          
+
           <!-- 설정 -->
           <div v-else-if="activeTab === 'settings'" class="settings-section">
             <!-- 화면 테마 -->
@@ -232,6 +144,8 @@
               <div class="settings-info wide">
                 <div class="settings-title">고객 지원</div>
                 <div class="settings-links">
+                  <span class="link" @click="handleBugReport">버그 신고</span>
+                  <span class="separator">|</span>
                   <span class="link" @click="handleNewsLink">새로운 소식</span>
                   <span class="separator">|</span>
                   <span class="link" @click="handleFaqLink">자주 묻는 질문</span>
@@ -386,7 +300,7 @@ const fetchUserInfo = async () => {
           profileImage.value = data.profile_image_url
         }
 
-        console.log('✅ 개발 환경 사용자 정보:', data)
+        console.log('Dev environment user info:', data)
       }
       return
     }
@@ -399,7 +313,7 @@ const fetchUserInfo = async () => {
     })
 
     if (!response.ok) {
-      throw new Error('사용자 정보를 가져오는데 실패했습니다.')
+      throw new Error('Failed to fetch user information')
     }
 
     const data = await response.json()
@@ -410,9 +324,9 @@ const fetchUserInfo = async () => {
       profileImage.value = data.profile_image_url
     }
 
-    console.log('사용자 정보:', data)
+    console.log('User info:', data)
   } catch (error) {
-    console.error('사용자 정보 로드 오류:', error)
+    console.error('User info load error:', error)
   }
 }
 
@@ -664,6 +578,11 @@ const cancelDeleteData = () => {
 }
 
 // 고객 지원 링크
+const handleBugReport = () => {
+  emit('close')
+  router.push('/bug-report')
+}
+
 const handleNewsLink = async () => {
   emit('close')
   await router.push('/')
@@ -684,9 +603,14 @@ const handleFaqLink = async () => {
   }
 }
 
-const handleGuideLink = () => {
-  // 가이드 페이지가 없으므로 무시
-  console.log('가이드 페이지는 아직 준비되지 않았습니다.')
+const handleGuideLink = async () => {
+  emit('close')
+  await router.push('/')
+  await nextTick()
+  const introSection = document.querySelector('#intro')
+  if (introSection) {
+    introSection.scrollIntoView({ behavior: 'smooth' })
+  }
 }
 
 // 서비스 정보 링크
@@ -1210,364 +1134,6 @@ onUnmounted(() => {
   border-radius: 12px;
 }
 
-.premium-section {
-  width: 100%;
-  max-width: 500px;
-  min-height: 65px;
-  overflow: hidden;
-  background-color: rgb(20, 29, 48);
-  border-radius: 25px;
-  position: relative;
-  margin: 0 auto;
-  flex-shrink: 0;
-  transition: min-height 0.3s ease;
-}
-
-.premium-section.verification-active {
-  min-height: 220px;
-}
-
-.premium-card {
-  width: 100%;
-  height: 100%;
-  position: relative;
-}
-
-.premium-content {
-  display: flex;
-  justify-content: flex-start;
-  flex-direction: row;
-  align-items: center;
-  flex: none;
-  gap: 56px;
-  width: 397px;
-  height: 35px;
-  box-sizing: border-box;
-  position: absolute;
-  left: calc(50% - 199px);
-  top: calc(50% - 17px);
-}
-
-.premium-info {
-  display: flex;
-  justify-content: flex-start;
-  flex-direction: row;
-  align-items: center;
-  flex: none;
-  gap: 15px;
-  box-sizing: border-box;
-}
-
-.premium-brand {
-  display: flex;
-  justify-content: flex-start;
-  flex-direction: row;
-  align-items: center;
-  flex: none;
-  gap: 8px;
-  box-sizing: border-box;
-}
-
-.brand-group {
-  width: 102px;
-  height: 35px;
-  position: relative;
-}
-
-.eulgpt-text {
-  color: white;
-  text-overflow: ellipsis;
-  font-size: 23px;
-  font-family: Poppins, sans-serif;
-  font-weight: 700;
-  text-align: left;
-  width: 105px;
-  position: absolute;
-  left: 0px;
-  top: 0px;
-}
-
-.union-icon {
-  width: 8px;
-  height: 8px;
-  background: white;
-  position: absolute;
-  left: 92px;
-  top: 4px;
-  transform: rotate(-15deg);
-  transform-origin: top left;
-  border-radius: 1px;
-}
-
-.premium-description {
-  color: white;
-  text-overflow: ellipsis;
-  font-size: 15px;
-  font-family: Pretendard, sans-serif;
-  font-weight: 600;
-  line-height: 24px;
-  text-align: center;
-}
-
-.verify-button {
-  display: flex;
-  justify-content: center;
-  flex-direction: row;
-  align-items: center;
-  flex: none;
-  gap: 8px;
-  border-radius: 12px;
-  width: 70px;
-  height: 32px;
-  background-color: white;
-  box-sizing: border-box;
-  padding: 0px 12px;
-  border: none;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.verify-text {
-  color: black;
-  text-overflow: ellipsis;
-  font-size: 14px;
-  font-family: Pretendard, sans-serif;
-  font-weight: 600;
-  line-height: 23px;
-  text-align: center;
-}
-
-.premium-logo {
-  display: flex;
-  justify-content: flex-start;
-  flex-direction: row;
-  align-items: center;
-  flex: none;
-  gap: 17px;
-  width: 210px;
-  height: 72px;
-  box-sizing: border-box;
-  position: absolute;
-  left: 0px;
-  top: calc(50% + 22px - 36px);
-}
-
-.logo-group {
-  width: 210px;
-  height: 72px;
-  position: relative;
-}
-
-.eulgpt-large {
-  color: rgba(255, 255, 255, 0.1);
-  text-overflow: ellipsis;
-  font-size: 48px;
-  font-family: Poppins, sans-serif;
-  font-weight: 700;
-  text-align: left;
-  width: 200px;
-  position: absolute;
-  left: 0px;
-  top: 0px;
-}
-
-.union-large {
-  width: 17px;
-  height: 17px;
-  background: rgba(255, 255, 255, 0.1);
-  position: absolute;
-  left: 189px;
-  top: 7px;
-  transform: rotate(-15deg);
-  transform-origin: top left;
-  border-radius: 2px;
-}
-
-/* Pro 배지 스타일 */
-.pro-badge {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-  border-radius: 8px;
-  padding: 6px 12px;
-  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
-}
-
-.pro-text {
-  color: white;
-  font-size: 12px;
-  font-family: Pretendard, sans-serif;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-}
-
-/* Pro 인증 폼 스타일 */
-.pro-verification-form {
-  width: calc(100% - 32px);
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  position: relative;
-  margin: 16px;
-  z-index: 10;
-}
-
-.verification-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.verification-title {
-  color: white;
-  font-size: 14px;
-  font-family: Pretendard, sans-serif;
-  font-weight: 600;
-}
-
-.close-verification {
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 20px;
-  cursor: pointer;
-  padding: 0;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.2s ease;
-}
-
-.close-verification:hover {
-  color: white;
-}
-
-.email-verification-section {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.email-input-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.pro-email-input {
-  flex: 1;
-  padding: 10px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  font-size: 14px;
-  font-family: Pretendard, sans-serif;
-  outline: none;
-  transition: all 0.2s ease;
-}
-
-.pro-email-input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.pro-email-input:focus {
-  border-color: rgba(255, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.pro-email-input:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.send-code-button {
-  padding: 10px 16px;
-  background: white;
-  color: rgb(20, 29, 48);
-  border: none;
-  border-radius: 8px;
-  font-size: 13px;
-  font-family: Pretendard, sans-serif;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s ease;
-}
-
-.send-code-button:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.9);
-  transform: translateY(-1px);
-}
-
-.send-code-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.verification-code-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  padding: 10px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.pro-code-input {
-  flex: 1;
-  border: none;
-  background: transparent;
-  color: white;
-  font-size: 14px;
-  font-family: Pretendard, sans-serif;
-  outline: none;
-}
-
-.pro-code-input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.timer-text {
-  color: #fbbf24;
-  font-size: 13px;
-  font-family: Pretendard, sans-serif;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.complete-verification-button {
-  padding: 12px 16px;
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-family: Pretendard, sans-serif;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
-}
-
-.complete-verification-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(245, 158, 11, 0.4);
-}
-
-.complete-verification-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 /* 반응형 */
 @media (max-width: 768px) {
   .modal-container {
@@ -1583,12 +1149,7 @@ onUnmounted(() => {
     width: 100%;
     max-width: 400px;
   }
-  
-  .premium-section {
-    width: 100%;
-    max-width: 400px;
-  }
-  
+
   .kakao-section {
     gap: 20px;
     justify-content: space-between;
@@ -1606,12 +1167,7 @@ onUnmounted(() => {
     height: auto;
     min-height: 180px;
   }
-  
-  .premium-section {
-    max-width: 350px;
-    height: 60px;
-  }
-  
+
   .name-section, 
   .reservation-section {
     position: static;
