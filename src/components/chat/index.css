@@ -546,25 +546,31 @@ button {
   flex-shrink: 0;
   gap: 10px;
   position: relative;
-  width: 270px;
+  width: 100%;
   height: 532px;
-  padding: 0 20px 0 20px;
+  padding: 0 clamp(10px, 5%, 20px);
   z-index: 36;
+  min-width: 0;
 }
 .chat-list-link {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   flex-wrap: nowrap;
   flex-shrink: 0;
-  gap: 139px;
+  gap: 8px;
   position: relative;
-  width: 216px;
+  width: 100%;
   background: #ffffff;
   z-index: 37;
+  min-width: 0;
 }
 .conversation-list {
-  flex-shrink: 0;
-  flex-basis: auto;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   position: relative;
   height: 23px;
   color: #6b7280;
