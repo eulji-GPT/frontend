@@ -11,9 +11,9 @@
             <img class="features-inner-svg" src="../../assets/FeaturesSection/Frame 2147227347.svg" alt="Frame 2147227347" />
             <div class="features-inner-title">실시간 응답 서비스</div>
             <div class="features-inner-desc">
-              학교생활에 필요한 질문, 정보 검색, 일정 확인까지<br />
-              자연스럽고 빠르게 대화하며 필요한 정보를 찾아드려요.<br />
-              챗봇을 넘어선 AI 조교처럼, 언제든 궁금한 걸 물어보세요.
+             학교생활에 필요한 질문, 정보 검색, 일정 확인까지<br />
+              자연스럽고 빠르게 대화하며 필요한 정보를 찾아봐요. <br />
+              챗봇을 넘어선 AI 조교처럼, 언제든 물어보세요
             </div>
           </div>
           <div class="Frame2147227348">
@@ -194,7 +194,7 @@ const navigateToFeature = (feature: string) => {
   font-style: normal;
   font-weight: 500;
   line-height: 25px; /* 156.25% */
-  margin-top: -30px;
+  margin-top: -10px;
   margin-bottom: 0px;
   padding: 0px;
   text-align: left;
