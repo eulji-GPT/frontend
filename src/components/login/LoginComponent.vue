@@ -18,22 +18,10 @@
       </span>
 
       <div class="frame-2147227518">
-        <div class="frame-2147227608">
-          <div class="button-pc" @click="handleEulgptSignup">
-            <div class="frame-2147227341">
-              <div class="frame-2147227341-inner">
-                <span class="text-white">EULGPT 계정으로 회원가입</span>
-              </div>
-            </div>
-          </div>
-          <div class="frame-2147227609">
-            <span class="eulgpt-text">EULGPT로 가입하면 프리미엄 이용이 가능해요</span>
-            <div class="union-icon">✨</div>
-          </div>
-        </div>
+        <!-- EULGPT 계정 회원가입 섹션 완전 제거 (카카오 전용) -->
 
         <div class="frame-2147227519">
-          <div class="line-103"></div>
+          <!-- 구분선 완전 제거 (카카오 버튼만 있으므로 불필요) -->
           <div class="frame-2147227518-inner">
             <div class="button-pc-yellow" @click="handleKakaoLogin">
               <div class="frame-2147227341-inner">
@@ -41,14 +29,15 @@
                 <span class="text-black">카카오 계정으로 회원가입</span>
               </div>
             </div>
-            <div class="frame-2147227520">
-              <span class="text-gray" @click="handleLogin">로그인</span>
-              <span class="dot">•</span>
-              <span class="text-gray" @click="handleFindAccount">내 계정 찾기</span>
+            <!-- 개발 환경 전용: 이메일 로그인 토글 버튼 -->
+            <div v-if="isDevelopment" class="frame-2147227520">
+              <span class="text-gray" @click="handleLogin">
+                {{ showLoginForm ? '로그인 폼 닫기' : '이메일로 로그인' }}
+              </span>
             </div>
-            
-            <!-- 로그인 폼 -->
-            <form v-if="showLoginForm" class="login-form" @submit.prevent="submitLogin">
+
+            <!-- 개발 환경 전용: 이메일 로그인 폼 -->
+            <form v-if="isDevelopment && showLoginForm" class="login-form" @submit.prevent="submitLogin">
               <div class="form-group">
                 <label for="login-email" class="visually-hidden">이메일</label>
                 <input
@@ -97,7 +86,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import HeaderSection from '../main/HeaderSection.vue';
 import { AuthService } from '../../services/auth';
@@ -105,6 +94,26 @@ import { healthAPI } from '../../services/api';
 
 const router = useRouter();
 const authService = AuthService.getInstance();
+
+// 개발 환경 감지 (이메일 로그인은 개발 환경에서만 표시)
+// 환경변수 또는 localhost 접속 시 개발 환경으로 간주
+const isDevelopment = computed(() => {
+  const envForceEnable = import.meta.env.VITE_ENABLE_EMAIL_LOGIN === 'true';
+  const isDevMode = import.meta.env.DEV;
+  const isLocalhost = window.location.hostname === 'localhost' ||
+                      window.location.hostname === '127.0.0.1';
+  const isDevEnvironment = envForceEnable || isDevMode || isLocalhost;
+
+  console.log('[Dev Check]', {
+    envForceEnable,
+    isDevMode,
+    isLocalhost,
+    hostname: window.location.hostname,
+    result: isDevEnvironment
+  });
+
+  return isDevEnvironment;
+});
 
 // 환경변수에서 카카오 설정 가져오기
 const KAKAO_REST_API_KEY = import.meta.env.VITE_KAKAO_REST_API_KEY || '6946f5fc07f24c4ab3e161bab6de3b4a';
@@ -118,10 +127,10 @@ const errorMessage = ref('');
 const testBackendConnection = async () => {
   try {
     const response = await healthAPI.checkHealth();
-    console.log('백엔드 연결 성공:', response);
+    console.log('Backend connection successful');
     return true;
   } catch (error) {
-    console.error('백엔드 연결 실패:', error);
+    console.error('Backend connection failed:', error);
     errorMessage.value = '서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.';
     return false;
   }
@@ -187,7 +196,7 @@ const submitLogin = async () => {
       password: loginForm.value.password
     });
     
-    console.log('로그인 성공:', result);
+    console.log('Login successful');
     
     // 메인 페이지로 이동 (또는 채팅 페이지)
     router.push('/');

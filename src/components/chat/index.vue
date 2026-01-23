@@ -103,9 +103,6 @@
       <div class="chat-content-wrapper">
         <!-- 일반 채팅 화면 -->
         <div v-if="currentView === 'chat'" class="chat-main-area" @click="handleMessageAreaClick">
-          <div class="rag-initializer-container">
-            <RagInitializer />
-          </div>
           <div class="chat-messages-container">
             <ChatMessageArea
               :messages="messages"
@@ -123,22 +120,6 @@
               @sendMessage="handleSendMessage"
               @stopResponse="stopResponse"
             />
-            <div class="help-button-container">
-              <div v-if="showHelpPanel" class="help-panel">
-                <div class="help-panel-item">
-                  <span class="help-panel-text">자주 묻는 질문</span>
-                </div>
-                <div class="help-panel-item">
-                  <span class="help-panel-text">가이드</span>
-                </div>
-              </div>
-              <button class="help-button" @click="toggleHelpPanel" title="도움말">
-                <svg width="8" height="15" viewBox="0 0 8 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="4" cy="11.5" r="0.5" fill="black"/>
-                  <path d="M4 1C2.34315 1 1 2.34315 1 4H2C2 2.89543 2.89543 2 4 2C5.10457 2 6 2.89543 6 4C6 5.10457 5.10457 6 4 6V9H5V6C6.65685 6 8 4.65685 8 3C8 1.34315 6.65685 0 5 0H4V1Z" fill="black"/>
-                </svg>
-              </button>
-            </div>
           </div>
         </div>
 
@@ -177,7 +158,6 @@ import ChatHistory from './ChatHistory.vue';
 import ChatMessageArea from './ChatMessageArea.vue';
 import ChatInput from './ChatInput.vue';
 import ChatModeSelector from './ChatModeSelector.vue';
-import RagInitializer from './RagInitializer.vue';
 import SourceSidebar from './SourceSidebar.vue';
 import ArtifactPanel from './ArtifactPanel.vue';
 import NotificationDropdown from '../common/NotificationDropdown.vue';
@@ -188,6 +168,8 @@ import type { ChatMode, Artifact, ArtifactVersion } from '../../composables/useC
 import eulLogo from '../../assets/eul_logo.svg';
 import sidebar_chatlogo from '../../components/chat/icon/sidebar-toggle-chatimg.svg'
 import { getApiBaseUrl } from '@/utils/ports-config';
+import { createLogger } from '../../utils/logger';
+const log = createLogger('Chat');
 
 const router = useRouter();
 const route = useRoute();
@@ -242,13 +224,13 @@ const currentView = ref<'chat'>('chat');
 
 // 피드백 처리
 const handleMessageFeedback = (type: 'good' | 'bad', messageId: string) => {
-  console.log(`메시지 피드백 처리: ${type}`, messageId);
+  log.debug(`Message feedback: ${type}`, messageId);
   // TODO: 피드백 데이터를 서버에 전송하거나 로컬 저장소에 저장
 };
 
 // 답변 재생성 처리
 const handleMessageRegenerate = (messageId: string) => {
-  console.log('답변 재생성 처리:', messageId);
+  log.debug('Regenerate answer:', messageId);
   
   try {
     // messageId에서 인덱스 추출 (예: "1-1234567890" -> 1)
@@ -256,13 +238,13 @@ const handleMessageRegenerate = (messageId: string) => {
     const currentChat = chatHistory.value.find(c => c.id === currentChatId.value);
     
     if (!currentChat || !currentChat.messages[messageIndex]) {
-      console.error('재생성할 메시지를 찾을 수 없습니다.');
+      log.error('Message to regenerate not found');
       return;
     }
     
     // 해당 메시지가 봇 메시지인지 확인
     if (currentChat.messages[messageIndex].isUser) {
-      console.error('사용자 메시지는 재생성할 수 없습니다.');
+      log.error('Cannot regenerate user message');
       return;
     }
     
@@ -276,11 +258,11 @@ const handleMessageRegenerate = (messageId: string) => {
     }
     
     if (!userMessage) {
-      console.error('재생성을 위한 사용자 메시지를 찾을 수 없습니다.');
+      log.error('User message for regeneration not found');
       return;
     }
     
-    console.log('🔄 답변 재생성 시작:', userMessage.substring(0, 50) + '...');
+    log.info('Starting answer regeneration:', userMessage.substring(0, 50) + '...');
     
     // 기존 봇 메시지를 로딩 상태로 변경
     currentChat.messages[messageIndex] = {
@@ -300,26 +282,26 @@ const handleMessageRegenerate = (messageId: string) => {
     handleSend(inputValue);
     
   } catch (error) {
-    console.error('답변 재생성 오류:', error);
+    log.error('Answer regeneration error:', error);
   }
 };
 
 // 아티팩트 열기 처리
 const handleOpenArtifact = (messageId: string) => {
-  console.log('아티팩트 열기 요청:', messageId);
+  log.debug('Open artifact request:', messageId);
   selectedArtifactMessageId.value = messageId;
   showArtifactPanel.value = true;
 };
 
 // 메시지 재시도 처리 (에러 발생 시)
 const handleRetryMessage = (messageIndex: number) => {
-  console.log('메시지 재시도 요청:', messageIndex);
+  log.debug('Message retry request:', messageIndex);
 
   try {
     const currentChat = chatHistory.value.find(c => c.id === currentChatId.value);
 
     if (!currentChat || !currentChat.messages[messageIndex]) {
-      console.error('재시도할 메시지를 찾을 수 없습니다.');
+      log.error('Message to retry not found');
       return;
     }
 
@@ -335,11 +317,11 @@ const handleRetryMessage = (messageIndex: number) => {
     }
 
     if (!userMessage) {
-      console.error('재시도를 위한 사용자 메시지를 찾을 수 없습니다.');
+      log.error('User message for retry not found');
       return;
     }
 
-    console.log('🔄 메시지 재시도 시작:', userMessage.substring(0, 50) + '...');
+    log.info('Starting message retry:', userMessage.substring(0, 50) + '...');
 
     // 에러 상태의 봇 메시지를 로딩 상태로 변경
     currentChat.messages[messageIndex] = {
@@ -360,12 +342,12 @@ const handleRetryMessage = (messageIndex: number) => {
     handleSend(inputValue);
 
   } catch (error) {
-    console.error('메시지 재시도 오류:', error);
+    log.error('Message retry error:', error);
   }
 };
 
 // 디버깅을 위한 messages 로그
-console.log('현재 메시지들:', messages.value);
+log.debug('Current messages:', messages.value);
 
 const isMobile = ref(false);
 const sidebarVisible = ref(true);
@@ -435,7 +417,6 @@ const minSidebarWidth = 200;
 const maxSidebarWidth = 500;
 const showNotificationDropdown = ref(false);
 const showInfoPanel = ref(false);
-const showHelpPanel = ref(false);
 const showMyPageModal = ref(false);
 const userProfileImage = ref<string | null>(null);
 const userName = ref<string>('');
@@ -509,7 +490,7 @@ const handleCloseArtifact = () => {
 };
 
 const handleUpdateArtifact = (updatedArtifact: Artifact) => {
-  console.log('아티팩트 업데이트:', updatedArtifact);
+  log.debug('Artifact updated:', updatedArtifact);
 
   // 가장 최근 아티팩트가 있는 메시지 찾기
   for (let i = messages.value.length - 1; i >= 0; i--) {
@@ -520,14 +501,14 @@ const handleUpdateArtifact = (updatedArtifact: Artifact) => {
 
       // 채팅 히스토리 저장
       saveChatHistory();
-      console.log('✅ 아티팩트가 업데이트되었습니다.');
+      log.info('Artifact updated successfully');
       break;
     }
   }
 };
 
 const handleRegenerateArtifact = async (artifact: Artifact) => {
-  console.log('🔄 아티팩트 재생성 요청');
+  log.info('Artifact regeneration requested');
 
   // 재생성 요청 메시지 추가
   const regenerateMessage = `"${artifact.title}" 아티팩트를 완전히 새롭게 재작성해주세요. 이전 내용과는 다른 관점이나 추가 정보를 포함하여 더 풍부한 내용으로 작성해주세요.`;
@@ -752,18 +733,7 @@ const toggleInfoPanel = (event: Event) => {
   console.log('Info icon clicked!');
   showInfoPanel.value = !showInfoPanel.value;
   showNotificationDropdown.value = false; // 다른 패널 닫기
-  showHelpPanel.value = false; // 다른 패널 닫기
   console.log('Info panel toggled:', showInfoPanel.value);
-};
-
-const toggleHelpPanel = (event: Event) => {
-  event.preventDefault();
-  event.stopPropagation();
-  console.log('Help button clicked!');
-  showHelpPanel.value = !showHelpPanel.value;
-  showNotificationDropdown.value = false; // 다른 패널 닫기
-  showInfoPanel.value = false; // 다른 패널 닫기
-  console.log('Help panel toggled:', showHelpPanel.value);
 };
 
 const toggleMyPageModal = () => {
@@ -871,6 +841,14 @@ onMounted(() => {
     window.visualViewport.addEventListener('scroll', handleVisualViewportResize);
   }
 
+  // URL 파라미터에서 chatId 읽기 (B: UUID 추가)
+  const chatIdFromUrl = route.params.chatId as string | undefined;
+  if (chatIdFromUrl) {
+    // URL에 chatId가 있으면 해당 채팅 선택
+    log.info(`Loading chat from URL: ${chatIdFromUrl}`);
+    selectChat(chatIdFromUrl);
+  }
+
   // 카카오 계정 연동 결과 처리
   const kakaoLinkResult = route.query.kakao_link as string;
   if (kakaoLinkResult) {
@@ -882,8 +860,8 @@ onMounted(() => {
       const errorMessage = route.query.message as string || '카카오 연동에 실패했습니다.';
       alert(errorMessage);
     }
-    // URL에서 쿼리 파라미터 제거
-    router.replace({ path: '/chat', query: {} });
+    // URL에서 쿼리 파라미터 제거 (chatId는 유지)
+    router.replace({ path: `/chat${chatIdFromUrl ? '/' + chatIdFromUrl : ''}`, query: {} });
   }
 });
 
@@ -1482,89 +1460,6 @@ const goToCrew = () => {
   background: var(--color-bg-primary);
 }
 
-.help-button {
-  position: absolute;
-  bottom: 30px;
-  right: 30px;
-  width: 34px;
-  height: 34px;
-  min-width: 34px;
-  min-height: 34px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--color-bg-primary);
-  border: 1px solid var(--color-card-border);
-  border-radius: 100px;
-  cursor: pointer;
-  padding: 0;
-  box-sizing: border-box;
-  transition: background-color 0.2s ease;
-  z-index: 101;
-  overflow: visible;
-}
-
-.help-button:hover {
-  background-color: var(--color-bg-secondary);
-}
-
-.help-button svg {
-  width: 10px;
-  height: 16px;
-  display: block;
-}
-
-.help-button-container {
-  position: absolute;
-  bottom: 30px;
-  right: 30px;
-  z-index: 101;
-}
-
-.help-button-container .help-button {
-  position: relative;
-  bottom: auto;
-  right: auto;
-}
-
-.help-panel {
-  position: absolute;
-  bottom: 44px;
-  right: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  background-color: var(--color-bg-primary);
-  border: 1px solid var(--color-card-border);
-  border-radius: 15px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  padding: 15px;
-  width: 200px;
-  z-index: 2000;
-}
-
-.help-panel-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.help-panel-item:hover {
-  background-color: var(--color-bg-secondary);
-}
-
-.help-panel-text {
-  color: var(--color-text-primary);
-  font-size: 14px;
-  font-family: Pretendard, sans-serif;
-  font-weight: 500;
-  line-height: 23px;
-}
-
 /* Sidebar resizer */
 .sidebar-resizer {
   position: absolute;
@@ -1689,12 +1584,7 @@ const goToCrew = () => {
     position: relative;
     top: 0;
     left: 0;
-    padding: 12px 16px;
-  }
-
-  .help-button {
-    bottom: 20px;
-    right: 16px;
+    padding: 20px 24px 12px 24px;
   }
 
   /* 키보드 오버레이 대응 */
@@ -1709,17 +1599,11 @@ const goToCrew = () => {
 
   /* 키보드가 열렸을 때 메시지 영역 조정 + FR-032: 부드러운 스크롤 */
   .chat-messages-container {
-    padding-bottom: calc(var(--keyboard-height, 0px) + 16px);
+    padding-bottom: calc(var(--keyboard-height, 0px) + 8px);
     transition: padding-bottom 0.15s ease-out;
     -webkit-overflow-scrolling: touch; /* iOS 부드러운 스크롤 */
     scroll-behavior: smooth;
     overscroll-behavior: contain; /* 스크롤 체이닝 방지 */
-  }
-
-  /* 키보드가 열렸을 때 도움말 버튼 위치 조정 */
-  .help-button {
-    bottom: calc(20px + var(--keyboard-height, 0px));
-    transition: bottom 0.15s ease-out;
   }
 }
 

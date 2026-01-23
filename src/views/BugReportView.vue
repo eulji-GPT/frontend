@@ -27,10 +27,9 @@
 
     <!-- Toast Notification -->
     <ToastNotification
-      v-if="showToast"
       :message="toastMessage"
-      :type="toastType"
-      @close="showToast = false"
+      :show="showToast"
+      @hide="showToast = false"
     />
   </div>
 </template>

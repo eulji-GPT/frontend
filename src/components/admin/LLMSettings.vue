@@ -7,13 +7,18 @@
       <div class="templates-panel">
         <div class="panel-header">
           <h3>프롬프트 템플릿</h3>
-          <button class="refresh-btn" @click="loadTemplates" :disabled="loading">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="23 4 23 10 17 10"></polyline>
-              <polyline points="1 20 1 14 7 14"></polyline>
-              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-            </svg>
-          </button>
+          <div class="header-actions">
+            <button class="apply-recommended-btn" @click="applyRecommendedParams" :disabled="loading" title="추천 설정 자동 적용">
+              ✨
+            </button>
+            <button class="refresh-btn" @click="loadTemplates" :disabled="loading">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div v-if="loading" class="loading-state">
@@ -30,7 +35,10 @@
             @click="selectTemplate(key)"
           >
             <div class="template-info">
-              <span class="template-name">{{ getTemplateName(key) }}</span>
+              <span class="template-name">
+                {{ getTemplateName(key) }}
+                <span v-if="useCustomParams[key]" class="custom-badge" title="개별 파라미터 사용 중">⚙️</span>
+              </span>
               <span class="template-key">{{ key }}</span>
             </div>
             <div class="template-icon">
@@ -49,6 +57,11 @@
               <span class="template-badge">{{ selectedTemplate }}</span>
             </div>
             <div class="editor-actions">
+              <button class="action-btn restart" @click="restartServices" :disabled="loading" title="AI 서비스 재시작">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
+                </svg>
+              </button>
               <button class="action-btn reset" @click="resetTemplate" title="초기화">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
@@ -83,22 +96,34 @@
 
           <!-- 모델 설정 -->
           <div class="model-settings">
-            <h4>모델 설정</h4>
-            <div class="settings-grid">
+            <div class="settings-header">
+              <h4>모델 설정</h4>
+              <label class="custom-params-toggle">
+                <input
+                  type="checkbox"
+                  v-model="useCustomParams[selectedTemplate]"
+                  @change="toggleCustomParams(selectedTemplate)"
+                />
+                <span>이 프롬프트만의 개별 파라미터 사용</span>
+              </label>
+            </div>
+
+            <!-- 전역 파라미터 (개별 파라미터 미사용 시) -->
+            <div v-if="!useCustomParams[selectedTemplate]" class="settings-grid">
               <div class="setting-item">
-                <label>Temperature</label>
+                <label>Temperature (전역)</label>
                 <input
                   type="range"
                   v-model.number="modelSettings.temperature"
                   min="0"
-                  max="2"
+                  max="1"
                   step="0.1"
                   @input="markAsChanged"
                 />
                 <span class="setting-value">{{ modelSettings.temperature.toFixed(1) }}</span>
               </div>
               <div class="setting-item">
-                <label>Top-P</label>
+                <label>Top-P (전역)</label>
                 <input
                   type="range"
                   v-model.number="modelSettings.topP"
@@ -110,7 +135,7 @@
                 <span class="setting-value">{{ modelSettings.topP.toFixed(2) }}</span>
               </div>
               <div class="setting-item">
-                <label>Max Tokens</label>
+                <label>Max Tokens (전역)</label>
                 <input
                   type="number"
                   v-model.number="modelSettings.maxTokens"
@@ -119,6 +144,149 @@
                   step="100"
                   @input="markAsChanged"
                 />
+              </div>
+            </div>
+
+            <!-- 개별 파라미터 (사용 시) -->
+            <div v-else class="settings-grid">
+              <div class="setting-item custom-param">
+                <label>Temperature (개별)</label>
+                <input
+                  type="range"
+                  v-model.number="promptParams[selectedTemplate].temperature"
+                  min="0"
+                  max="1"
+                  step="0.1"
+                  @input="markAsChanged"
+                />
+                <span class="setting-value custom">{{ promptParams[selectedTemplate].temperature.toFixed(1) }}</span>
+              </div>
+              <div class="setting-item custom-param">
+                <label>Top-P (개별)</label>
+                <input
+                  type="range"
+                  v-model.number="promptParams[selectedTemplate].topP"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  @input="markAsChanged"
+                />
+                <span class="setting-value custom">{{ promptParams[selectedTemplate].topP.toFixed(2) }}</span>
+              </div>
+              <div class="setting-item custom-param">
+                <label>Max Tokens (개별)</label>
+                <input
+                  type="number"
+                  v-model.number="promptParams[selectedTemplate].maxTokens"
+                  min="100"
+                  max="8000"
+                  step="100"
+                  @input="markAsChanged"
+                />
+              </div>
+            </div>
+
+            <div v-if="useCustomParams[selectedTemplate]" class="custom-param-notice">
+              ℹ️ 이 프롬프트는 개별 파라미터를 사용합니다. 전역 설정과 독립적으로 작동합니다.
+            </div>
+          </div>
+
+          <!-- RAG 설정 -->
+          <div class="rag-settings">
+            <h4>RAG 설정</h4>
+            <div class="settings-grid">
+              <div class="setting-item">
+                <label>Initial Top-K (검색 결과 수)</label>
+                <input
+                  type="range"
+                  v-model.number="ragSettings.initial_top_k"
+                  min="5"
+                  max="50"
+                  step="5"
+                  @input="markAsChanged"
+                />
+                <span class="setting-value">{{ ragSettings.initial_top_k }}</span>
+              </div>
+              <div class="setting-item">
+                <label>Final Top-K (최종 문서 수)</label>
+                <input
+                  type="range"
+                  v-model.number="ragSettings.final_top_k"
+                  min="1"
+                  max="20"
+                  step="1"
+                  @input="markAsChanged"
+                />
+                <span class="setting-value">{{ ragSettings.final_top_k }}</span>
+              </div>
+              <div class="setting-item">
+                <label>Alpha (Dense 가중치)</label>
+                <input
+                  type="range"
+                  v-model.number="ragSettings.alpha"
+                  min="0"
+                  max="1"
+                  step="0.1"
+                  @input="markAsChanged"
+                />
+                <span class="setting-value">{{ ragSettings.alpha.toFixed(1) }}</span>
+              </div>
+            </div>
+
+            <!-- 검색 방법 선택 -->
+            <div class="search-method-section">
+              <label class="section-label">검색 방법</label>
+              <div class="radio-group">
+                <label class="radio-label">
+                  <input
+                    type="radio"
+                    v-model="ragSettings.search_method"
+                    value="dense"
+                    @change="markAsChanged"
+                  />
+                  <span>Dense (의미 기반)</span>
+                </label>
+                <label class="radio-label">
+                  <input
+                    type="radio"
+                    v-model="ragSettings.search_method"
+                    value="sparse"
+                    @change="markAsChanged"
+                  />
+                  <span>Sparse (키워드 기반)</span>
+                </label>
+                <label class="radio-label">
+                  <input
+                    type="radio"
+                    v-model="ragSettings.search_method"
+                    value="hybrid"
+                    @change="markAsChanged"
+                  />
+                  <span>Hybrid (혼합)</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- 리랭커 옵션 -->
+            <div class="reranker-section">
+              <label class="section-label">리랭커 옵션</label>
+              <div class="checkbox-group">
+                <label class="checkbox-label">
+                  <input
+                    type="checkbox"
+                    v-model="ragSettings.use_reranker"
+                    @change="markAsChanged"
+                  />
+                  <span>기본 리랭커 사용</span>
+                </label>
+                <label class="checkbox-label">
+                  <input
+                    type="checkbox"
+                    v-model="ragSettings.use_llm_reranker"
+                    @change="markAsChanged"
+                  />
+                  <span>LLM 리랭커 사용 (느리지만 정확)</span>
+                </label>
               </div>
             </div>
           </div>
@@ -168,6 +336,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
+import { aiSettingsAPI } from '@/services/api'
+import type { RAGConfig, ModelParams } from '@/services/api'
 
 interface ModelSettings {
   temperature: number
@@ -255,10 +425,37 @@ const modelSettings = reactive<ModelSettings>({
   maxTokens: 4000
 })
 
+// 프롬프트별 개별 파라미터
+const promptParams = ref<Record<string, ModelSettings | null>>({
+  university: null,
+  study: null,
+  career: null,
+  cot: null,
+  general: null
+})
+
+// 프롬프트별 개별 파라미터 사용 여부
+const useCustomParams = ref<Record<string, boolean>>({
+  university: false,
+  study: false,
+  career: false,
+  cot: false,
+  general: false
+})
+
+const ragSettings = reactive<RAGConfig>({
+  initial_top_k: 15,
+  final_top_k: 5,
+  search_method: 'hybrid',
+  alpha: 0.5,
+  use_reranker: true,
+  use_llm_reranker: false
+})
+
 const toast = reactive({
   show: false,
   message: '',
-  type: 'success' as 'success' | 'error'
+  type: 'success' as 'success' | 'error' | 'warning'
 })
 
 // 템플릿 이름 매핑
@@ -295,22 +492,52 @@ const getTemplateVariables = (key: string) => templateVariables[key] || []
 const loadTemplates = async () => {
   loading.value = true
   try {
-    // 로컬 스토리지에서 저장된 템플릿 로드
-    const saved = localStorage.getItem('llm_templates')
-    if (saved) {
-      templates.value = { ...defaultTemplates, ...JSON.parse(saved) }
-    } else {
-      templates.value = { ...defaultTemplates }
+    // Backend API에서 모든 설정 동시 로드
+    const [promptsData, ragConfigData, modelParamsData] = await Promise.all([
+      aiSettingsAPI.getPrompts(),
+      aiSettingsAPI.getRAGConfig(),
+      aiSettingsAPI.getModelParams()
+    ])
+
+    // 프롬프트 템플릿 적용
+    templates.value = { ...defaultTemplates, ...promptsData }
+
+    // RAG 설정 적용
+    Object.assign(ragSettings, ragConfigData)
+
+    // 모델 파라미터 적용
+    modelSettings.temperature = modelParamsData.temperature
+    modelSettings.topP = modelParamsData.top_p
+    modelSettings.maxTokens = modelParamsData.max_tokens
+
+    // 각 프롬프트별 개별 파라미터 로드
+    for (const key of Object.keys(templates.value)) {
+      try {
+        const params = await aiSettingsAPI.getPromptParams(key)
+        if (params && (params.temperature !== undefined || params.max_tokens !== undefined || params.top_p !== undefined)) {
+          // 개별 파라미터가 설정되어 있으면 로드
+          promptParams.value[key] = {
+            temperature: params.temperature ?? modelSettings.temperature,
+            topP: params.top_p ?? modelSettings.topP,
+            maxTokens: params.max_tokens ?? modelSettings.maxTokens
+          }
+          useCustomParams.value[key] = true
+        }
+      } catch (error) {
+        // 개별 파라미터가 없는 경우 무시 (전역 파라미터 사용)
+        console.log(`No custom params for ${key}`)
+      }
     }
 
-    // 모델 설정 로드
-    const savedSettings = localStorage.getItem('llm_model_settings')
-    if (savedSettings) {
-      const parsed = JSON.parse(savedSettings)
-      Object.assign(modelSettings, parsed)
-    }
+    console.log('✅ 설정 로드 완료:', {
+      prompts: Object.keys(promptsData).length,
+      ragConfig: ragConfigData,
+      modelParams: modelParamsData,
+      customParams: Object.keys(promptParams.value).filter(k => useCustomParams.value[k]).length
+    })
   } catch (error) {
-    console.error('템플릿 로드 실패:', error)
+    console.error('설정 로드 실패:', error)
+    showToast('설정 로드에 실패했습니다. 기본값을 사용합니다.', 'error')
     templates.value = { ...defaultTemplates }
   } finally {
     loading.value = false
@@ -351,25 +578,60 @@ const confirmSave = async () => {
   if (!selectedTemplate.value) return
 
   try {
-    // 템플릿 저장
+    // 1. 프롬프트 템플릿 + 개별 파라미터 업데이트
+    const currentParams = promptParams.value[selectedTemplate.value]
+    const shouldUseCustom = useCustomParams.value[selectedTemplate.value]
+
+    const promptResponse = await aiSettingsAPI.updatePrompt(
+      selectedTemplate.value,
+      {
+        template: editingPrompt.value,
+        params: shouldUseCustom && currentParams ? {
+          temperature: currentParams.temperature,
+          max_tokens: currentParams.maxTokens,
+          top_p: currentParams.topP
+        } : undefined
+      }
+    )
+
+    // 2. 전역 모델 파라미터 업데이트
+    const modelParamsResponse = await aiSettingsAPI.updateModelParams({
+      temperature: modelSettings.temperature,
+      max_tokens: modelSettings.maxTokens,
+      top_p: modelSettings.topP
+    })
+
+    // 3. RAG 설정 업데이트
+    const ragConfigResponse = await aiSettingsAPI.updateRAGConfig(ragSettings)
+
+    // 로컬 상태 업데이트
     templates.value[selectedTemplate.value] = editingPrompt.value
-    localStorage.setItem('llm_templates', JSON.stringify(templates.value))
-
-    // 모델 설정 저장
-    localStorage.setItem('llm_model_settings', JSON.stringify(modelSettings))
-
     originalPrompt.value = editingPrompt.value
     hasChanges.value = false
     showSaveModal.value = false
 
-    showToast('프롬프트가 저장되었습니다', 'success')
+    // 207 Multi-Status 응답 처리
+    const has207 = [promptResponse, modelParamsResponse, ragConfigResponse]
+      .some(r => r.status === 'partial')
+
+    if (has207) {
+      showToast('설정이 저장되었으나 AI 서비스 반영에 실패했습니다. 수동 재시작이 필요할 수 있습니다.', 'warning')
+    } else {
+      showToast('모든 설정이 성공적으로 저장되었습니다', 'success')
+    }
+
+    console.log('✅ 설정 저장 완료:', {
+      prompt: promptResponse.status,
+      modelParams: modelParamsResponse.status,
+      ragConfig: ragConfigResponse.status
+    })
   } catch (error) {
     console.error('저장 실패:', error)
-    showToast('저장에 실패했습니다', 'error')
+    showToast('저장에 실패했습니다. 다시 시도해주세요.', 'error')
   }
 }
 
-const showToast = (message: string, type: 'success' | 'error') => {
+const showToast = (message: string, type: 'success' | 'error' | 'warning') => {
   toast.message = message
   toast.type = type
   toast.show = true
@@ -377,6 +639,105 @@ const showToast = (message: string, type: 'success' | 'error') => {
   setTimeout(() => {
     toast.show = false
   }, 3000)
+}
+
+// 개별 파라미터 토글
+const toggleCustomParams = async (promptName: string) => {
+  const enabled = useCustomParams.value[promptName]
+
+  if (enabled && !promptParams.value[promptName]) {
+    // 처음 활성화하는 경우: 전역 파라미터 복사
+    promptParams.value[promptName] = {
+      temperature: modelSettings.temperature,
+      topP: modelSettings.topP,
+      maxTokens: modelSettings.maxTokens
+    }
+  }
+}
+
+// 서버 재시작
+const restartServices = async () => {
+  if (!confirm('AI 서비스를 재시작하시겠습니까?')) return
+
+  loading.value = true
+  try {
+    const response = await aiSettingsAPI.restartServices()
+
+    // Handle both full success (200) and partial success (207)
+    if (response.status === 'success') {
+      showToast(response.message || 'AI 서비스가 재시작되었습니다', 'success')
+    } else if (response.status === 'partial') {
+      showToast(response.message || '설정 저장됨 (재시작 실패)', 'warning')
+    } else {
+      showToast(response.message || 'AI 서비스가 재시작되었습니다', 'success')
+    }
+  } catch (error) {
+    console.error('서버 재시작 실패:', error)
+    showToast('서버 재시작에 실패했습니다', 'error')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 추천 파라미터 자동 적용
+const applyRecommendedParams = async () => {
+  if (!confirm('모든 프롬프트에 추천 파라미터를 적용하시겠습니까?\n\n각 모드에 최적화된 설정이 자동으로 적용됩니다.')) return
+
+  loading.value = true
+
+  // 추천 파라미터
+  const recommendedParams = {
+    university: { temperature: 0.3, max_tokens: 2048, top_p: 0.9 },
+    study: { temperature: 0.5, max_tokens: 3072, top_p: 0.9 },
+    career: { temperature: 0.7, max_tokens: 2560, top_p: 0.9 },
+    cot: { temperature: 0.4, max_tokens: 4096, top_p: 0.85 },
+    general: { temperature: 0.7, max_tokens: 2048, top_p: 0.9 }
+  }
+
+  try {
+    let successCount = 0
+    let failCount = 0
+
+    // 각 프롬프트에 추천 파라미터 적용
+    for (const [promptName, params] of Object.entries(recommendedParams)) {
+      try {
+        await aiSettingsAPI.updatePromptParams(promptName, params)
+
+        // 로컬 상태 업데이트
+        promptParams.value[promptName] = {
+          temperature: params.temperature,
+          topP: params.top_p,
+          maxTokens: params.max_tokens
+        }
+        useCustomParams.value[promptName] = true
+
+        successCount++
+      } catch (error) {
+        console.error(`Failed to apply params for ${promptName}:`, error)
+        failCount++
+      }
+    }
+
+    // 결과 알림
+    if (failCount === 0) {
+      showToast(`✨ 추천 파라미터가 모두 적용되었습니다! (${successCount}개)`, 'success')
+
+      // 서비스 재시작 제안
+      setTimeout(() => {
+        if (confirm('AI 서비스를 재시작하여 변경사항을 적용하시겠습니까?')) {
+          restartServices()
+        }
+      }, 1000)
+    } else {
+      showToast(`일부 설정 적용에 실패했습니다. (성공: ${successCount}, 실패: ${failCount})`, 'warning')
+    }
+
+  } catch (error) {
+    console.error('추천 파라미터 적용 실패:', error)
+    showToast('추천 파라미터 적용에 실패했습니다', 'error')
+  } finally {
+    loading.value = false
+  }
 }
 
 onMounted(() => {
@@ -427,6 +788,43 @@ onMounted(() => {
   font-weight: 600;
   color: #1f2937;
   margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.apply-recommended-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+.apply-recommended-btn:hover:not(:disabled) {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.apply-recommended-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  animation: none;
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
 }
 
 .refresh-btn {
@@ -487,6 +885,14 @@ onMounted(() => {
   font-size: 14px;
   font-weight: 600;
   color: #1f2937;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.custom-badge {
+  font-size: 12px;
+  opacity: 0.8;
 }
 
 .template-key {
@@ -569,6 +975,21 @@ onMounted(() => {
   color: #374151;
 }
 
+.action-btn.restart {
+  background: #10b981;
+  border-color: #10b981;
+  color: #fff;
+}
+
+.action-btn.restart:hover:not(:disabled) {
+  background: #059669;
+}
+
+.action-btn.restart:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .action-btn.reset:hover {
   background: #fef3c7;
   border-color: #f59e0b;
@@ -643,11 +1064,63 @@ onMounted(() => {
   margin-bottom: 16px;
 }
 
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
 .model-settings h4 {
   font-size: 14px;
   font-weight: 600;
   color: #374151;
-  margin: 0 0 16px 0;
+  margin: 0;
+}
+
+.custom-params-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 8px 12px;
+  background: #fff;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  transition: all 0.2s;
+  font-size: 13px;
+}
+
+.custom-params-toggle:hover {
+  border-color: #02478A;
+  background: #f0f9ff;
+}
+
+.custom-params-toggle input[type="checkbox"] {
+  accent-color: #02478A;
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.custom-param-notice {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: #dbeafe;
+  border-left: 3px solid #02478A;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #1e40af;
+}
+
+.setting-item.custom-param label {
+  color: #02478A;
+  font-weight: 600;
+}
+
+.setting-value.custom {
+  color: #059669;
+  font-weight: 700;
 }
 
 .settings-grid {
@@ -685,6 +1158,102 @@ onMounted(() => {
   font-weight: 600;
   color: #02478A;
   text-align: center;
+}
+
+/* RAG 설정 */
+.rag-settings {
+  background: #fef3c7;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.rag-settings h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 16px 0;
+}
+
+.section-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 12px;
+}
+
+.search-method-section,
+.reranker-section {
+  margin-top: 20px;
+}
+
+.radio-group {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 10px 16px;
+  background: #fff;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.radio-label:hover {
+  border-color: #02478A;
+  background: #f0f9ff;
+}
+
+.radio-label input[type="radio"] {
+  accent-color: #02478A;
+  cursor: pointer;
+}
+
+.radio-label span {
+  font-size: 14px;
+  color: #374151;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 10px 16px;
+  background: #fff;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.checkbox-label:hover {
+  border-color: #02478A;
+  background: #f0f9ff;
+}
+
+.checkbox-label input[type="checkbox"] {
+  accent-color: #02478A;
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+}
+
+.checkbox-label span {
+  font-size: 14px;
+  color: #374151;
 }
 
 /* 변수 힌트 */
@@ -834,6 +1403,10 @@ onMounted(() => {
 
 .toast.error {
   background: #ef4444;
+}
+
+.toast.warning {
+  background: #f59e0b;
 }
 
 @keyframes slideIn {

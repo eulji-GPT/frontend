@@ -25,44 +25,46 @@
             내가 찾던 정보, <br/>
             이제 쉽게 만나요.
           </span>
-          <div class="form-container">
-            <div class="input-group">
-              <input 
-                v-model="email" 
-                type="email" 
-                placeholder="이메일" 
-                class="input-field"
-              />
-            </div>
-            <div class="password-group">
-              <input 
-                v-model="password" 
-                :type="showPassword ? 'text' : 'password'" 
-                placeholder="비밀번호" 
-                class="input-field"
-              />
-              <button @click="togglePassword" class="eye-button">
-                <svg v-if="showPassword" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c4.42 0 8 2.79 10 7a13.16 13.16 0 0 1-1.67 2.68" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12c2 4.21 5.58 7 10 7a9.74 9.74 0 0 0 5.39-1.61" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <line x1="2" y1="2" x2="22" y2="22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <svg v-else width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </button>
-            </div>
-          </div>
+          <!-- 이메일 로그인 폼 완전 제거 (카카오 로그인 전용) -->
         </div>
 
-        <button class="login-button" @click="handleLogin" :disabled="isLoading">
-          <span class="button-text">{{ isLoading ? '로그인 중...' : '로그인' }}</span>
-        </button>
+        <!-- 이메일 로그인 버튼 완전 제거 -->
+
+        <!-- 개발 환경 전용: 이메일 로그인 폼 -->
+        <div v-if="isDevelopment" class="form-container">
+          <div class="input-group">
+            <input
+              v-model="email"
+              type="email"
+              class="input-field"
+              placeholder="이메일 ID"
+              @keyup.enter="handleLogin"
+            />
+          </div>
+          <div class="password-group">
+            <input
+              v-model="password"
+              :type="showPassword ? 'text' : 'password'"
+              class="input-field"
+              placeholder="비밀번호"
+              @keyup.enter="handleLogin"
+            />
+            <button type="button" class="eye-button" @click="togglePassword">
+              {{ showPassword ? '👁️' : '👁️‍🗨️' }}
+            </button>
+          </div>
+          <button
+            class="login-button"
+            @click="handleLogin"
+            :disabled="isLoading"
+          >
+            <span class="button-text">{{ isLoading ? '로그인 중...' : '로그인' }}</span>
+          </button>
+        </div>
 
         <div class="divider-section">
-          <div class="divider-line"></div>
+          <!-- 구분선: 이메일 로그인이 있을 때만 표시 -->
+          <div v-if="isDevelopment" class="divider-line"></div>
           <div class="alternative-login">
             <button class="kakao-button" @click="handleKakaoLogin">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -70,11 +72,6 @@
               </svg>
               <span class="kakao-text">카카오 계정으로 로그인</span>
             </button>
-            <div class="bottom-links">
-              <span class="link-text" @click="() => router.push('/signup')">회원가입</span>
-              <span class="separator">•</span>
-              <span class="link-text">내 계정 찾기</span>
-            </div>
           </div>
         </div>
       </div>
@@ -83,7 +80,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import ToastNotification from '../common/ToastNotification.vue'
 import HeaderSection from '../main/HeaderSection.vue'
@@ -93,6 +90,25 @@ import { getApiBaseUrl } from '@/utils/ports-config'
 const router = useRouter()
 
 const API_BASE_URL = getApiBaseUrl()
+
+// 개발 환경 감지 (이메일 로그인은 개발 환경에서만 표시)
+const isDevelopment = computed(() => {
+  const envForceEnable = import.meta.env.VITE_ENABLE_EMAIL_LOGIN === 'true'
+  const isDevMode = import.meta.env.DEV
+  const isLocalhost = window.location.hostname === 'localhost' ||
+                      window.location.hostname === '127.0.0.1'
+  const isDevEnvironment = envForceEnable || isDevMode || isLocalhost
+
+  console.log('[Dev Check]', {
+    envForceEnable,
+    isDevMode,
+    isLocalhost,
+    hostname: window.location.hostname,
+    result: isDevEnvironment
+  })
+
+  return isDevEnvironment
+})
 
 const email = ref('')
 const password = ref('')
@@ -153,7 +169,7 @@ const handleLogin = async () => {
         setUserInfo(userInfo)
       }
     } catch (e) {
-      console.error('사용자 정보 조회 실패:', e)
+      console.error('Failed to fetch user info:', e)
     }
 
     // redirect 쿼리 파라미터가 있으면 그 경로로, 없으면 메인 페이지로 이동

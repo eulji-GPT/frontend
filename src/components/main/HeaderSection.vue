@@ -159,12 +159,12 @@ const fetchUserInfo = async () => {
 
     if (response.ok) {
       const data = await response.json()
-      console.log('사용자 정보:', data)
+      console.log('User info:', data)
       userName.value = data.nickname || data.name || '사용자'
       console.log('설정된 userName:', userName.value)
     }
   } catch (error) {
-    console.error('사용자 정보 로드 오류:', error)
+    console.error('User info load error:', error)
   }
 }
 

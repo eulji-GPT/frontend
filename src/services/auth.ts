@@ -52,7 +52,7 @@ export class AuthService {
         },
       };
     } catch (error) {
-      console.error('로그인 실패:', error);
+      console.error('Login failed:', error);
       throw new Error('로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.');
     }
   }
@@ -63,7 +63,7 @@ export class AuthService {
       const response = await memberAPI.register(userData);
       return response;
     } catch (error) {
-      console.error('회원가입 실패:', error);
+      console.error('Registration failed:', error);
       throw new Error('회원가입에 실패했습니다. 입력 정보를 확인해주세요.');
     }
   }
@@ -114,7 +114,7 @@ export class AuthService {
       localStorage.setItem('accessToken', response.access_token);
       return response.access_token;
     } catch (error) {
-      console.error('토큰 새로고침 실패:', error);
+      console.error('Token refresh failed:', error);
       this.logout();
       throw error;
     }
@@ -126,7 +126,7 @@ export class AuthService {
       const response = await memberAPI.getProfile();
       return response as User;
     } catch (error) {
-      console.error('사용자 정보 조회 실패:', error);
+      console.error('Failed to fetch user info:', error);
       throw error;
     }
   }
