@@ -175,7 +175,7 @@ const router = useRouter();
 const route = useRoute();
 
 const API_BASE_URL = getApiBaseUrl();
-import "./index.css";
+
 
 const {
   messages,
@@ -896,6 +896,8 @@ const goToCrew = () => {
 </script>
 
 <style scoped>
+
+@import "./index.css";
 /* Keep only the styles for the main layout */
 .main-container {
   display: flex;

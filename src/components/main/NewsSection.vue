@@ -84,7 +84,7 @@ onMounted(() => {
   background: var(--color-bg-primary);
   border-radius: 18px;
   box-shadow: 0 2px 12px 0 rgba(79, 110, 219, 0.04);
-  padding: 2.5rem 0 2.5rem 0;
+  padding: 2.5rem 0 30rem 0;
   margin-top: 0;
   margin-bottom: 0;
   scroll-margin-top: 84px;
