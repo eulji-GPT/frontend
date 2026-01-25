@@ -47,12 +47,12 @@ const availableModes = [
   {
     key: 'unified' as ChatMode,
     name: '통합 모델',
-    description: '일반적인 대화와 학습, 진로 상담을 지원합니다\n(대학 정보는 대학 정보 검색 모델을 이용하세요)',
+    description: '일반적인 대화와 학습, 진로 상담을 지원합니다\n(대학 정보는 대학 정보 모델을 이용하세요)',
     icon: '🤖'
   },
   {
     key: 'rag' as ChatMode,
-    name: '대학 정보 검색 모델',
+    name: '대학 정보 모델',
     description: '을지대학교 공식 자료를 검색하여\n정확한 학사 정보를 제공합니다',
     icon: '🔍'
   }
