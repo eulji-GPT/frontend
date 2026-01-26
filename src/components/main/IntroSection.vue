@@ -123,6 +123,7 @@
     font-size: clamp(16px, 2.2vw, 22px);
     width: 90vw;
     height: calc(1.4em * 1); /* 1줄 고정 높이 */
+    justify-content: center;
   }
   
   .intro-description {
@@ -130,6 +131,7 @@
     width: 90vw;
     height: calc(1.4em * 3); /* 3줄 고정 높이 */
     line-height: 140%;
+    justify-content: center;
   }
   
   .intro-image {
@@ -139,6 +141,14 @@
     max-height: 400px;
     margin-top: 0;
   }
+    .intro-section {
+    border-radius: 0px;
+  }
+
+  .intro-text {
+    align-items: center;
+  }
+  
 }
 
 /* 모바일 크기 조정 */
@@ -194,4 +204,5 @@
     max-height: 250px;
     margin-top: 0;
   }
-}</style>
+}
+</style>

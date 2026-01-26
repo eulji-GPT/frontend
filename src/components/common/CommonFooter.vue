@@ -90,11 +90,24 @@ export default {
   position: relative;
 }
 
+.div, .text-wrapper-2 {
+  text-align: center;
+}
+
 /* 태블릿 반응형 */
 @media (max-width: 1024px) {
   .common-footer {
     padding: 10px 100px;
     height: 100px;
+  }
+}
+@media (max-width : 1024px) {
+  .div {
+    text-align: center;
+  }
+
+  .text-wrapper-2 {
+    text-align: center;
   }
 }
 

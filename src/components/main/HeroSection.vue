@@ -2,10 +2,10 @@
   <div class="hero-section">
     <div class="main-content-wrapper">
       <div class="title-and-decoration">
-        <h1 class="main-title">
+        <p class="main-title">
           학교생활의<br />
           <span class="gradient-text">모든 순간</span>에 답하다
-        </h1>
+        </p>
         <img class="hero-svg" src="../../assets/HeroSection/Frame-2147227367.svg" alt="장식 이미지" />
       </div>
       <div class="hero-bottom-section">
@@ -178,23 +178,105 @@ function goToChatApp() {
   box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.15);
   transform: translateY(0);
 }
+@media (min-width:1025px) and (max-width: 1110px) {
+  .main-title {
+    font-size : 60px;
+  }
+  .gradient-text {
+    font-size : 60px;
+  }
 
+   .hero-svg {
+    width: 450px;
+   }
+}
 
 /* 태블릿 크기에서의 추가 조정 */
 @media (max-width: 1024px) {
+    .hero-section {
+    padding: 0px max(20px, 5vw) 0px max(20px, 5vw);
+    height : 600px;
+    overflow-x :unset;
+  }
+
+  .main-content-wrapper {
+    top : 100px;
+    gap : 30px;
+    height: 760px;
+  }
+
+   .hero-bottom-section {
+    height : 100px;
+
+  }
+
+  .title-and-decoration {
+    justify-content: flex-start;
+    align-items: center;
+    gap: clamp(15px, 3vw, 80px);
+    width : 90vw;
+    margin : 0 auto;
+  }
+
   .hero-svg {
-    width: 38.19vw; /* 550/1440 * 100 */
+    width: 41vw; /* 550/1440 * 100 */
     height: auto; /* hero-image와 같은 높이 유지 */
-    top: -15vh; /* -120/800 * 100 */
-    right: -180px; /* 오른쪽으로 180px 이동 */
-    position: absolute;
+    top: 0px; /* -120/800 * 100 */
+    right: 0px; /* 오른쪽으로 180px 이동 */
+    position: relative;
   }
   
   .main-title {
-    font-size: 3.89vw; /* 56/1440 * 100 */
-    line-height: 9.75vh; /* 78/800 * 100 */
-    top: -15vh;
+    font-size: min(44px, 8vw);
+    line-height: min(70px, 9vw);
+    letter-spacing: 0.03em;
+    text-align: left;
+    padding: 0;
+    top: 0;
+    width: 90vw;
+    height: auto;
   }
+
+    .hero-image {
+    width: calc(100% - 40px); /* 모바일에서는 좌우 20px씩 */
+    margin: 0 20px;
+  }
+
+  .gradient-text {
+    font-size: min(44px, 10vw);
+    line-height: 20px;
+  }
+
+  .floating-start-btn {
+    width : 200px;
+    font-size : 20px;
+    padding : 0px;
+    height : 55px;
+  }
+
+  .floating-btn-wrapper {
+    bottom : 70px;
+  }
+}
+
+@media (min-width : 800px) and (max-width : 900px) {
+    .main-title {
+    font-size: min(48px, 8vw);
+    }
+
+    .gradient-text {
+    font-size: min(48px, 10vw);
+    }
+}
+
+@media (min-width : 901px) and (max-width : 1023px) {
+    .main-title {
+    font-size: min(52px, 8vw);
+    }
+
+    .gradient-text {
+    font-size: min(52px, 10vw);
+    }
 }
 
 @media (max-width: 768px) {
@@ -203,13 +285,32 @@ function goToChatApp() {
     align-items: center;
     width: 90vw;
   }
+
+  .main-content-wrapper {
+    top : 80px;
+    gap : 30px;
+    height: 500px;
+  }
+
+  .hero-bottom-section {
+    height : 70px;
+
+  }
+
+  .title-and-decoration {
+    justify-content: flex-start;
+    align-items: center;
+    gap: clamp(15px, 3vw, 80px);
+    width : 90vw;
+    margin : 0 auto;
+  }
   
   .hero-svg {
-    width: 38.19vw; /* 550/1440 * 100 */
+    width: 40vw; /* 550/1440 * 100 */
     height: auto; /* hero-image와 같은 높이 유지 */
-    top: -10vh; /* -80/800 * 100 */
-    right: -90px; /* 모바일에서는 90px 이동 */
-    position: absolute;
+    top: 0px; /* 모바일에서는 90px 이동 */
+    right: 0px;
+    position: relative;
   }
   
   .hero-image {
@@ -228,10 +329,10 @@ function goToChatApp() {
   }
   
   .main-title {
-    font-size: min(40px, 8vw);
+    font-size: min(28px, 8vw);
     line-height: min(56px, 9vw);
     letter-spacing: 0.05em;
-    text-align: center;
+    text-align: left;
     padding: 0;
     top: 0;
     width: 90vw;
@@ -242,20 +343,73 @@ function goToChatApp() {
     transform: translateX(0);
   }
   
+  .gradient-text {
+    font-size: min(28px, 10vw);
+    line-height: 20px;
+  }
+
   .start-btn {
     width: clamp(100px, 40vw, 160px);
     height: clamp(32px, 6vh, 45px);
     font-size: clamp(12px, 3.5vw, 14px);
   }
+
+  .hero-section {
+    padding: 0px max(20px, 5vw) 0px max(20px, 5vw);
+    height : 500px;
+    overflow-x :unset;
+  }
+
+  .floating-start-btn {
+    width : 170px;
+    font-size : 16px;
+    padding : 0px;
+    height : 45px;
+  }
+  .floating-btn-wrapper {
+    bottom : 50px;
+  }
+}
+
+@media (min-width : 580px) and (max-width:680px) {
+    .main-title {
+    font-size: min(34px, 8vw);
+    }
+
+    .gradient-text {
+    font-size: min(34px, 10vw);
+    }
+}
+
+@media (min-width : 680px) and (max-width : 768px) {
+    .main-title {
+    font-size: min(38px, 8vw);
+    }
+
+    .gradient-text {
+    font-size: min(38px, 10vw);
+    }
 }
 
 @media (max-width: 480px) {
-  .hero-svg {
-    width: 38.19vw; /* 550/1440 * 100 */
+  .main-content-wrapper {
+    top : 60px;
+    gap : 20px;
+    height: 300px;
+  }
+
+  .hero-bottom-section {
+    height : 50px;
+
+  }
+    
+  .title-and-decoration {
+    gap: clamp(10px, 3vw, 80px);
+
+  }
+    .hero-svg {
+    width: 39vw; /* 550/1440 * 100 */
     height: auto; /* hero-image와 같은 높이 유지 */
-    top: -7.5vh; /* -60/800 * 100 */
-    right: -45px; /* 소형 모바일에서는 45px 이동 */
-    position: absolute;
   }
   
   .hero-image {
@@ -264,11 +418,15 @@ function goToChatApp() {
   }
   
   .main-title {
-    font-size: min(32px, 10vw);
+    font-size: min(25px, 10vw);
     line-height: min(45px, 11vw);
     letter-spacing: 0.02em;
+    width : 80vw;
   }
-  
+    .gradient-text {
+    font-size: min(25px, 10vw);
+  }
+
   .start-btn {
     width: clamp(90px, 50vw, 140px);
     height: clamp(28px, 7vh, 40px);
@@ -276,7 +434,37 @@ function goToChatApp() {
   }
   
   .hero-section {
-    padding: 0px max(20px, 5vw) 0px max(20px, 5vw);
+    height : 350px;
+  }
+
+  .floating-start-btn {
+    width : 150px;
+    height : 40px;
+  }
+  .floating-btn-wrapper {
+    bottom : 30px;
   }
 }
+
+@media (min-width: 320px) and (max-width: 400px) {
+    .main-title {
+    font-size: min(20px, 10vw);
+    }
+
+    .gradient-text {
+    font-size: min(20px, 10vw);
+  }
+
+    .hero-svg {
+    width: 39vw; /* 550/1440 * 100 */
+  }
+  
+  .floating-start-btn {
+    width : 100px;
+    font-size : 12px;
+    height : 30px;
+  }
+  
+}
+
 </style>
