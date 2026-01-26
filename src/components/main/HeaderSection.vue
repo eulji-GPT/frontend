@@ -516,16 +516,18 @@ header.header {
   }
   
   .nav-list {
-    gap: 32px;
+    gap: 28px;
+    justify-content: flex-start;
   }
   
   .nav-list li a {
-    font-size: 14px;
+    font-size: 13px;
+    padding : 0px;
   }
   
   .auth-links {
-    gap: 16px;
-    font-size: 14px;
+    gap: 14px;
+    font-size: 13px;
   }
 }
 

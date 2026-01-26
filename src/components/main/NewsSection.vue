@@ -179,6 +179,7 @@ onMounted(() => {
 .retry-button:hover {
   background-color: var(--color-button-primary-hover);
 }
+
 @media (max-width: 900px) {
   .news-section-image {
     padding: 1.2rem 0 1.2rem 0;
@@ -225,4 +226,40 @@ onMounted(() => {
     font-size: 0.93rem;
   }
 }
+
+@media (max-width : 1024px) {
+  .news-section-image {
+    padding-bottom: 80px;
+  }
+  .news-header-image {
+    width : 90%;
+    margin : 0 auto;
+  }
+
+  .news-list-image {
+    width : 90%;
+    margin : 0 auto;
+  }
+
+  .news-header-image {
+    font-size : 2.2rem;
+    margin-bottom: 40px;
+  }
+}
+
+@media (max-width : 768px) {
+  .news-header-image {
+    font-size : 1.8rem;
+    margin-bottom: 35px;
+  }
+
+}
+
+@media (min-width : 320px) and (max-width : 480px) {
+  .news-header-image {
+    font-size : 1.6rem;
+    margin-bottom: 30px;
+  }
+}
+
 </style>

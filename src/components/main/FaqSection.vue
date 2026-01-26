@@ -344,6 +344,17 @@ onMounted(() => {
   }
 }
 
+@media (max-width : 1024px) {
+  .text-wrapper-4 {
+    width : 90%;
+    margin : 0 auto;
+  }
+  .div-2 {
+    margin : 0 auto;
+    width : 90%;
+  }
+}
+
 @media (max-width: 768px) {
   .frame {
     padding: 60px 20px;
@@ -426,6 +437,17 @@ onMounted(() => {
   
   .faq-a-text {
     font-size: 1rem;
+  }
+}
+
+@media (min-width : 320px) and (max-width : 480px) {
+  .text-wrapper-4 {
+    width : 90%;
+    margin : 0 auto;
+  }
+  .div-2 {
+    margin : 0 auto;
+    width : 90%;
   }
 }
 </style>

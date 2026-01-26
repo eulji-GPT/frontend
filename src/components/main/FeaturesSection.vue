@@ -180,7 +180,7 @@ const navigateToFeature = (feature: string) => {
   font-style: normal;
   font-weight: 600;
   line-height: 140%;
-  margin-top: -24px;
+  margin-top: 10px;
   margin-bottom: 0px;
   padding: 0px;
   text-align: left;
@@ -286,6 +286,9 @@ const navigateToFeature = (feature: string) => {
 
 /* 태블릿 반응형 */
 @media (max-width: 1024px) {
+  .features-section {
+    border-radius: 0px;
+  }
   .features-container {
     padding-bottom: 80px;
   }
@@ -294,6 +297,7 @@ const navigateToFeature = (feature: string) => {
     flex-direction: column;
     gap: 40px;
     align-items: center;
+    width : 90%;
   }
   
   .Frame2147227299,
@@ -304,15 +308,36 @@ const navigateToFeature = (feature: string) => {
   
   .Frame2147227299 {
     min-height: auto;
-    padding: 40px 30px 30px 30px;
+    padding: 50px 40px 30px 40px;
   }
   
   .features-title {
     font-size: 20px;
+    text-align: center;
   }
   
   .features-subtitle {
     font-size: 28px;
+    text-align: center;
+  }
+
+    .features-section-block {
+    flex : none;
+  }
+  
+  .features-section-desc {
+    text-align: left;
+  }
+  
+  .features-inner-title {
+    margin-top : 10px;
+    margin-left: 20px;
+    font-size: 28px;
+  }
+  
+  .features-inner-desc {
+    margin-left : 20px;
+    font-size: 20px;
   }
 }
 
@@ -334,6 +359,7 @@ const navigateToFeature = (feature: string) => {
   
   .features-inner-title {
     font-size: 20px;
+    margin-top : 5px;
   }
   
   .features-inner-desc {
@@ -371,6 +397,30 @@ const navigateToFeature = (feature: string) => {
     font-size: 22px;
     text-align: center;
   }
+
+  .features-content-frame {
+    width : 80%;
+  }
+}
+@media (min-width:600px) and (max-width: 768px) {
+  .Frame2147227299 {
+    padding: 40px 34px 24px 34px;
+  }
+  .features-section-title {
+    font-size : 20px;
+  }
+  .features-section-desc {
+    font-size: 14px;
+  }
+}
+
+@media (min-width:550px) and (max-width: 768px) {
+  .features-inner-title {
+    margin-left : 20px;
+  }
+  .features-inner-desc {
+    margin-left : 20px; 
+  }
 }
 
 /* 소형 모바일 반응형 */
@@ -380,7 +430,7 @@ const navigateToFeature = (feature: string) => {
   }
   
   .Frame2147227299 {
-    padding: 24px 20px 20px 20px;
+    padding: 34px 30px 30px 30px;
     gap: 20px;
   }
   
@@ -417,6 +467,38 @@ const navigateToFeature = (feature: string) => {
   .features-subtitle {
     font-size: 20px;
   }
-}
 
+  .features-content-frame {
+    width : 90%;
+  }
+}
+@media (min-width:320px) and (max-width: 400px) {
+  .Frame2147227299 {
+    padding: 34px 30px 30px 30px;
+    gap: 20px;
+  }
+
+  .features-inner-title {
+    font-size : 16px;
+    margin-top : 10px;
+  }
+
+  .features-inner-desc {
+    font-size: 12px;
+    line-height: 25px;
+  }
+
+  .features-section-block {
+    flex : none;
+  }
+
+  .features-section-desc {
+    text-align: left;
+  }
+
+  .features-content-frame {
+    width : 100%;
+  }
+
+}
 </style>
