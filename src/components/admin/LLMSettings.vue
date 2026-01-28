@@ -167,36 +167,36 @@
             </div>
 
             <!-- 개별 파라미터 (사용 시) -->
-            <div v-else class="settings-grid">
+            <div v-else-if="promptParams[selectedTemplate]" class="settings-grid">
               <div class="setting-item custom-param">
                 <label>Temperature (개별)</label>
                 <input
                   type="range"
-                  v-model.number="promptParams[selectedTemplate].temperature"
+                  v-model.number="promptParams[selectedTemplate]!.temperature"
                   min="0"
                   max="1"
                   step="0.1"
                   @input="markAsChanged"
                 />
-                <span class="setting-value custom">{{ promptParams[selectedTemplate].temperature.toFixed(1) }}</span>
+                <span class="setting-value custom">{{ promptParams[selectedTemplate]!.temperature.toFixed(1) }}</span>
               </div>
               <div class="setting-item custom-param">
                 <label>Top-P (개별)</label>
                 <input
                   type="range"
-                  v-model.number="promptParams[selectedTemplate].topP"
+                  v-model.number="promptParams[selectedTemplate]!.topP"
                   min="0"
                   max="1"
                   step="0.05"
                   @input="markAsChanged"
                 />
-                <span class="setting-value custom">{{ promptParams[selectedTemplate].topP.toFixed(2) }}</span>
+                <span class="setting-value custom">{{ promptParams[selectedTemplate]!.topP.toFixed(2) }}</span>
               </div>
               <div class="setting-item custom-param">
                 <label>Max Tokens (개별)</label>
                 <input
                   type="number"
-                  v-model.number="promptParams[selectedTemplate].maxTokens"
+                  v-model.number="promptParams[selectedTemplate]!.maxTokens"
                   min="100"
                   max="8000"
                   step="100"
