@@ -598,6 +598,38 @@ export function useChat() {
     }
   }
 
+  // 백엔드에 메시지 저장
+  async function saveMessageToBackend(
+    chatId: string,
+    isUser: boolean,
+    message: string,
+    modelName?: string
+  ) {
+    if (!isAuthenticated()) return;
+
+    try {
+      const chat = chatHistory.value.find(c => c.id === chatId);
+      if (!chat?.sessionId) {
+        log.warn('No backend sessionId for chat:', chatId);
+        return;
+      }
+
+      await apiRequest(`${BACKEND_BASE_URL}/chat/history/${chat.sessionId}/message`, {
+        method: 'POST',
+        body: JSON.stringify({
+          is_user: isUser,
+          message: message,
+          model_name: modelName || null
+        })
+      });
+
+      log.debug('Message saved to backend:', { chatId, isUser, modelName });
+    } catch (error) {
+      log.error('Failed to save message to backend:', error);
+      // 실패해도 사용자 경험에 영향 없도록 에러 무시
+    }
+  }
+
   async function generateChatTitle(message: string): Promise<string> {
     try {
       const response = await fetch(`${FASTAPI_BASE_URL}/chat`, {
@@ -862,6 +894,8 @@ export function useChat() {
 
                     // AI 메시지를 노션에 저장
                     await saveMessageToNotion(currentChat.id, false, finalText);
+                    // AI 메시지를 백엔드에 저장
+                    await saveMessageToBackend(currentChat.id, false, finalText, getModelName(chatMode.value));
 
                     // 최종 스크롤
                     setTimeout(() => {
@@ -1128,6 +1162,8 @@ export function useChat() {
 
           // AI 메시지를 노션에 저장 (아티팩트 전체 내용 저장)
           await saveMessageToNotion(currentChat.id, false, reportContent);
+          // AI 메시지를 백엔드에 저장
+          await saveMessageToBackend(currentChat.id, false, reportContent, getModelName(chatMode.value));
 
           isStreaming.value = false;
           saveChatHistory();
@@ -1141,6 +1177,8 @@ export function useChat() {
 
           // AI 메시지를 노션에 저장
           await saveMessageToNotion(currentChat.id, false, normalizedText);
+          // AI 메시지를 백엔드에 저장
+          await saveMessageToBackend(currentChat.id, false, normalizedText, getModelName(chatMode.value));
 
           isStreaming.value = false;
           saveChatHistory();
@@ -1277,6 +1315,8 @@ export function useChat() {
 
           // AI 메시지를 노션에 저장
           await saveMessageToNotion(currentChat.id, false, normalizedAnswer);
+          // AI 메시지를 백엔드에 저장
+          await saveMessageToBackend(currentChat.id, false, normalizedAnswer, getModelName(chatMode.value));
         }
       } else {
         throw new Error('RAG 응답에서 답변을 찾을 수 없습니다.');
@@ -1504,6 +1544,8 @@ export function useChat() {
 
     // 사용자 메시지를 노션에 즉시 저장
     await saveMessageToNotion(currentChat.id, true, userMessageText);
+    // 사용자 메시지를 백엔드에 저장
+    await saveMessageToBackend(currentChat.id, true, userMessageText, undefined);
 
     inputValue.value = '';
     // scrollToBottom will be called from the component

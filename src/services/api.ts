@@ -623,5 +623,23 @@ export const aiSettingsAPI = {
     return apiRequest<SettingsSaveResponse>('/admin/restart-services', {
       method: 'POST'
     });
+  },
+
+  // POST /admin/sync-notion - Notion 데이터 재임베딩
+  syncNotion: (): Promise<{
+    success: boolean;
+    message: string;
+    sync_time: string;
+    stats: {
+      notion_documents: number;
+      local_documents: number;
+      total_documents: number;
+    };
+    errors: string[];
+  }> => {
+    const AI_RAG_URL = import.meta.env.VITE_GEMINI_FASTAPI_URL || '/gemini-api';
+    return apiRequest(`${AI_RAG_URL}/admin/sync-notion`, {
+      method: 'POST'
+    });
   }
 };
