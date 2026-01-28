@@ -334,20 +334,7 @@
       </div>
     </div>
 
-    <!-- Tab Content: Tool 관리 -->
-    <div v-show="activeTab === 'tools'">
-      <ToolManagement />
-    </div>
-
-    <!-- Tab Content: Notion API 설정 -->
-    <div v-show="activeTab === 'notion'">
-      <NotionSettings />
-    </div>
-
-    <!-- Tab Content: 답변 품질 모니터링 -->
-    <div v-show="activeTab === 'quality'">
-      <QualityMonitoring />
-    </div>
+    <!-- Admin 페이지 간소화: Tool, Notion, Quality 탭 제거됨 -->
 
     <!-- 저장 확인 모달 -->
     <div v-if="showSaveModal" class="modal-overlay" @click.self="showSaveModal = false">
@@ -372,9 +359,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { aiSettingsAPI } from '@/services/api'
 import type { RAGConfig, ModelParams } from '@/services/api'
-import ToolManagement from './ToolManagement.vue'
-import NotionSettings from './NotionSettings.vue'
-import QualityMonitoring from './QualityMonitoring.vue'
+// Admin 페이지 간소화: Tool, Notion, Quality 탭 제거
 
 interface ModelSettings {
   temperature: number
@@ -383,11 +368,9 @@ interface ModelSettings {
 }
 
 // Tab 설정
+// Admin 페이지 간소화: 프롬프트 템플릿만 표시
 const tabs = [
-  { key: 'prompts', label: '프롬프트 템플릿', icon: '📝' },
-  { key: 'tools', label: 'Tool 관리', icon: '🛠️' },
-  { key: 'notion', label: 'Notion API 설정', icon: '🔗' },
-  { key: 'quality', label: '답변 품질 모니터링', icon: '📊' }
+  { key: 'prompts', label: '프롬프트 및 모델 설정', icon: '📝' }
 ]
 const activeTab = ref('prompts')
 
