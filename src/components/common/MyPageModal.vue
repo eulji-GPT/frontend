@@ -101,7 +101,7 @@
           <!-- 설정 -->
           <div v-else-if="activeTab === 'settings'" class="settings-section">
             <!-- 화면 테마 -->
-            <div class="settings-group">
+            <!-- <div class="settings-group">
               <div class="settings-title">화면 테마</div>
               <div class="theme-buttons">
                 <button class="theme-button" :class="{ active: selectedTheme === 'light' }" @click="handleThemeChange('light')">
@@ -126,8 +126,8 @@
                   <span>시스템</span>
                 </button>
               </div>
-            </div>
-            
+            </div> -->
+
             <!-- 전체 데이터 삭제 -->
             <div class="settings-row">
               <div class="settings-info">

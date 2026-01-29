@@ -2,16 +2,18 @@
 <section class="features-section" id="features">
     <div class="features-container">
       <div class="features-frame">
+        <div class="features-total-ct">
         <div class="features-title">유용한 기능</div>
         <div class="features-subtitle">캠퍼스 생활의 모든 순간, 을GPT로 더 똑똑하고 간편하게</div>
+        </div>
         <div class="features-content-frame">
           <div class="Frame2147227299">
             <img class="features-inner-svg" src="../../assets/FeaturesSection/Frame 2147227347.svg" alt="Frame 2147227347" />
             <div class="features-inner-title">실시간 응답 서비스</div>
             <div class="features-inner-desc">
-              학교생활에 필요한 질문, 정보 검색, 일정 확인까지<br />
-              자연스럽고 빠르게 대화하며 필요한 정보를 찾아드려요.<br />
-              챗봇을 넘어선 AI 조교처럼, 언제든 궁금한 걸 물어보세요.
+             학교생활에 필요한 질문, 정보 검색, 일정 확인까지<br />
+              자연스럽고 빠르게 대화하며 필요한 정보를 찾아봐요. <br />
+              챗봇을 넘어선 AI 조교처럼, 언제든 물어보세요
             </div>
           </div>
           <div class="Frame2147227348">
@@ -62,7 +64,8 @@ const navigateToFeature = (feature: string) => {
   width: 100%;
   min-height: 0;
   height: auto;
-  background: var(--color-bg-secondary) !important;
+  /* background: var(--color-bg-secondary) !important; */
+  background: #f3f8ff;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -97,6 +100,11 @@ const navigateToFeature = (feature: string) => {
   align-self: stretch;
 }
 
+.features-total-ct {
+  display : flex;
+  flex-direction: column;
+  width : 85%;
+}
 .features-title {
   align-self: stretch;
   color: var(--color-primary);
@@ -108,6 +116,7 @@ const navigateToFeature = (feature: string) => {
   margin-bottom: 0;
   margin-top: 0;
   padding-left: 0;
+  width : 100%;
 }
 
 .features-section {
@@ -171,7 +180,7 @@ const navigateToFeature = (feature: string) => {
   font-style: normal;
   font-weight: 600;
   line-height: 140%;
-  margin-top: -24px;
+  margin-top: 10px;
   margin-bottom: 0px;
   padding: 0px;
   text-align: left;
@@ -185,7 +194,7 @@ const navigateToFeature = (feature: string) => {
   font-style: normal;
   font-weight: 500;
   line-height: 25px; /* 156.25% */
-  margin-top: -30px;
+  margin-top: -10px;
   margin-bottom: 0px;
   padding: 0px;
   text-align: left;
@@ -277,6 +286,9 @@ const navigateToFeature = (feature: string) => {
 
 /* 태블릿 반응형 */
 @media (max-width: 1024px) {
+  .features-section {
+    border-radius: 0px;
+  }
   .features-container {
     padding-bottom: 80px;
   }
@@ -285,6 +297,7 @@ const navigateToFeature = (feature: string) => {
     flex-direction: column;
     gap: 40px;
     align-items: center;
+    width : 90%;
   }
   
   .Frame2147227299,
@@ -295,15 +308,36 @@ const navigateToFeature = (feature: string) => {
   
   .Frame2147227299 {
     min-height: auto;
-    padding: 40px 30px 30px 30px;
+    padding: 50px 40px 30px 40px;
   }
   
   .features-title {
     font-size: 20px;
+    text-align: center;
   }
   
   .features-subtitle {
     font-size: 28px;
+    text-align: center;
+  }
+
+    .features-section-block {
+    flex : none;
+  }
+  
+  .features-section-desc {
+    text-align: left;
+  }
+  
+  .features-inner-title {
+    margin-top : 10px;
+    margin-left: 20px;
+    font-size: 28px;
+  }
+  
+  .features-inner-desc {
+    margin-left : 20px;
+    font-size: 20px;
   }
 }
 
@@ -325,6 +359,7 @@ const navigateToFeature = (feature: string) => {
   
   .features-inner-title {
     font-size: 20px;
+    margin-top : 5px;
   }
   
   .features-inner-desc {
@@ -362,6 +397,30 @@ const navigateToFeature = (feature: string) => {
     font-size: 22px;
     text-align: center;
   }
+
+  .features-content-frame {
+    width : 80%;
+  }
+}
+@media (min-width:600px) and (max-width: 768px) {
+  .Frame2147227299 {
+    padding: 40px 34px 24px 34px;
+  }
+  .features-section-title {
+    font-size : 20px;
+  }
+  .features-section-desc {
+    font-size: 14px;
+  }
+}
+
+@media (min-width:550px) and (max-width: 768px) {
+  .features-inner-title {
+    margin-left : 20px;
+  }
+  .features-inner-desc {
+    margin-left : 20px; 
+  }
 }
 
 /* 소형 모바일 반응형 */
@@ -371,7 +430,7 @@ const navigateToFeature = (feature: string) => {
   }
   
   .Frame2147227299 {
-    padding: 24px 20px 20px 20px;
+    padding: 34px 30px 30px 30px;
     gap: 20px;
   }
   
@@ -408,6 +467,38 @@ const navigateToFeature = (feature: string) => {
   .features-subtitle {
     font-size: 20px;
   }
-}
 
+  .features-content-frame {
+    width : 90%;
+  }
+}
+@media (min-width:320px) and (max-width: 400px) {
+  .Frame2147227299 {
+    padding: 34px 30px 30px 30px;
+    gap: 20px;
+  }
+
+  .features-inner-title {
+    font-size : 16px;
+    margin-top : 10px;
+  }
+
+  .features-inner-desc {
+    font-size: 12px;
+    line-height: 25px;
+  }
+
+  .features-section-block {
+    flex : none;
+  }
+
+  .features-section-desc {
+    text-align: left;
+  }
+
+  .features-content-frame {
+    width : 100%;
+  }
+
+}
 </style>

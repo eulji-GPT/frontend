@@ -199,8 +199,9 @@ onUnmounted(() => {
   position: relative;
   width: 100%;
   height: 532px;
-  padding: 0 20px;
+  padding: 0 clamp(10px, 5%, 20px);
   z-index: 36;
+  min-width: 0;
 }
 .chat-list-link {
   display: flex;
@@ -212,6 +213,7 @@ onUnmounted(() => {
   overflow: visible;
   gap: 8px;
   background: var(--color-bg-primary);
+  min-width: 0;
 }
 
 .conversation-list {
@@ -220,6 +222,11 @@ onUnmounted(() => {
   line-height: 23px;
   color: var(--color-text-tertiary);
   font-family: Pretendard, var(--default-font-family);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .new-chat-button {
@@ -238,6 +245,7 @@ onUnmounted(() => {
   cursor: pointer;
   transition: all 0.2s ease;
   flex-shrink: 0;
+  min-width: fit-content;
 }
 
 .new-chat-button:hover {

@@ -99,7 +99,12 @@
               :class="{ 'user-message': message.is_user, 'ai-message': !message.is_user }"
             >
               <div class="message-header">
-                <span class="sender">{{ message.is_user ? '사용자' : 'AI' }}</span>
+                <span class="sender">
+                  {{ message.is_user ? '사용자' : 'AI' }}
+                  <span v-if="!message.is_user && message.model_name" class="model-badge">
+                    {{ getModelDisplayName(message.model_name) }}
+                  </span>
+                </span>
               </div>
               <div class="message-body" v-html="formatMessage(message.message)"></div>
             </div>
@@ -151,6 +156,7 @@ interface ChatMessage {
   chat_history_id: number
   is_user: boolean
   message: string
+  model_name?: string
 }
 
 interface UserInfo {
@@ -296,6 +302,18 @@ const formatDateFull = (dateStr: string): string => {
   } catch {
     return '-'
   }
+}
+
+const getModelDisplayName = (modelName: string | null | undefined): string => {
+  if (!modelName) return ''
+
+  const displayNames: Record<string, string> = {
+    '통합 모델': '💬 일반',
+    '깊은 추론 모델': '🧠 CoT',
+    '대학 정보 검색 모델': '🔍 RAG'
+  }
+
+  return displayNames[modelName] || modelName
 }
 
 const formatMessage = (message: string): string => {
@@ -609,6 +627,21 @@ onMounted(async () => {
   align-self: flex-start;
   background: #f3f4f6;
   color: #1f2937;
+}
+
+.model-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.user-message .model-badge {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .message-header {

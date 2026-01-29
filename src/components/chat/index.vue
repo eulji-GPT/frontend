@@ -2,33 +2,33 @@
 <template>
   <div class="main-container">
     <div class="mobile-overlay" v-if="showMobileOverlay" @click="toggleSidebar"></div>
-    <div class="chatbot-sidebar-wrapper" :class="{ 'mobile-hidden': !sidebarVisible }" :style="{ width: sidebarWidth + 'px' }">
-      <div class="frame">
-        <div class="chatbot-logo-header">
-          <div class="frame-1" @click="goToHome" style="cursor: pointer;">
-            <div class="logo-icon"></div>
-            <img :src="eulLogo" alt="EULGPT 로고" class="eulgpt-logo-svg" />
+    <div class="chatbot-sidebar-wrapper" :class="{ 'mobile-hidden': !sidebarVisible, 'collapsed': isCollapsed }" :style="{ width: !isCollapsed ? sidebarWidth + 'px' : '' }">
+      <div class="frame" :class="{'collapsed': isCollapsed }">
+        <div class="chatbot-logo-header" :class="{'collapsed': isCollapsed }">
+          <div class="frame-1" style="cursor: pointer;">
+            <div class="logo-icon" @click.stop="pctoggleSidebar"></div>
+            <img :src="eulLogo" alt="EULGPT 로고" @click="goToHome" v-show="showCollapsibleContent"  class="eulgpt-logo-svg" />
           </div>
+          <div class="edit-icon" @click="startNewChat" v-show="showCollapsibleContent" ></div>
         </div>
         <div class="frame-2">
-          <div class="chatbot-menu-item">
-            <div class="frame-3" @click="goToCrew">
+          <div class="chatbot-menu-item" :class="{'collapsed': isCollapsed }">
+            <div class="frame-3" :class="{'collapsed': isCollapsed }" @click="goToCrew">
               <div class="group-4">
-                <div class="group-5"></div>
-                <div class="frame-6"><span class="day">DAY</span></div>
               </div>
-              <span class="empty-classroom-check">빈 강의실 확인</span>
+              <span class="empty-classroom-check" v-show="showCollapsibleContent" >빈 강의실 확인</span>
             </div>
-            <div class="frame-7" @click="goToCrew">
+            <div class="frame-7"  :class="{'collapsed': isCollapsed }" @click="goToCrew">
               <div class="group-8"></div>
-              <span class="library-study-room-reservation">도서관 ∙ 열람실 자리 예약</span>
+              <span class="library-study-room-reservation" v-show="showCollapsibleContent" >도서관 ∙ 열람실 자리 예약</span>
             </div>
-            <div class="frame-9" @click="goToCrew">
+            <div class="frame-9" :class="{'collapsed': isCollapsed }" @click="goToCrew">
               <div class="group-a"></div>
-              <span class="status">학식당 현황</span>
+              <span class="status" v-show="showCollapsibleContent" >학식당 현황</span>
             </div>
           </div>
           <ChatHistory 
+            v-show=showCollapsibleContent
             :chatHistory="chatHistory" 
             :currentChatId="currentChatId" 
             @selectChat="handleSelectChat"
@@ -36,14 +36,15 @@
             @deleteChat="deleteChat"
             @updateChatTitle="updateChatTitle"
           />
+          <div class="sidebar-toggle-chaticon" @click.stop="pctoggleSidebar" v-show=showFixedContent> <img :src="sidebar_chatlogo" /></div>
         </div>
       </div>
-      <div class="side-footer" @click="toggleMyPageModal">
+      <div class="side-footer" :class="{'collapsed': !showCollapsibleContent }" @click="toggleMyPageModal" >
         <div class="ellipse" :class="{ 'has-initial': !userProfileImage }">
           <img v-if="userProfileImage" :src="userProfileImage" alt="프로필" class="profile-image" />
           <span v-else class="user-initial">{{ userInitial }}</span>
         </div>
-        <div class="frame-12">
+        <div class="frame-12" :class="{'collapsed': isCollapsed }">
           <div class="notification-container" @click="toggleNotificationDropdown">
             <div class="notification"></div>
             <NotificationDropdown :isVisible="showNotificationDropdown" />
@@ -56,11 +57,22 @@
       </div>
       <div 
         class="sidebar-resizer"
+        v-show="showCollapsibleContent"
         v-if="!isMobile"
         @mousedown="startResize"
         :class="{ 'resizing': isResizing }"
       ></div>
     </div>
+
+    <!-- <div class="sidebar-collapsible-contour"></div> -->
+    
+    <div class="sidebar-collapsible-ct" v-show=showFixedContent>
+      <div>
+      <img :src="eulLogo" alt="EULGPT 로고" @click="goToHome" class="eulgpt-logo-svg" />
+      <div class="edit-icon" @click="startNewChat"></div>
+      </div>
+    </div>
+
     <div class="chat-content-col">
       <div class="mobile-header">
         <button class="mobile-menu-toggle" @click="toggleSidebar">
@@ -152,6 +164,7 @@ import MyPageModal from '../common/MyPageModal.vue';
 import { useChat } from '../../composables/useChat';
 import type { ChatMode, Artifact, ArtifactVersion } from '../../composables/useChat';
 import eulLogo from '../../assets/eul_logo.svg';
+import sidebar_chatlogo from '../../components/chat/icon/sidebar-toggle-chatimg.svg'
 import { getApiBaseUrl } from '@/utils/ports-config';
 import { createLogger } from '../../utils/logger';
 const log = createLogger('Chat');
@@ -160,7 +173,7 @@ const router = useRouter();
 const route = useRoute();
 
 const API_BASE_URL = getApiBaseUrl();
-import "./index.css";
+
 
 const {
   messages,
@@ -683,6 +696,21 @@ const checkMobileSize = () => {
     sidebarVisible.value = true;
   }
 };
+// 요소 사라지게
+const showCollapsibleContent = ref(true); 
+
+// 요소 나타나게
+const showFixedContent = ref(false);
+
+// 요소 없어지거나 나타났을때 css 수정할 수 있도록
+const isCollapsed = ref(false); 
+
+// pc 사이드바 토글 함수 설정
+const pctoggleSidebar = () => {
+  showCollapsibleContent.value = !showCollapsibleContent.value;
+  showFixedContent.value = !showFixedContent.value;
+  isCollapsed.value = !isCollapsed.value;
+};
 
 const toggleSidebar = () => {
   sidebarVisible.value = !sidebarVisible.value;
@@ -866,6 +894,8 @@ const goToCrew = () => {
 </script>
 
 <style scoped>
+
+@import "./index.css";
 /* Keep only the styles for the main layout */
 .main-container {
   display: flex;
@@ -895,6 +925,14 @@ const goToCrew = () => {
     inset -2px -2px 3px 0px rgba(255, 255, 255, 0.7);
 }
 
+.chatbot-sidebar-wrapper.collapsed {
+  width : 70px;
+  min-width : 70px !important;
+  border-right : 1px solid var(--color-card-border);
+  border-radius: 0px;
+  
+}
+
 .chat-content-col {
   display: flex;
   flex-direction: column;
@@ -915,8 +953,12 @@ const goToCrew = () => {
   min-height: 0;
   position: relative;
   width: 100%;
-  padding: 8px 0 0 0;
+  padding: 38px 0 0 0;
   z-index: 9;
+}
+
+.frame.collapsed {
+  width : 70px;
 }
 .chatbot-logo-header {
   display: flex;
@@ -931,6 +973,11 @@ const goToCrew = () => {
   background: var(--color-bg-primary);
   /* border-right removed to prevent double lines */
   z-index: 10;
+}
+
+.chatbot-logo-header.collapsed {
+  padding : 0px;
+  margin : 0 auto;
 }
 .frame-1 {
   display: flex;
@@ -969,6 +1016,7 @@ const goToCrew = () => {
   background-size: cover;
   z-index: 16;
   overflow: hidden;
+  display: none;
 }
 .frame-2 {
   display: flex;
@@ -990,12 +1038,17 @@ const goToCrew = () => {
   align-items: stretch;
   flex-wrap: nowrap;
   flex-shrink: 0;
-  gap: 16px;
+  gap: 24px;
   position: relative;
   width: 100%;
   padding: 0 20px 0 20px;
   background: transparent;
   z-index: 18;
+}
+
+.chatbot-menu-item.collapsed {
+  padding : 0px;
+  align-items: center;
 }
 
 .chatbot-menu-item > div {
@@ -1009,8 +1062,13 @@ const goToCrew = () => {
   cursor: pointer;
   transition: all 0.2s ease;
   border-radius: 8px;
-  padding: 8px;
+  padding: 0px 8px 0px 8px;
   box-sizing: border-box;
+}
+
+.frame-3.collapsed, .frame-7.collapsed, .frame-9.collapsed {
+  padding : 0px;
+  justify-content: center;
 }
 
 .chatbot-menu-item > div:hover {
@@ -1020,34 +1078,19 @@ const goToCrew = () => {
 .frame-3 {
   z-index: 19;
 }
+
+
+
 .group-4 {
   flex-shrink: 0;
   position: relative;
   width: 25px;
   height: 27.004px;
-  z-index: 20;
+  background: url('./icon/캘린더.svg') no-repeat center;
+  background-size: cover;
+  z-index: 29;
 }
-.group-5 {
-  position: relative;
-  width: 14.078px;
-  height: 9.751px;
-  margin: 0 0 0 5.582px;
-  background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-31/CcpStAfx5O.png)
-    no-repeat center;
-  background-size: 100% 100%;
-  z-index: 21;
-  border-radius: 6.251px;
-}
-.frame-6 {
-  position: relative;
-  width: 25px;
-  height: 25px;
-  margin: -4.751px 0 0 0;
-  background: var(--color-primary-light);
-  z-index: 22;
-  overflow: visible;
-  border-radius: 6.251px;
-}
+
 .day {
   display: flex;
   align-items: center;
@@ -1150,6 +1193,16 @@ const goToCrew = () => {
   transition: background-color 0.2s ease;
 }
 
+.side-footer.collapsed {
+  display : flex;
+  flex-direction: column-reverse;
+  padding : 0px;
+  border: 0px;
+  width : 70px;
+  height : 130px;
+  padding-bottom: 18px;
+}
+
 .side-footer:hover {
   background: var(--color-bg-secondary);
 }
@@ -1188,7 +1241,7 @@ const goToCrew = () => {
   text-transform: uppercase;
 }
 .frame-12 {
-  display: flex;
+  display: none;
   align-items: flex-end;
   justify-content: center;
   flex-wrap: nowrap;
@@ -1198,6 +1251,13 @@ const goToCrew = () => {
   width: 80px;
   padding: 10px 10px 10px 10px;
   z-index: 44;
+}
+
+.frame-12.collapsed {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0px;
 }
 .notification {
   flex-shrink: 0;
@@ -1425,6 +1485,25 @@ const goToCrew = () => {
   opacity: 1;
 }
 
+/* 버그픽스 3번 햄버거 버튼 클릭 관련 css 입니다.*/
+
+.sidebar-collapsible-contour {
+  width : 1px;
+  background-color: var(--color-card-border);
+}
+.sidebar-collapsible-ct > div {
+  display : flex;
+  gap : 15px;
+  align-items: center;
+  padding-top : 38px;
+  margin-left : 18px;
+}
+
+.sidebar-toggle-chaticon {
+  padding-left: 28px;
+  cursor: pointer;
+}
+
 /* ========================================
    Keyboard Overlay Support (Story 2.1)
    - CSS 변수를 통해 키보드 높이 대응
@@ -1537,6 +1616,7 @@ const goToCrew = () => {
   .edit-icon {
     width: 20px;
     height: 20px;
+    display: none;
   }
 
   .chatbot-menu-item {
@@ -1581,6 +1661,7 @@ const goToCrew = () => {
   .edit-icon {
     width: 18px;
     height: 18px;
+    display: none;
   }
 
   .chat-content-col {

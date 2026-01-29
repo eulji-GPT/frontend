@@ -11,8 +11,8 @@ export default defineConfig(({ mode }) => {
   const backendUrl = env.VITE_FASTAPI_URL || 'http://127.0.0.1:8000'
   const geminiUrl = env.VITE_GEMINI_FASTAPI_URL || 'http://127.0.0.1:8001'
 
-  // .env.local에서 프로덕션 URL을 사용하는 경우 proxy 비활성화
-  const useProxy = backendUrl.includes('localhost') || backendUrl.includes('127.0.0.1')
+  // 프록시 활성화 조건: localhost/127.0.0.1이 포함되거나 /api 같은 상대경로인 경우
+  const useProxy = backendUrl.startsWith('/') || backendUrl.includes('localhost') || backendUrl.includes('127.0.0.1')
 
   return {
     plugins: [vue()],
@@ -39,13 +39,13 @@ export default defineConfig(({ mode }) => {
       ...(useProxy && {
         proxy: {
           '/api': {
-            target: backendUrl,
+            target: backendUrl.startsWith('/') ? 'http://localhost:8000' : backendUrl,
             changeOrigin: true,
             rewrite: (path: string) => path.replace(/^\/api/, ''),
             timeout: 30000, // 30초 타임아웃
           },
           '/gemini-api': {
-            target: geminiUrl,
+            target: geminiUrl.startsWith('/') ? 'http://localhost:8001' : geminiUrl,
             changeOrigin: true,
             rewrite: (path: string) => path.replace(/^\/gemini-api/, ''),
             timeout: 60000, // 60초 타임아웃 (AI 응답 대기)

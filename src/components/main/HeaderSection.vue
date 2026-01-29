@@ -12,22 +12,22 @@
       </ul>
 
       <!-- 테마 토글 버튼 -->
-      <button
+      <!-- <button
         class="theme-toggle-btn"
         @click="toggleTheme"
         :title="effectiveTheme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'"
         aria-label="테마 전환"
       >
-        <!-- 다크 모드일 때 달 아이콘 -->
+        <!~~ 다크 모드일 때 달 아이콘 ~~>
         <svg v-if="effectiveTheme === 'dark'" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
           <path d="M21 12.79A9 9 0 1111.21 3A7 7 0 0021 12.79z"/>
         </svg>
-        <!-- 라이트 모드일 때 태양 아이콘 -->
+        <!~~ 라이트 모드일 때 태양 아이콘 ~~>
         <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="5"/>
           <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
         </svg>
-      </button>
+      </button> -->
 
       <div class="auth-links">
         <template v-if="!isLoggedIn">
@@ -516,16 +516,18 @@ header.header {
   }
   
   .nav-list {
-    gap: 32px;
+    gap: 28px;
+    justify-content: flex-start;
   }
   
   .nav-list li a {
-    font-size: 14px;
+    font-size: 13px;
+    padding : 0px;
   }
   
   .auth-links {
-    gap: 16px;
-    font-size: 14px;
+    gap: 14px;
+    font-size: 13px;
   }
 }
 

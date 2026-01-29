@@ -2,7 +2,21 @@
   <div class="llm-settings">
     <h2 class="section-title">LLM 설정 관리</h2>
 
-    <div class="settings-layout">
+    <!-- Tab Navigation -->
+    <div class="tab-navigation">
+      <button
+        v-for="tab in tabs"
+        :key="tab.key"
+        class="tab-button"
+        :class="{ active: activeTab === tab.key }"
+        @click="activeTab = tab.key"
+      >
+        {{ tab.icon }} {{ tab.label }}
+      </button>
+    </div>
+
+    <!-- Tab Content: 프롬프트 템플릿 -->
+    <div v-show="activeTab === 'prompts'" class="settings-layout">
       <!-- 프롬프트 템플릿 목록 -->
       <div class="templates-panel">
         <div class="panel-header">
@@ -57,6 +71,11 @@
               <span class="template-badge">{{ selectedTemplate }}</span>
             </div>
             <div class="editor-actions">
+              <button class="action-btn reembed" @click="syncNotionData" :disabled="loading" title="Notion 데이터 재임베딩">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
+                </svg>
+              </button>
               <button class="action-btn restart" @click="restartServices" :disabled="loading" title="AI 서비스 재시작">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
@@ -148,36 +167,36 @@
             </div>
 
             <!-- 개별 파라미터 (사용 시) -->
-            <div v-else class="settings-grid">
+            <div v-else-if="promptParams[selectedTemplate]" class="settings-grid">
               <div class="setting-item custom-param">
                 <label>Temperature (개별)</label>
                 <input
                   type="range"
-                  v-model.number="promptParams[selectedTemplate].temperature"
+                  v-model.number="promptParams[selectedTemplate]!.temperature"
                   min="0"
                   max="1"
                   step="0.1"
                   @input="markAsChanged"
                 />
-                <span class="setting-value custom">{{ promptParams[selectedTemplate].temperature.toFixed(1) }}</span>
+                <span class="setting-value custom">{{ promptParams[selectedTemplate]!.temperature.toFixed(1) }}</span>
               </div>
               <div class="setting-item custom-param">
                 <label>Top-P (개별)</label>
                 <input
                   type="range"
-                  v-model.number="promptParams[selectedTemplate].topP"
+                  v-model.number="promptParams[selectedTemplate]!.topP"
                   min="0"
                   max="1"
                   step="0.05"
                   @input="markAsChanged"
                 />
-                <span class="setting-value custom">{{ promptParams[selectedTemplate].topP.toFixed(2) }}</span>
+                <span class="setting-value custom">{{ promptParams[selectedTemplate]!.topP.toFixed(2) }}</span>
               </div>
               <div class="setting-item custom-param">
                 <label>Max Tokens (개별)</label>
                 <input
                   type="number"
-                  v-model.number="promptParams[selectedTemplate].maxTokens"
+                  v-model.number="promptParams[selectedTemplate]!.maxTokens"
                   min="100"
                   max="8000"
                   step="100"
@@ -315,6 +334,8 @@
       </div>
     </div>
 
+    <!-- Admin 페이지 간소화: Tool, Notion, Quality 탭 제거됨 -->
+
     <!-- 저장 확인 모달 -->
     <div v-if="showSaveModal" class="modal-overlay" @click.self="showSaveModal = false">
       <div class="modal-content">
@@ -338,12 +359,20 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { aiSettingsAPI } from '@/services/api'
 import type { RAGConfig, ModelParams } from '@/services/api'
+// Admin 페이지 간소화: Tool, Notion, Quality 탭 제거
 
 interface ModelSettings {
   temperature: number
   topP: number
   maxTokens: number
 }
+
+// Tab 설정
+// Admin 페이지 간소화: 프롬프트 템플릿만 표시
+const tabs = [
+  { key: 'prompts', label: '프롬프트 및 모델 설정', icon: '📝' }
+]
+const activeTab = ref('prompts')
 
 // 프롬프트 템플릿 (기본값)
 const defaultTemplates: Record<string, string> = {
@@ -420,7 +449,7 @@ const showSaveModal = ref(false)
 const hasChanges = ref(false)
 
 const modelSettings = reactive<ModelSettings>({
-  temperature: 0.7,
+  temperature: 0.3,  // 최적화된 Agent 기본값 (정확도 향상)
   topP: 0.9,
   maxTokens: 4000
 })
@@ -655,6 +684,33 @@ const toggleCustomParams = async (promptName: string) => {
   }
 }
 
+// Notion 데이터 재임베딩
+const syncNotionData = async () => {
+  if (!confirm('Notion 데이터를 재임베딩하시겠습니까?\n\n시간이 다소 걸릴 수 있습니다.')) return
+
+  loading.value = true
+  try {
+    const response = await aiSettingsAPI.syncNotion()
+
+    if (response.success) {
+      showToast(
+        `✅ ${response.message}\n` +
+        `Notion: ${response.stats.notion_documents}개, ` +
+        `로컬: ${response.stats.local_documents}개, ` +
+        `총: ${response.stats.total_documents}개`,
+        'success'
+      )
+    } else {
+      showToast('재임베딩에 실패했습니다.', 'error')
+    }
+  } catch (error) {
+    console.error('재임베딩 실패:', error)
+    showToast('재임베딩 중 오류가 발생했습니다.', 'error')
+  } finally {
+    loading.value = false
+  }
+}
+
 // 서버 재시작
 const restartServices = async () => {
   if (!confirm('AI 서비스를 재시작하시겠습니까?')) return
@@ -685,13 +741,13 @@ const applyRecommendedParams = async () => {
 
   loading.value = true
 
-  // 추천 파라미터
+  // 추천 파라미터 (정확도 최적화)
   const recommendedParams = {
-    university: { temperature: 0.3, max_tokens: 2048, top_p: 0.9 },
-    study: { temperature: 0.5, max_tokens: 3072, top_p: 0.9 },
-    career: { temperature: 0.7, max_tokens: 2560, top_p: 0.9 },
-    cot: { temperature: 0.4, max_tokens: 4096, top_p: 0.85 },
-    general: { temperature: 0.7, max_tokens: 2048, top_p: 0.9 }
+    university: { temperature: 0.3, max_tokens: 2048, top_p: 0.9 },  // 정확한 학교 정보 전달
+    study: { temperature: 0.3, max_tokens: 3072, top_p: 0.9 },       // 정확한 학습 지도
+    career: { temperature: 0.4, max_tokens: 2560, top_p: 0.9 },      // 진로 조언은 약간의 창의성
+    cot: { temperature: 0.3, max_tokens: 4096, top_p: 0.85 },        // 논리적 추론의 일관성
+    general: { temperature: 0.3, max_tokens: 2048, top_p: 0.9 }      // 일반 대화도 정확도 우선
   }
 
   try {
@@ -755,6 +811,41 @@ onMounted(() => {
   font-weight: 700;
   color: #1f2937;
   margin-bottom: 24px;
+}
+
+/* Tab Navigation */
+.tab-navigation {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0;
+}
+
+.tab-button {
+  padding: 12px 24px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-size: 15px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  bottom: -2px;
+}
+
+.tab-button:hover {
+  color: #02478A;
+  background: #f0f9ff;
+  border-radius: 8px 8px 0 0;
+}
+
+.tab-button.active {
+  color: #02478A;
+  border-bottom-color: #02478A;
+  background: transparent;
 }
 
 .settings-layout {
@@ -973,6 +1064,21 @@ onMounted(() => {
 .action-btn:hover {
   background: #e5e7eb;
   color: #374151;
+}
+
+.action-btn.reembed {
+  background: #8b5cf6;
+  border-color: #8b5cf6;
+  color: #fff;
+}
+
+.action-btn.reembed:hover:not(:disabled) {
+  background: #7c3aed;
+}
+
+.action-btn.reembed:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .action-btn.restart {
