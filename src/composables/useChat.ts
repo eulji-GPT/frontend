@@ -1553,10 +1553,37 @@ export function useChat() {
     isLoading.value = true;
 
     const loadingMessageIndex = currentChat.messages.length;
+
+    // 다양한 로딩 메시지 (사용자가 대기 시간을 덜 느끼도록)
+    const ragLoadingMessages = [
+      "학교 데이터베이스를 검색하고 있어요...",
+      "관련 정보를 찾고 있어요...",
+      "최신 학교 자료를 확인하고 있어요...",
+      "을지대 정보를 분석하고 있어요...",
+      "공식 자료에서 답을 찾고 있어요...",
+      "학교 문서를 꼼꼼히 살펴보고 있어요...",
+      "정확한 정보를 준비하고 있어요...",
+      "관련 공지사항을 확인하고 있어요...",
+      "학교 시스템에서 검색 중이에요...",
+      "필요한 정보를 수집하고 있어요..."
+    ];
+
+    const unifiedLoadingMessages = [
+      "답변을 생성하고 있어요...",
+      "생각하고 있어요...",
+      "최선의 답변을 준비 중이에요...",
+      "정보를 정리하고 있어요...",
+      "답변을 작성하고 있어요..."
+    ];
+
+    const getRandomMessage = (messages: string[]) => {
+      return messages[Math.floor(Math.random() * messages.length)];
+    };
+
     const modeMessages: Record<ChatMode, string> = {
-      unified: "답변을 생성하고 있습니다...",
+      unified: getRandomMessage(unifiedLoadingMessages),
       cot: "단계별 추론 시작...",
-      rag: "을지대학교 정보 검색 중..."
+      rag: getRandomMessage(ragLoadingMessages)
     };
 
     // AI 로딩 메시지 추가
@@ -1573,6 +1600,29 @@ export function useChat() {
 
     // Vue 반응성을 위해 messages.value 즉시 업데이트 (로딩 메시지가 바로 보이도록)
     messages.value = [...currentChat.messages];
+
+    // 로딩 메시지 로테이션 (RAG/통합 모드에서 대기 시간을 덜 느끼도록)
+    let loadingMessageInterval: ReturnType<typeof setInterval> | null = null;
+    if (chatMode.value === 'rag' || chatMode.value === 'unified') {
+      const loadingMessages = chatMode.value === 'rag' ? ragLoadingMessages : unifiedLoadingMessages;
+      let messageIndex = 0;
+
+      loadingMessageInterval = setInterval(() => {
+        if (currentChat.messages[loadingMessageIndex]?.isLoading) {
+          messageIndex = (messageIndex + 1) % loadingMessages.length;
+          const newMessage = loadingMessages[messageIndex];
+          currentChat.messages[loadingMessageIndex].text = newMessage;
+          currentChat.messages[loadingMessageIndex].currentStep = newMessage;
+          messages.value = [...currentChat.messages];
+        } else {
+          // 로딩 완료 시 인터벌 정리
+          if (loadingMessageInterval) {
+            clearInterval(loadingMessageInterval);
+            loadingMessageInterval = null;
+          }
+        }
+      }, 2500); // 2.5초마다 메시지 변경
+    }
 
     try {
       if (images && images.length > 0) {
@@ -1651,6 +1701,11 @@ export function useChat() {
         };
       }
     } finally {
+      // 로딩 메시지 로테이션 인터벌 정리
+      if (loadingMessageInterval) {
+        clearInterval(loadingMessageInterval);
+        loadingMessageInterval = null;
+      }
       isLoading.value = false;
       saveChatHistory();
       // scrollToBottom will be called from the component
