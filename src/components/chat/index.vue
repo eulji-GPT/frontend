@@ -9,7 +9,6 @@
             <div class="logo-icon"></div>
             <img :src="eulLogo" alt="EULGPT 로고" class="eulgpt-logo-svg" />
           </div>
-          <div class="edit-icon" @click="startNewChat"></div>
         </div>
         <div class="frame-2">
           <div class="chatbot-menu-item">
