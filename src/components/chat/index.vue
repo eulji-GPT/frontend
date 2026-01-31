@@ -68,7 +68,7 @@
     
     <div class="sidebar-collapsible-ct" v-show=showFixedContent>
       <div>
-      <img :src="eulLogo" alt="EULGPT 로고" @click="goToHome" class="eulgpt-logo-svg" />
+      <img v-if="!isMobile" :src="eulLogo" alt="EULGPT 로고" @click="goToHome" class="eulgpt-logo-svg" />
       <div class="edit-icon" @click="startNewChat"></div>
       </div>
     </div>
@@ -150,7 +150,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick, watch  } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import ChatHistory from './ChatHistory.vue';
 import ChatMessageArea from './ChatMessageArea.vue';
@@ -348,6 +348,19 @@ const handleRetryMessage = (messageIndex: number) => {
 log.debug('Current messages:', messages.value);
 
 const isMobile = ref(false);
+
+watch(isMobile, (newVal) => {
+  if (newVal) {
+    isCollapsed.value = false;
+    showCollapsibleContent.value = true;
+    showFixedContent.value = false;
+    sidebarVisible.value = true; 
+  } else {
+    sidebarVisible.value = true;
+  }
+});
+
+
 const sidebarVisible = ref(true);
 const sidebarWidth = ref(Number(localStorage.getItem('sidebarWidth')) || 270);
 
@@ -707,9 +720,19 @@ const isCollapsed = ref(false);
 
 // pc 사이드바 토글 함수 설정
 const pctoggleSidebar = () => {
-  showCollapsibleContent.value = !showCollapsibleContent.value;
-  showFixedContent.value = !showFixedContent.value;
-  isCollapsed.value = !isCollapsed.value;
+  if (isMobile.value) {
+    sidebarVisible.value = !sidebarVisible.value;
+
+    if (sidebarVisible.value) {
+      showCollapsibleContent.value = true;
+      showFixedContent.value = false;
+      isCollapsed.value = false;
+    }
+  } else {
+    showCollapsibleContent.value = !showCollapsibleContent.value;
+    showFixedContent.value = !showFixedContent.value;
+    isCollapsed.value = !isCollapsed.value;
+  }
 };
 
 const toggleSidebar = () => {
@@ -918,7 +941,7 @@ const goToCrew = () => {
   border-right: 1px solid var(--color-card-border);
   min-width: 200px;
   max-width: 500px;
-  border-radius: 20px;
+  border-radius: 0px 20px 20px 0px;
   box-shadow:
     inset 0px 0px 6px 0px rgba(255, 255, 255, 0.15),
     inset 2px 2px 4px 0px rgba(255, 255, 255, 0.96),
@@ -1642,6 +1665,9 @@ const goToCrew = () => {
   /* 480px 이하에서도 키보드 대응 유지 */
   .chat-input-area {
     padding-bottom: max(env(safe-area-inset-bottom), var(--keyboard-height, 0px));
+  }
+  .chatbot-sidebar-wrapper {
+    border-radius: 0px;
   }
 }
 

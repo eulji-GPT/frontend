@@ -288,6 +288,7 @@ const removeImage = (index: number) => {
   display: flex;
   flex-direction: row;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
   max-width: min(770px, 100%);
   width: 100%;
@@ -651,8 +652,8 @@ textarea:disabled {
 /* 태블릿 (641px - 1024px) */
 @media (min-width: 641px) and (max-width: 1024px) {
   .chat-input-box {
-    max-width: 500px;
-    width: 500px;
+    /* max-width: 500px; */
+    width : 90%;
   }
 
   .placeholder-text-container {
