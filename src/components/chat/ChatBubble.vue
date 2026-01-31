@@ -743,67 +743,74 @@ onUpdated(() => {
   letter-spacing: -0.01em;  /* 한글 가독성 향상 */
 }
 
+/* 제목 스타일 - 깔끔한 섹션 구분 */
 :deep(.markdown-content h1),
 :deep(.markdown-content h2),
 :deep(.markdown-content h3),
 :deep(.markdown-content h4),
 :deep(.markdown-content h5),
 :deep(.markdown-content h6) {
-  margin: 12px 0 4px 0;
-  font-weight: 700;
-  line-height: 1.3;
-  color: var(--color-primary);
+  margin: 16px 0 8px 0;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-text-primary);
 }
 
-/* 대제목 - 가장 크고 눈에 띄게 */
+/* 대제목 - 섹션 카드 스타일 */
 :deep(.markdown-content h1) {
-  font-size: 2em !important;
-  font-weight: 800 !important;
-  color: var(--color-primary) !important;
-  margin: 16px 0 8px 0 !important;
+  font-size: 1.1em !important;
+  font-weight: 600 !important;
+  color: var(--color-text-primary) !important;
+  margin: 20px 0 12px 0 !important;
+  padding: 10px 14px !important;
+  background: var(--color-bg-secondary) !important;
+  border-radius: 8px !important;
   display: block !important;
 }
 
-/* 중제목 - 뚜렷하게 구분 */
+/* 중제목 - 섹션 카드 스타일 */
 :deep(.markdown-content h2) {
-  font-size: 1.6em !important;
-  font-weight: 700 !important;
-  color: var(--color-primary) !important;
-  margin: 14px 0 6px 0 !important;
+  font-size: 1em !important;
+  font-weight: 600 !important;
+  color: var(--color-text-primary) !important;
+  margin: 18px 0 10px 0 !important;
+  padding: 8px 12px !important;
+  background: var(--color-bg-secondary) !important;
+  border-radius: 6px !important;
   display: block !important;
 }
 
-/* 소제목 - 적당한 크기로 */
+/* 소제목 */
 :deep(.markdown-content h3) {
-  font-size: 1.3em !important;
-  font-weight: 700 !important;
-  color: var(--color-primary) !important;
-  margin: 12px 0 4px 0 !important;
+  font-size: 0.95em !important;
+  font-weight: 600 !important;
+  color: var(--color-text-primary) !important;
+  margin: 14px 0 6px 0 !important;
   display: block !important;
 }
 
 /* 세부 제목들 */
 :deep(.markdown-content h4) {
-  font-size: 1.15em !important;
+  font-size: 0.95em !important;
   font-weight: 600 !important;
   color: var(--color-text-primary) !important;
-  margin: 10px 0 3px 0 !important;
+  margin: 10px 0 4px 0 !important;
   display: block !important;
 }
 
 :deep(.markdown-content h5) {
-  font-size: 1.05em !important;
+  font-size: 0.9em !important;
   font-weight: 600 !important;
-  color: var(--color-text-secondary) !important;
-  margin: 8px 0 2px 0 !important;
+  color: var(--color-text-primary) !important;
+  margin: 8px 0 4px 0 !important;
   display: block !important;
 }
 
 :deep(.markdown-content h6) {
-  font-size: 1em !important;
-  font-weight: 600 !important;
-  color: var(--color-text-tertiary) !important;
-  margin: 6px 0 2px 0 !important;
+  font-size: 0.9em !important;
+  font-weight: 500 !important;
+  color: var(--color-text-secondary) !important;
+  margin: 6px 0 4px 0 !important;
   display: block !important;
 }
 
@@ -852,17 +859,15 @@ onUpdated(() => {
   margin-top: 0.6em;  /* 0.3em → 0.6em: 줄바꿈 시 더 명확한 간격 */
 }
 
+/* 강조 스타일 - 볼드만 적용, 색상은 블랙 */
 :deep(.markdown-content strong) {
   font-weight: 700;
-  color: var(--color-primary);
+  color: var(--color-text-primary);
 }
 
 :deep(.markdown-content em) {
   font-style: italic;
-  color: var(--color-info);
-  background: rgba(30, 64, 175, 0.05);
-  padding: 1px 3px;
-  border-radius: 2px;
+  color: var(--color-text-primary);
 }
 
 :deep(.markdown-content ul),
@@ -890,12 +895,13 @@ onUpdated(() => {
   line-height: 1.6;
 }
 
+/* 불릿 리스트 - 단순한 점 스타일 */
 :deep(.markdown-content ul li::before) {
-  content: '▶';
+  content: '•';
   position: absolute;
   left: 0;
-  color: var(--color-primary);
-  font-weight: bold;
+  color: var(--color-text-primary);
+  font-weight: normal;
 }
 
 :deep(.markdown-content ol) {
@@ -911,19 +917,17 @@ onUpdated(() => {
   line-height: 1.6;
 }
 
+/* 번호 리스트 - 단순한 숫자 스타일 */
 :deep(.markdown-content ol li::before) {
   content: counter(item) ".";
   counter-increment: item;
   position: absolute;
   left: -1.8em;
-  color: var(--color-primary);
-  font-weight: bold;
-  background: var(--color-primary-light);
-  padding: 2px 6px;
-  border-radius: 50%;
-  font-size: 0.9em;
+  color: var(--color-text-primary);
+  font-weight: 600;
+  font-size: 1em;
   min-width: 1.2em;
-  text-align: center;
+  text-align: left;
 }
 
 /* 중첩된 순서 있는 목록 스타일 */
@@ -934,11 +938,11 @@ onUpdated(() => {
 }
 
 :deep(.markdown-content ol ol li::before) {
-  content: counter(item) "." counter(subitem);
+  content: counter(subitem) ")";
   counter-increment: subitem;
-  left: -2.5em;
-  background: var(--color-bg-tertiary);
-  font-size: 0.85em;
+  left: -1.5em;
+  font-size: 0.95em;
+  font-weight: 500;
 }
 
 /* 3단계 중첩 목록 */
@@ -948,33 +952,31 @@ onUpdated(() => {
 }
 
 :deep(.markdown-content ol ol ol li::before) {
-  content: counter(item) "." counter(subitem) "." counter(subsubitem);
+  content: "- ";
   counter-increment: subsubitem;
-  left: -3em;
-  background: var(--color-bg-secondary);
-  font-size: 0.8em;
+  left: -1em;
+  font-size: 0.9em;
+  font-weight: normal;
 }
 
+/* 인용 블록 - 단순화 */
 :deep(.markdown-content blockquote) {
-  border-left: 4px solid var(--color-primary);
-  background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-bg-secondary) 100%);
-  margin: 1em 0;  /* 12px → 1em: 인용 블록 전후 여백 확대 */
-  padding: 1em 1.25em;  /* 패딩도 확대 */
+  border-left: 3px solid var(--color-card-border);
+  background: var(--color-bg-secondary);
+  margin: 1em 0;
+  padding: 0.75em 1em;
   font-style: normal;
-  border-radius: 0 12px 12px 0;
-  box-shadow: 0 2px 6px rgba(2, 71, 138, 0.08);
-  position: relative;
+  border-radius: 0 8px 8px 0;
 }
 
-/* blockquote 앞의 아이콘 제거 - AI가 이미 💡 이모지를 포함함 */
 :deep(.markdown-content blockquote::before) {
   display: none;
 }
 
 :deep(.markdown-content blockquote p) {
   margin: 0;
-  font-weight: 500;
-  color: var(--color-info);
+  font-weight: 400;
+  color: var(--color-text-primary);
 }
 
 :deep(.markdown-content code) {

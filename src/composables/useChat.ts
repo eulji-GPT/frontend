@@ -57,7 +57,7 @@ export interface ChatSession {
   sessionId?: string; // 백엔드 세션 ID
 }
 
-export type ChatMode = 'unified' | 'cot' | 'rag';
+export type ChatMode = 'rag';
 
 export function useChat() {
   const router = useRouter();
@@ -66,9 +66,8 @@ export function useChat() {
   const currentChatId = ref<string | null>(null);
   const isLoading = ref(false);
   const isStreaming = ref(false);
-  // localStorage에서 chatMode 초기화 (기본값: 'unified')
-  const savedChatMode = localStorage.getItem('chatMode') as ChatMode | null;
-  const chatMode = ref<ChatMode>(savedChatMode && ['unified', 'cot', 'rag'].includes(savedChatMode) ? savedChatMode : 'unified');
+  // 기본 모드: 'rag' (대학 정보 검색)
+  const chatMode = ref<ChatMode>('rag');
   let currentController: AbortController | null = null;
   
   // RAG 시스템 상태
@@ -96,13 +95,8 @@ export function useChat() {
   };
 
   // 모드별 모델 이름 반환
-  const getModelName = (mode: ChatMode): string => {
-    const modelNames: Record<ChatMode, string> = {
-      'unified': '통합 모델',
-      'cot': '깊은 추론 모델',
-      'rag': '대학 정보 검색 모델'
-    };
-    return modelNames[mode] || '통합 모델';
+  const getModelName = (_mode: ChatMode): string => {
+    return '대학 정보 검색 모델';
   };
 
   // 메시지 업데이트를 위한 헬퍼 함수 (Vue 반응성 보장)
@@ -162,13 +156,9 @@ export function useChat() {
 
   const FASTAPI_BASE_URL = getGeminiApiBaseUrl(); // AI-RAG API URL
   const BACKEND_BASE_URL = getBackendApiBaseUrl(); // 백엔드 API URL
-  const getAPIUrl = (mode: ChatMode): string => {
-    const endpoints = {
-      unified: '/chat',  // 통합 챗봇 (Function Calling 기반)
-      cot: '/cot',       // Chain of Thought
-      rag: '/rag/query'  // RAG 시스템
-    };
-    return `${FASTAPI_BASE_URL}${endpoints[mode]}`;
+  const getAPIUrl = (_mode: ChatMode): string => {
+    // RAG 시스템만 지원
+    return `${FASTAPI_BASE_URL}/rag/query`;
   };
 
   // 자동 스크롤 함수
@@ -304,23 +294,8 @@ export function useChat() {
            || (message.length >= 30 && hasKeyPhrase);
   };
 
-  // 메시지 전처리: 상세 답변이 필요한 경우 보고서 스타일 지침 추가
-  const prepareMessageForAI = (message: string, mode: ChatMode): string => {
-    // CoT, RAG 모드는 이미 특화된 프롬프트가 있으므로 건너뜀
-    if (mode === 'cot' || mode === 'rag') {
-      return message;
-    }
-
-    // 상세 답변이 필요한 질문인 경우 간결한 구조화 지침 추가
-    if (requiresDetailedResponse(message)) {
-      const reportStyleInstruction = `마크다운 제목(# ## ###)을 사용하여 체계적으로 답변하세요. 질문: ${message}`;
-
-      log.debug("Structured mode: Requesting formatted response");
-      log.debug("Structured mode: Original question:", message);
-      return reportStyleInstruction;
-    }
-
-    log.debug("Normal mode: Standard response");
+  // 메시지 전처리 (RAG 모드는 그대로 전달)
+  const prepareMessageForAI = (message: string, _mode: ChatMode): string => {
     return message;
   };
 
@@ -970,19 +945,19 @@ export function useChat() {
         log.info("Falling back to general mode due to CoT failure...");
         
         if (currentChat.messages[messageIndex]) {
-          currentChat.messages[messageIndex].text = '🔄 CoT 모드에서 오류가 발생했습니다. 일반 모드로 자동 전환합니다...';
-          currentChat.messages[messageIndex].currentStep = '일반 모드로 전환 중...';
+          currentChat.messages[messageIndex].text = '🔄 CoT 모드에서 오류가 발생했습니다. RAG 모드로 자동 전환합니다...';
+          currentChat.messages[messageIndex].currentStep = 'RAG 모드로 전환 중...';
         }
-        
+
         try {
           const originalMode = chatMode.value;
-          chatMode.value = 'unified';
+          chatMode.value = 'rag';
           await callFastAPIChat(message, messageIndex);
           chatMode.value = originalMode;
           return;
         } catch (fallbackError) {
-          log.error("General mode fallback also failed:", fallbackError);
-          errorMessage = '🚫 CoT와 일반 모드 모두 실패했습니다. 잠시 후 다시 시도해주세요.';
+          log.error("RAG mode fallback also failed:", fallbackError);
+          errorMessage = '🚫 CoT와 RAG 모드 모두 실패했습니다. 잠시 후 다시 시도해주세요.';
         }
       }
 
@@ -1036,11 +1011,10 @@ export function useChat() {
           'Content-Type': 'application/json',
         },
         signal: currentController.signal, // AbortController 신호 추가
-        body: JSON.stringify(
-          chatMode.value === 'cot'
-            ? { question: preparedMessage, context: null, session_id: currentChat.sessionId }
-            : { message: preparedMessage, context: null, session_id: currentChat.sessionId }
-        )
+        body: JSON.stringify({
+          question: preparedMessage,
+          session_id: currentChat.sessionId
+        })
       });
 
       log.debug("Response status:", response.status, response.statusText);
@@ -1568,21 +1542,11 @@ export function useChat() {
       "필요한 정보를 수집하고 있어요..."
     ];
 
-    const unifiedLoadingMessages = [
-      "답변을 생성하고 있어요...",
-      "생각하고 있어요...",
-      "최선의 답변을 준비 중이에요...",
-      "정보를 정리하고 있어요...",
-      "답변을 작성하고 있어요..."
-    ];
-
     const getRandomMessage = (messages: string[]) => {
       return messages[Math.floor(Math.random() * messages.length)];
     };
 
     const modeMessages: Record<ChatMode, string> = {
-      unified: getRandomMessage(unifiedLoadingMessages),
-      cot: "단계별 추론 시작...",
       rag: getRandomMessage(ragLoadingMessages)
     };
 
@@ -1601,10 +1565,10 @@ export function useChat() {
     // Vue 반응성을 위해 messages.value 즉시 업데이트 (로딩 메시지가 바로 보이도록)
     messages.value = [...currentChat.messages];
 
-    // 로딩 메시지 로테이션 (RAG/통합 모드에서 대기 시간을 덜 느끼도록)
+    // 로딩 메시지 로테이션 (RAG 모드에서 대기 시간을 덜 느끼도록)
     let loadingMessageInterval: ReturnType<typeof setInterval> | null = null;
-    if (chatMode.value === 'rag' || chatMode.value === 'unified') {
-      const loadingMessages = chatMode.value === 'rag' ? ragLoadingMessages : unifiedLoadingMessages;
+    if (chatMode.value === 'rag') {
+      const loadingMessages = ragLoadingMessages;
       let messageIndex = 0;
 
       loadingMessageInterval = setInterval(() => {
@@ -1627,9 +1591,8 @@ export function useChat() {
     try {
       if (images && images.length > 0) {
         await callFastAPIChatWithImages(userMessageText, images, loadingMessageIndex);
-      } else if (chatMode.value === 'cot') {
-        await callFastAPICotChat(userMessageText, loadingMessageIndex);
-      } else if (chatMode.value === 'rag') {
+      } else {
+        // RAG 모드만 지원
         // RAG 모드: 초기화 상태 확인 및 필요시 자동 초기화
         if (!ragStatus.value.initialized && !ragStatus.value.isInitializing) {
           log.debug('RAG not initialized - starting auto-initialization');
@@ -1650,8 +1613,6 @@ export function useChat() {
         }
 
         await callFastAPIRagChat(userMessageText, loadingMessageIndex);
-      } else {
-        await callFastAPIChat(userMessageText, loadingMessageIndex);
       }
       
       // 첫 번째 메시지인 경우 AI로 제목 생성 (비동기)
@@ -1735,12 +1696,7 @@ export function useChat() {
   }
 
   function getChatModeInfo() {
-    const modeInfo: Record<ChatMode, { name: string; description: string }> = {
-      unified: { name: '통합 채팅', description: '범용 AI 대화' },
-      cot: { name: '깊은 추론 모델', description: 'Chain of Thought 방식' },
-      rag: { name: '대학 정보 검색 모델', description: '을지대학교 공식 자료 기반 정보 검색' }
-    };
-    return modeInfo[chatMode.value];
+    return { name: '대학 정보 검색 모델', description: '을지대학교 공식 자료 기반 정보 검색' };
   }
 
   function stopResponse() {
