@@ -1,7 +1,7 @@
 <template>
   <div class="mode-selector-header">
     <div class="header-content">
-      <span class="current-mode">대학 정보 검색 모델</span>
+      <span class="current-mode">대학 정보 모델</span>
       <div class="mode-icon-indicator">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="11" cy="11" r="8"></circle>

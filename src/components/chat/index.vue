@@ -115,15 +115,11 @@
               ref="chatInputRef"
               :isLoading="isLoading"
               :isStreaming="isStreaming"
+              :lastIndexedTime="chatMode === 'rag' ? formattedLastIndexed : null"
               @sendMessage="handleSendMessage"
               @stopResponse="stopResponse"
             />
           </div>
-        </div>
-
-        <!-- 마지막 인덱싱 시간 표시 (RAG 모드에서만) -->
-        <div v-if="chatMode === 'rag' && formattedLastIndexed" class="last-indexed-indicator">
-          마지막 업데이트: {{ formattedLastIndexed }}
         </div>
       </div>
     </div>
@@ -1757,27 +1753,6 @@ const goToCrew = () => {
 
   .mode-selector-container {
     left: 20px;
-  }
-}
-
-/* 마지막 인덱싱 시간 표시 */
-.last-indexed-indicator {
-  position: absolute;
-  bottom: 8px;
-  right: 16px;
-  font-size: 11px;
-  color: var(--color-text-tertiary, #999);
-  opacity: 0.7;
-  font-family: Pretendard, var(--default-font-family);
-  pointer-events: none;
-  z-index: 10;
-}
-
-@media (max-width: 640px) {
-  .last-indexed-indicator {
-    font-size: 10px;
-    bottom: 4px;
-    right: 8px;
   }
 }
 
