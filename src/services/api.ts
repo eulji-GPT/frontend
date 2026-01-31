@@ -637,7 +637,20 @@ export const aiSettingsAPI = {
     };
     errors: string[];
   }> => {
-    const AI_RAG_URL = import.meta.env.VITE_GEMINI_FASTAPI_URL || '/gemini-api';
+    let AI_RAG_URL = import.meta.env.VITE_GEMINI_FASTAPI_URL || '/gemini-api';
+
+    // 프로덕션 환경에서 직접 Railway URL 사용 (커스텀 도메인 지원)
+    if (!AI_RAG_URL || AI_RAG_URL === '/gemini-api' || AI_RAG_URL.includes('.railway.internal')) {
+      if (typeof window !== 'undefined') {
+        const hostname = window.location.hostname;
+        if (hostname.includes('railway.app') ||
+            hostname.includes('euljigpt.com') ||
+            hostname === 'www.euljigpt.com') {
+          AI_RAG_URL = 'https://ai-rag-production.up.railway.app';
+        }
+      }
+    }
+
     return apiRequest(`${AI_RAG_URL}/admin/sync-notion`, {
       method: 'POST'
     });
@@ -785,7 +798,20 @@ export const knowledgeAPI = {
   // GET /knowledge/reindex/status - 재인덱싱 상태 조회
   getReindexStatus: async (): Promise<ReindexStatus> => {
     // AI-RAG 백엔드에서 상태 조회
-    const AI_RAG_URL = import.meta.env.VITE_GEMINI_FASTAPI_URL || '/gemini-api';
+    let AI_RAG_URL = import.meta.env.VITE_GEMINI_FASTAPI_URL || '/gemini-api';
+
+    // 프로덕션 환경에서 직접 Railway URL 사용 (커스텀 도메인 지원)
+    if (!AI_RAG_URL || AI_RAG_URL === '/gemini-api' || AI_RAG_URL.includes('.railway.internal')) {
+      if (typeof window !== 'undefined') {
+        const hostname = window.location.hostname;
+        if (hostname.includes('railway.app') ||
+            hostname.includes('euljigpt.com') ||
+            hostname === 'www.euljigpt.com') {
+          AI_RAG_URL = 'https://ai-rag-production.up.railway.app';
+        }
+      }
+    }
+
     const response = await fetch(`${AI_RAG_URL}/admin/knowledge/reindex/status`, {
       method: 'GET',
       headers: {
