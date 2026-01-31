@@ -887,8 +887,6 @@ export function useChat() {
                       final_text_length: currentChat.messages[messageIndex].text.length
                     });
 
-                    // AI 메시지를 노션에 저장
-                    await saveMessageToNotion(currentChat.id, false, finalText);
                     // AI 메시지를 백엔드에 저장
                     await saveMessageToBackend(currentChat.id, false, finalText, getModelName(chatMode.value));
 
@@ -1154,9 +1152,7 @@ export function useChat() {
           currentChat.messages[messageIndex].isStreaming = false;
           currentChat.messages[messageIndex].currentStep = undefined;
 
-          // AI 메시지를 노션에 저장 (아티팩트 전체 내용 저장)
-          await saveMessageToNotion(currentChat.id, false, reportContent);
-          // AI 메시지를 백엔드에 저장
+          // AI 메시지를 백엔드에 저장 (아티팩트 전체 내용 저장)
           await saveMessageToBackend(currentChat.id, false, reportContent, getModelName(chatMode.value));
 
           isStreaming.value = false;
@@ -1169,8 +1165,6 @@ export function useChat() {
           currentChat.messages[messageIndex].isStreaming = false;
           currentChat.messages[messageIndex].currentStep = undefined;
 
-          // AI 메시지를 노션에 저장
-          await saveMessageToNotion(currentChat.id, false, normalizedText);
           // AI 메시지를 백엔드에 저장
           await saveMessageToBackend(currentChat.id, false, normalizedText, getModelName(chatMode.value));
 
@@ -1351,8 +1345,6 @@ export function useChat() {
 
         messages.value = [...currentChat.messages];
 
-        // AI 메시지를 노션에 저장
-        await saveMessageToNotion(currentChat.id, false, normalizedAnswer);
         // AI 메시지를 백엔드에 저장
         await saveMessageToBackend(currentChat.id, false, normalizedAnswer, getModelName(chatMode.value));
       }
@@ -1485,8 +1477,8 @@ export function useChat() {
             currentChat.messages[messageIndex].isStreaming = false;
             isStreaming.value = false;
 
-            // AI 메시지를 노션에 저장
-            saveMessageToNotion(currentChat.id, false, responseText);
+            // AI 메시지를 백엔드에 저장
+            saveMessageToBackend(currentChat.id, false, responseText, getModelName(chatMode.value));
 
             saveChatHistory();
           }
@@ -1537,24 +1529,6 @@ export function useChat() {
     }
   }
 
-  // 노션에 메시지 저장 함수
-  async function saveMessageToNotion(chatHistoryId: string, isUser: boolean, message: string) {
-    if (!isAuthenticated()) return;
-
-    try {
-      await apiRequest(`${BACKEND_BASE_URL}/chat/history/${chatHistoryId}/message`, {
-        method: 'POST',
-        body: JSON.stringify({
-          is_user: isUser,
-          message: message
-        })
-      });
-      log.debug('Message saved to backend:', isUser ? 'user' : 'AI');
-    } catch (error) {
-      log.error('Failed to save message to backend:', error);
-    }
-  }
-
   async function handleSend(inputValue: { value: string }, images?: File[]) {
     // 중복 전송 방지: 이미 전송 중이면 무시
     if (isSendingLock) {
@@ -1587,8 +1561,6 @@ export function useChat() {
     // Vue 반응성을 위해 messages.value 즉시 업데이트 (사용자 메시지가 바로 보이도록)
     messages.value = [...currentChat.messages];
 
-    // 사용자 메시지를 노션에 즉시 저장
-    await saveMessageToNotion(currentChat.id, true, userMessageText);
     // 사용자 메시지를 백엔드에 저장
     await saveMessageToBackend(currentChat.id, true, userMessageText, undefined);
 
