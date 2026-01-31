@@ -583,7 +583,7 @@ export function useChat() {
     }
   }
 
-  // 백엔드에 메시지 저장
+  // 백엔드에 메시지 저장 (단일 저장 - 중복 저장 버그 수정됨)
   async function saveMessageToBackend(
     chatId: string,
     isUser: boolean,
