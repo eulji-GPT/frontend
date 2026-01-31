@@ -1500,8 +1500,10 @@ const goToCrew = () => {
 }
 
 .sidebar-toggle-chaticon {
-  padding-left: 28px;
   cursor: pointer;
+  width:100%;
+  display : flex;
+  justify-content: center;
 }
 
 /* ========================================
