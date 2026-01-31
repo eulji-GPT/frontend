@@ -584,12 +584,22 @@ export function useChat() {
 
     try {
       const chat = chatHistory.value.find(c => c.id === chatId);
-      if (!chat?.sessionId) {
-        log.warn('No backend sessionId for chat:', chatId);
+      if (!chat) {
+        log.warn('Chat not found:', chatId);
         return;
       }
 
-      await apiRequest(`${BACKEND_BASE_URL}/chat/history/${chat.sessionId}/message`, {
+      // chat.id가 Backend 채팅 히스토리 ID (숫자)
+      // chat.sessionId는 AI-RAG 세션 ID (UUID) - 여기서 사용하지 않음
+      const backendChatId = chat.id;
+
+      // 숫자 형식이 아닌 경우 (로컬 채팅) 저장하지 않음
+      if (backendChatId.startsWith('chat-')) {
+        log.debug('Local chat, skipping backend save:', backendChatId);
+        return;
+      }
+
+      await apiRequest(`${BACKEND_BASE_URL}/chat/history/${backendChatId}/message`, {
         method: 'POST',
         body: JSON.stringify({
           is_user: isUser,
@@ -598,7 +608,7 @@ export function useChat() {
         })
       });
 
-      log.debug('Message saved to backend:', { chatId, isUser, modelName });
+      log.debug('Message saved to backend:', { chatId: backendChatId, isUser, modelName });
     } catch (error) {
       log.error('Failed to save message to backend:', error);
       // 실패해도 사용자 경험에 영향 없도록 에러 무시
