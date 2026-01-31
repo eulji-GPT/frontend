@@ -879,9 +879,15 @@ onUpdated(() => {
 /* 연속된 목록 사이 간격 줄이기 */
 :deep(.markdown-content ul + ul),
 :deep(.markdown-content ol + ol),
-:deep(.markdown-content ul + ol),
-:deep(.markdown-content ol + ul) {
+:deep(.markdown-content ul + ol) {
   margin-top: 2px;
+}
+
+/* 순서 목록 다음의 불릿 목록은 들여쓰기 (계층 구조 표현) */
+:deep(.markdown-content ol + ul) {
+  margin-top: 4px;
+  margin-left: 1.5em;
+  margin-bottom: 0.75em;
 }
 
 :deep(.markdown-content ul) {
