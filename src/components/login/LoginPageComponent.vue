@@ -208,7 +208,7 @@ const handleKakaoLogin = () => {
 }
 
 // Mock 로그인: 백엔드 없이 프론트엔드만 개발할 때 사용
-const handleMockLogin = () => {
+const handleMockLogin = async () => {
   console.log('[Mock Login] 개발자 로그인 실행')
 
   // 가짜 토큰 생성
@@ -231,11 +231,9 @@ const handleMockLogin = () => {
   console.log('[Mock Login] 로그인 성공:', mockUser)
   showToastMessage('개발자 모드로 로그인되었습니다.')
 
-  // 채팅 페이지로 이동
-  setTimeout(() => {
-    const redirect = (router.currentRoute.value.query.redirect as string) || '/chat'
-    router.push(redirect)
-  }, 500)
+  // 즉시 채팅 페이지로 이동
+  const redirect = (router.currentRoute.value.query.redirect as string) || '/chat'
+  await router.push(redirect)
 }
 </script>
 
