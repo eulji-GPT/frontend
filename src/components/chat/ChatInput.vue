@@ -62,6 +62,7 @@
     </div>
     <div class="disclaimer-text">
       개인정보 처리방침 | Copyright ⓒ EULGPT. All Rights Reserved
+      <span v-if="props.lastIndexedTime" class="last-indexed-text"> | 마지막 업데이트: {{ props.lastIndexedTime }}</span>
     </div>
   </div>
 </template>
@@ -76,6 +77,7 @@ const props = defineProps<{
   isLoading: boolean;
   isStreaming: boolean;
   className?: string;
+  lastIndexedTime?: string | null;
 }>();
 
 const emit = defineEmits<{
@@ -551,7 +553,7 @@ textarea:disabled {
 }
 
 .disclaimer-text {
-  max-width: 450px;
+  max-width: 600px;
   color: var(--color-text-tertiary);
   text-align: center;
   font-family: Pretendard;
@@ -560,6 +562,11 @@ textarea:disabled {
   font-weight: 500;
   line-height: normal;
   margin: 18px auto 18px auto;
+}
+
+.last-indexed-text {
+  color: var(--color-text-tertiary);
+  opacity: 0.8;
 }
 
 .file-preview-container {

@@ -69,6 +69,8 @@ export function useChat() {
   // 기본 모드: 'rag' (대학 정보 검색)
   const chatMode = ref<ChatMode>('rag');
   let currentController: AbortController | null = null;
+  // 중복 전송 방지 플래그
+  let isSendingLock = false;
   
   // RAG 시스템 상태
   const ragStatus = ref({
@@ -96,7 +98,7 @@ export function useChat() {
 
   // 모드별 모델 이름 반환
   const getModelName = (_mode: ChatMode): string => {
-    return '대학 정보 검색 모델';
+    return '대학 정보 모델';
   };
 
   // 메시지 업데이트를 위한 헬퍼 함수 (Vue 반응성 보장)
@@ -1546,7 +1548,15 @@ export function useChat() {
   }
 
   async function handleSend(inputValue: { value: string }, images?: File[]) {
+    // 중복 전송 방지: 이미 전송 중이면 무시
+    if (isSendingLock) {
+      log.debug('handleSend blocked: already sending');
+      return;
+    }
     if ((!inputValue.value.trim() && !images?.length) || isLoading.value) return;
+
+    // 락 설정 (가장 먼저)
+    isSendingLock = true;
 
     const userMessageText = inputValue.value.trim();
     const currentChat = chatHistory.value.find(c => c.id === currentChatId.value);
@@ -1721,6 +1731,7 @@ export function useChat() {
         loadingMessageInterval = null;
       }
       isLoading.value = false;
+      isSendingLock = false; // 전송 락 해제
       saveChatHistory();
       // scrollToBottom will be called from the component
     }
@@ -1749,7 +1760,7 @@ export function useChat() {
   }
 
   function getChatModeInfo() {
-    return { name: '대학 정보 검색 모델', description: '을지대학교 공식 자료 기반 정보 검색' };
+    return { name: '대학 정보 모델', description: '을지대학교 공식 자료 기반 정보 검색' };
   }
 
   function stopResponse() {
