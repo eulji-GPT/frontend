@@ -13,16 +13,16 @@
         </div>
         <div class="frame-2">
           <div class="chatbot-menu-item" :class="{'collapsed': isCollapsed }">
-            <div class="frame-3" :class="{'collapsed': isCollapsed }" @click="goToCrew">
+            <div class="frame-3" :class="{'collapsed': isCollapsed }" @click="goToPreparation">
               <div class="group-4">
               </div>
               <span class="empty-classroom-check" v-show="showCollapsibleContent" >빈 강의실 확인</span>
             </div>
-            <div class="frame-7"  :class="{'collapsed': isCollapsed }" @click="goToCrew">
+            <div class="frame-7"  :class="{'collapsed': isCollapsed }" @click="goToPreparation">
               <div class="group-8"></div>
               <span class="library-study-room-reservation" v-show="showCollapsibleContent" >도서관 ∙ 열람실 자리 예약</span>
             </div>
-            <div class="frame-9" :class="{'collapsed': isCollapsed }" @click="goToCrew">
+            <div class="frame-9" :class="{'collapsed': isCollapsed }" @click="goToPreparation">
               <div class="group-a"></div>
               <span class="status" v-show="showCollapsibleContent" >학식당 현황</span>
             </div>
@@ -935,8 +935,8 @@ const goToHome = () => {
   router.push('/');
 };
 
-const goToCrew = () => {
-  router.push('/crew');
+const goToPreparation = () => {
+  router.push('/preparation');
 };
 
 // Reserved for future use
@@ -1085,7 +1085,8 @@ const goToCrew = () => {
   gap: 40px;
   position: relative;
   min-width: 0;
-  height: 681px;
+  flex:1;
+  overflow: hidden;
   padding: 20px 0 0 0;
   z-index: 17;
 }
