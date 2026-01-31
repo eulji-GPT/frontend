@@ -121,6 +121,10 @@
           </div>
         </div>
 
+        <!-- 마지막 인덱싱 시간 표시 (RAG 모드에서만) -->
+        <div v-if="chatMode === 'rag' && formattedLastIndexed" class="last-indexed-indicator">
+          마지막 업데이트: {{ formattedLastIndexed }}
+        </div>
       </div>
     </div>
 
@@ -167,6 +171,7 @@ import eulLogo from '../../assets/eul_logo.svg';
 import sidebar_chatlogo from '../../components/chat/icon/sidebar-toggle-chatimg.svg'
 import { getApiBaseUrl } from '@/utils/ports-config';
 import { createLogger } from '../../utils/logger';
+import { knowledgeAPI } from '../../services/api';
 const log = createLogger('Chat');
 
 const router = useRouter();
@@ -449,6 +454,38 @@ const userInitial = computed(() => {
 const showSourceSidebar = ref(true); // RAG 소스 사이드바 표시 여부
 const showArtifactPanel = ref(true); // 아티팩트 패널 표시 여부
 const selectedArtifactMessageId = ref<string | null>(null); // 선택된 아티팩트의 메시지 ID
+
+// 마지막 인덱싱 시간 표시용
+const lastIndexedTime = ref<string | null>(null);
+
+// 마지막 인덱싱 시간을 한국어 형식으로 변환
+const formattedLastIndexed = computed(() => {
+  if (!lastIndexedTime.value) return null;
+  try {
+    const date = new Date(lastIndexedTime.value);
+    return date.toLocaleString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return lastIndexedTime.value;
+  }
+});
+
+// 재인덱싱 상태 조회
+const fetchLastIndexedTime = async () => {
+  try {
+    const status = await knowledgeAPI.getReindexStatus();
+    if (status.last_indexed) {
+      lastIndexedTime.value = status.last_indexed;
+    }
+  } catch (error) {
+    log.debug('Failed to fetch reindex status:', error);
+  }
+};
 
 const showMobileOverlay = computed(() => isMobile.value && sidebarVisible.value);
 
@@ -853,6 +890,7 @@ const fetchUserProfile = async () => {
 onMounted(() => {
   checkMobileSize();
   fetchUserProfile();
+  fetchLastIndexedTime(); // 마지막 인덱싱 시간 조회
   window.addEventListener('resize', checkMobileSize);
   document.addEventListener('click', handleClickOutside);
 
@@ -1719,6 +1757,27 @@ const goToCrew = () => {
 
   .mode-selector-container {
     left: 20px;
+  }
+}
+
+/* 마지막 인덱싱 시간 표시 */
+.last-indexed-indicator {
+  position: absolute;
+  bottom: 8px;
+  right: 16px;
+  font-size: 11px;
+  color: var(--color-text-tertiary, #999);
+  opacity: 0.7;
+  font-family: Pretendard, var(--default-font-family);
+  pointer-events: none;
+  z-index: 10;
+}
+
+@media (max-width: 640px) {
+  .last-indexed-indicator {
+    font-size: 10px;
+    bottom: 4px;
+    right: 8px;
   }
 }
 

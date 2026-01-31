@@ -783,9 +783,18 @@ export const knowledgeAPI = {
   },
 
   // GET /knowledge/reindex/status - 재인덱싱 상태 조회
-  getReindexStatus: (): Promise<ReindexStatus> => {
-    return apiRequest<ReindexStatus>('/knowledge/reindex/status', {
-      method: 'GET'
+  getReindexStatus: async (): Promise<ReindexStatus> => {
+    // AI-RAG 백엔드에서 상태 조회
+    const AI_RAG_URL = import.meta.env.VITE_GEMINI_FASTAPI_URL || '/gemini-api';
+    const response = await fetch(`${AI_RAG_URL}/admin/knowledge/reindex/status`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
   }
 };
