@@ -1218,13 +1218,14 @@ export function useChat() {
   }
 
   async function callFastAPIRagChat(message: string, messageIndex: number) {
-    const apiUrl = getAPIUrl(chatMode.value);
-    log.debug("RAG FastAPI call started:", apiUrl);
+    // 스트리밍 엔드포인트 사용
+    const apiUrl = `${FASTAPI_BASE_URL}/chat/stream`;
+    log.debug("RAG FastAPI streaming call started:", apiUrl);
     log.debug("Query:", message);
-    
+
     // 새로운 AbortController 생성
     currentController = new AbortController();
-    
+
     const currentChat = chatHistory.value.find(c => c.id === currentChatId.value);
     if (!currentChat) {
       log.error("Current chat not found");
@@ -1232,7 +1233,7 @@ export function useChat() {
     }
 
     try {
-      log.debug("RAG fetch request started");
+      log.debug("RAG streaming fetch request started");
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
@@ -1240,14 +1241,13 @@ export function useChat() {
         },
         signal: currentController.signal,
         body: JSON.stringify({
-          question: message,
-          prompt_type: "auto",
-          top_k: 8,
-          show_debug: true
+          message: message,
+          session_id: currentChat.sessionId,
+          mode: 'rag'
         })
       });
 
-      log.debug("RAG response status:", response.status, response.statusText);
+      log.debug("RAG streaming response status:", response.status, response.statusText);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -1255,58 +1255,101 @@ export function useChat() {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const data = await response.json();
-      log.debug("RAG FastAPI response received");
-      
-      if (data.answer) {
-        if (currentChat.messages[messageIndex]) {
-          // 텍스트 정규화 적용
-          const normalizedAnswer = normalizeWhitespace(data.answer);
+      // 스트리밍 모드 초기화
+      if (currentChat.messages[messageIndex]) {
+        currentChat.messages[messageIndex].text = '';
+        currentChat.messages[messageIndex].isLoading = false;
+        currentChat.messages[messageIndex].isStreaming = true;
+        currentChat.messages[messageIndex].currentStep = '답변 생성 중...';
+        currentChat.messages[messageIndex].hasError = false;
+        currentChat.messages[messageIndex].modelName = "대학 정보 검색";
+        currentChat.messages[messageIndex].ragSources = [];
+      }
 
-          currentChat.messages[messageIndex].text = normalizedAnswer;
-          currentChat.messages[messageIndex].isLoading = false;
-          currentChat.messages[messageIndex].isStreaming = false;
-          currentChat.messages[messageIndex].currentStep = undefined;
-          currentChat.messages[messageIndex].hasError = false;
-          currentChat.messages[messageIndex].modelName = "대학 정보 검색";  // RAG 모드 모델 이름
+      isStreaming.value = true;
+      messages.value = [...currentChat.messages];
 
-          // RAG 소스 정보 추가 (정보 제공 요청 시에만)
-          // 인사말, 범위 외 질문, 검색 품질 낮은 경우는 참고문서를 표시하지 않음
-          const shouldShowSources = !['greeting', 'out_of_scope', 'low_relevance'].includes(data.prompt_type_used || '');
+      // SSE 스트리밍 처리
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let fullResponseText = '';
 
-          if (shouldShowSources && data.sources && Array.isArray(data.sources) && data.sources.length > 0) {
-            currentChat.messages[messageIndex].ragSources = data.sources.map((source: any) => ({
-              title: source.title || '제목 없음',
-              content: source.content || '',
-              domain: source.domain || 'eulji.ac.kr',
-              category: source.category || '기타',
-              score: source.score || 0
-            }));
-          } else {
-            currentChat.messages[messageIndex].ragSources = [];
+      if (!reader) {
+        throw new Error("응답 스트림을 읽을 수 없습니다.");
+      }
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.trim() || !line.startsWith('data: ')) continue;
+
+          try {
+            const jsonStr = line.slice(6);
+            const data = JSON.parse(jsonStr);
+
+            if (data.type === 'start') {
+              // 세션 ID 저장
+              if (data.session_id && currentChat) {
+                currentChat.sessionId = data.session_id;
+                log.debug("Session ID saved");
+              }
+            } else if (data.type === 'sources') {
+              // RAG 소스 정보 저장
+              if (currentChat.messages[messageIndex] && data.sources) {
+                currentChat.messages[messageIndex].ragSources = data.sources.map((source: any) => ({
+                  title: source.title || '제목 없음',
+                  content: source.content || '',
+                  domain: 'eulji.ac.kr',
+                  category: source.category || '기타',
+                  score: source.score || 0
+                }));
+                log.debug("RAG sources received:", data.sources.length);
+              }
+            } else if (data.type === 'chunk') {
+              // 실시간 스트리밍 청크 추가
+              fullResponseText += data.content;
+              if (currentChat.messages[messageIndex]) {
+                currentChat.messages[messageIndex].text = fullResponseText;
+                currentChat.messages[messageIndex].currentStep = undefined;
+                messages.value = [...currentChat.messages];
+              }
+              setTimeout(() => scrollToBottom(), 10);
+            } else if (data.type === 'done') {
+              log.debug("RAG streaming completed");
+            } else if (data.type === 'error') {
+              throw new Error(data.error);
+            }
+          } catch (parseError) {
+            log.warn("JSON parsing failed:", line, parseError);
           }
-
-          // RAG 디버그 정보 표시 (옵셔널)
-          if (data.debug_info && data.debug_info.length > 0) {
-            log.debug("RAG debug info:", data.debug_info);
-          }
-
-          // RAG 메타데이터 표시 (처리시간, 검색된 문서 수 등)
-          log.debug(`RAG performance: ${data.processing_time?.toFixed(2)}s, docs: ${data.search_results_count}, prompt: ${data.prompt_type_used}`);
-
-          // Vue 반응성을 위해 messages.value 업데이트 (화면에 응답이 표시되도록)
-          messages.value = [...currentChat.messages];
-
-          // AI 메시지를 노션에 저장
-          await saveMessageToNotion(currentChat.id, false, normalizedAnswer);
-          // AI 메시지를 백엔드에 저장
-          await saveMessageToBackend(currentChat.id, false, normalizedAnswer, getModelName(chatMode.value));
         }
-      } else {
-        throw new Error('RAG 응답에서 답변을 찾을 수 없습니다.');
+      }
+
+      // 스트리밍 완료 후 처리
+      if (currentChat.messages[messageIndex]) {
+        const normalizedAnswer = normalizeWhitespace(fullResponseText);
+        currentChat.messages[messageIndex].text = normalizedAnswer;
+        currentChat.messages[messageIndex].isStreaming = false;
+        currentChat.messages[messageIndex].currentStep = undefined;
+
+        messages.value = [...currentChat.messages];
+
+        // AI 메시지를 노션에 저장
+        await saveMessageToNotion(currentChat.id, false, normalizedAnswer);
+        // AI 메시지를 백엔드에 저장
+        await saveMessageToBackend(currentChat.id, false, normalizedAnswer, getModelName(chatMode.value));
       }
 
       isStreaming.value = false;
+      saveChatHistory();
+
     } catch (error: any) {
       log.error("RAG FastAPI call error:", error);
 
@@ -1314,6 +1357,7 @@ export function useChat() {
 
       if (error.name === 'AbortError') {
         log.debug("RAG search stopped by user");
+        isStreaming.value = false;
         return;
       } else {
         if (error.message.includes('503')) {
@@ -1326,7 +1370,7 @@ export function useChat() {
           errorMessage = '을지대 정보검색 연결에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.';
         }
       }
-      
+
       if (currentChat.messages[messageIndex]) {
         currentChat.messages[messageIndex].text = errorMessage;
         currentChat.messages[messageIndex].isLoading = false;
@@ -1334,7 +1378,6 @@ export function useChat() {
         currentChat.messages[messageIndex].currentStep = undefined;
         currentChat.messages[messageIndex].hasError = true;
 
-        // Vue 반응성을 위해 messages.value 업데이트 (에러 메시지가 표시되도록)
         messages.value = [...currentChat.messages];
       }
 
