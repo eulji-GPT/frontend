@@ -17,24 +17,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import ChatHistory from './ChatHistory.vue';
-import ChatMessageArea from './ChatMessageArea.vue';
-import ChatInput from './ChatInput.vue';
-import ChatModeSelector from './ChatModeSelector.vue';
-import SourceSidebar from './SourceSidebar.vue';
-import ArtifactPanel from './ArtifactPanel.vue';
-import NotificationDropdown from '../common/NotificationDropdown.vue';
-import InfoPanel from '../common/InfoPanel.vue';
-import MyPageModal from '../common/MyPageModal.vue';
-import { useChat } from '../../composables/useChat';
-import type { ChatMode, Artifact, ArtifactVersion } from '../../composables/useChat';
-import eulLogo from '../../assets/eul_logo.svg';
-import sidebar_chatlogo from '../../components/chat/icon/sidebar-toggle-chatimg.svg'
-import { getApiBaseUrl } from '@/utils/ports-config';
-import { createLogger } from '../../utils/logger';
-const log = createLogger('Chat');
+
 
 const router = useRouter();
 const route = useRoute();
