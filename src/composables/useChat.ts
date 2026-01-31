@@ -121,15 +121,19 @@ export function useChat() {
 
     // Railway 내부 URL 감지 및 외부 URL로 대체
     if (envUrl && envUrl.includes('.railway.internal')) {
-      
       return 'https://ai-rag-production.up.railway.app';
     }
 
     // 프로덕션 환경에서 /gemini-api 프록시 경로 사용 시 외부 URL로 대체
     if (!envUrl || envUrl === '/gemini-api') {
-      // 브라우저에서 Railway 호스트인지 확인
-      if (typeof window !== 'undefined' && window.location.hostname.includes('railway.app')) {
-        return 'https://ai-rag-production.up.railway.app';
+      // 브라우저에서 프로덕션 호스트인지 확인 (Railway 또는 커스텀 도메인)
+      if (typeof window !== 'undefined') {
+        const hostname = window.location.hostname;
+        if (hostname.includes('railway.app') ||
+            hostname.includes('euljigpt.com') ||
+            hostname === 'www.euljigpt.com') {
+          return 'https://ai-rag-production.up.railway.app';
+        }
       }
     }
 
@@ -141,15 +145,19 @@ export function useChat() {
 
     // Railway 내부 URL 감지 및 외부 URL로 대체
     if (envUrl && envUrl.includes('.railway.internal')) {
-      
       return 'https://fastapi-backend-production-2cd0.up.railway.app';
     }
 
     // 프로덕션 환경에서 /api 프록시 경로 사용 시 외부 URL로 대체
     if (!envUrl || envUrl === '/api') {
-      // 브라우저에서 Railway 호스트인지 확인
-      if (typeof window !== 'undefined' && window.location.hostname.includes('railway.app')) {
-        return 'https://fastapi-backend-production-2cd0.up.railway.app';
+      // 브라우저에서 프로덕션 호스트인지 확인 (Railway 또는 커스텀 도메인)
+      if (typeof window !== 'undefined') {
+        const hostname = window.location.hostname;
+        if (hostname.includes('railway.app') ||
+            hostname.includes('euljigpt.com') ||
+            hostname === 'www.euljigpt.com') {
+          return 'https://fastapi-backend-production-2cd0.up.railway.app';
+        }
       }
     }
 
@@ -1264,7 +1272,7 @@ export function useChat() {
         currentChat.messages[messageIndex].isStreaming = true;
         currentChat.messages[messageIndex].currentStep = '답변 생성 중...';
         currentChat.messages[messageIndex].hasError = false;
-        currentChat.messages[messageIndex].modelName = "대학 정보 검색";
+        currentChat.messages[messageIndex].modelName = "대학 정보 모델";
         currentChat.messages[messageIndex].ragSources = [];
       }
 
