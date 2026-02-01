@@ -281,11 +281,27 @@ const normalizeLineBreaks = (text: string): string => {
   // 먼저 tool_call 태그 제거
   let normalized = stripToolCallTags(text);
 
+  // 시간 범위의 물결표(~) 이스케이프 (예: 09:00~17:00, 12:00~13:00)
+  // 마크다운 취소선으로 잘못 해석되는 것 방지
+  normalized = normalized.replace(/(\d{1,2}:\d{2})~(\d{1,2}:\d{2})/g, '$1\u223C$2');
+
   // 3개 이상 연속 개행을 2개로 줄임
   normalized = normalized.replace(/\n{3,}/g, '\n\n');
 
-  // 목록 항목 사이의 과도한 빈 줄 제거 (숫자 목록)
-  normalized = normalized.replace(/(\d+\.\s+[^\n]+)\n{2,}(?=\d+\.)/g, '$1\n');
+  // [중요] 볼드 섹션 헤더 앞에 빈 줄 추가
+  // 리스트 안에 잘못 들어가는 것을 방지
+
+  // 1. 번호 있는 볼드 헤더 (예: **2. 제목**)
+  normalized = normalized.replace(/([^\n])\n(\*\*\d+\.\s+[^*]+\*\*)/g, '$1\n\n$2');
+
+  // 2. 번호 없는 볼드 헤더 (예: **비용**, **운행 시간**)
+  // 리스트 아이템(•, -, 숫자.) 뒤에 오는 볼드 텍스트
+  normalized = normalized.replace(/(•\s+[^\n]+)\n(\*\*[^*\n]+\*\*)/g, '$1\n\n$2');
+  normalized = normalized.replace(/([-]\s+[^\n]+)\n(\*\*[^*\n]+\*\*)/g, '$1\n\n$2');
+  normalized = normalized.replace(/(\d+\.\s+[^\n]+)\n(\*\*[^*\n]+\*\*)/g, '$1\n\n$2');
+
+  // 목록 항목 사이의 과도한 빈 줄 제거 (숫자 목록) - 단, 볼드 섹션은 제외
+  normalized = normalized.replace(/(\d+\.\s+[^\n*]+)\n{2,}(?=\d+\.)/g, '$1\n');
 
   // 불릿 목록 사이의 과도한 빈 줄 제거
   normalized = normalized.replace(/([-*]\s+[^\n]+)\n{2,}(?=[-*]\s)/g, '$1\n');
@@ -736,74 +752,82 @@ onUpdated(() => {
   line-height: 1.4;
 }
 
-/* 마크다운 스타일링 - ChatGPT/Claude 수준의 가독성 */
+/* 마크다운 스타일링 - PDF 참조 디자인 적용 */
 :deep(.markdown-content) {
-  line-height: 1.75;  /* 1.5 → 1.75: 더 넉넉한 줄 간격 */
+  line-height: 1.9;  /* PDF 스타일: 넉넉한 줄 간격 */
   white-space: normal;
-  letter-spacing: -0.01em;  /* 한글 가독성 향상 */
+  letter-spacing: 0.01em;  /* 한글 가독성: 약간의 자간 */
+  font-size: 15px;  /* 기본 글씨 크기 */
 }
 
+/* 제목 스타일 - 깔끔한 섹션 구분 */
 :deep(.markdown-content h1),
 :deep(.markdown-content h2),
 :deep(.markdown-content h3),
 :deep(.markdown-content h4),
 :deep(.markdown-content h5),
 :deep(.markdown-content h6) {
-  margin: 12px 0 4px 0;
-  font-weight: 700;
-  line-height: 1.3;
-  color: var(--color-primary);
+  margin: 16px 0 8px 0;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-text-primary);
 }
 
-/* 대제목 - 가장 크고 눈에 띄게 */
+/* 대제목 - 섹션 카드 스타일 */
 :deep(.markdown-content h1) {
-  font-size: 2em !important;
-  font-weight: 800 !important;
-  color: var(--color-primary) !important;
-  margin: 16px 0 8px 0 !important;
+  font-size: 1.1em !important;
+  font-weight: 600 !important;
+  color: var(--color-text-primary) !important;
+  margin: 20px 0 12px 0 !important;
+  padding: 10px 14px !important;
+  background: var(--color-bg-secondary) !important;
+  border-radius: 8px !important;
   display: block !important;
 }
 
-/* 중제목 - 뚜렷하게 구분 */
+/* 중제목 - 섹션 카드 스타일 */
 :deep(.markdown-content h2) {
-  font-size: 1.6em !important;
-  font-weight: 700 !important;
-  color: var(--color-primary) !important;
-  margin: 14px 0 6px 0 !important;
+  font-size: 1em !important;
+  font-weight: 600 !important;
+  color: var(--color-text-primary) !important;
+  margin: 18px 0 10px 0 !important;
+  padding: 8px 12px !important;
+  background: var(--color-bg-secondary) !important;
+  border-radius: 6px !important;
   display: block !important;
 }
 
-/* 소제목 - 적당한 크기로 */
+/* 소제목 */
 :deep(.markdown-content h3) {
-  font-size: 1.3em !important;
-  font-weight: 700 !important;
-  color: var(--color-primary) !important;
-  margin: 12px 0 4px 0 !important;
+  font-size: 0.95em !important;
+  font-weight: 600 !important;
+  color: var(--color-text-primary) !important;
+  margin: 14px 0 6px 0 !important;
   display: block !important;
 }
 
 /* 세부 제목들 */
 :deep(.markdown-content h4) {
-  font-size: 1.15em !important;
+  font-size: 0.95em !important;
   font-weight: 600 !important;
   color: var(--color-text-primary) !important;
-  margin: 10px 0 3px 0 !important;
+  margin: 10px 0 4px 0 !important;
   display: block !important;
 }
 
 :deep(.markdown-content h5) {
-  font-size: 1.05em !important;
+  font-size: 0.9em !important;
   font-weight: 600 !important;
-  color: var(--color-text-secondary) !important;
-  margin: 8px 0 2px 0 !important;
+  color: var(--color-text-primary) !important;
+  margin: 8px 0 4px 0 !important;
   display: block !important;
 }
 
 :deep(.markdown-content h6) {
-  font-size: 1em !important;
-  font-weight: 600 !important;
-  color: var(--color-text-tertiary) !important;
-  margin: 6px 0 2px 0 !important;
+  font-size: 0.9em !important;
+  font-weight: 500 !important;
+  color: var(--color-text-secondary) !important;
+  margin: 6px 0 4px 0 !important;
   display: block !important;
 }
 
@@ -824,11 +848,12 @@ onUpdated(() => {
 }
 
 :deep(.markdown-content p) {
-  margin: 0 0 1em 0;  /* 4px → 1em: 단락 간 충분한 여백 */
+  margin: 0 0 1.2em 0;  /* PDF 스타일: 단락 간 여백 */
+  line-height: 1.9;
 }
 
 :deep(.markdown-content p:last-child) {
-  margin-bottom: 0;  /* 마지막 단락은 하단 여백 제거 */
+  margin-bottom: 0;
 }
 
 /* 빈 단락 숨김 */
@@ -852,31 +877,62 @@ onUpdated(() => {
   margin-top: 0.6em;  /* 0.3em → 0.6em: 줄바꿈 시 더 명확한 간격 */
 }
 
+/* 강조 스타일 - PDF 참조: 섹션 제목용 볼드 */
 :deep(.markdown-content strong) {
   font-weight: 700;
-  color: var(--color-primary);
+  font-size: 1.1em;  /* 볼드 텍스트는 약간 크게 */
+  color: var(--color-text-primary);
+  display: inline;
+}
+
+/* 단락 시작의 볼드는 섹션 제목으로 처리 */
+:deep(.markdown-content p > strong:first-child:last-child),
+:deep(.markdown-content p > strong:only-child) {
+  display: block;
+  font-size: 1.15em;
+  margin: 1.8em 0 0.8em 0;  /* 상단 여백 증가: 1.5em → 1.8em */
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--color-card-border);
+}
+
+/* 목록 다음에 오는 섹션 제목 - 더 큰 여백 */
+:deep(.markdown-content ul + p > strong:first-child),
+:deep(.markdown-content ol + p > strong:first-child) {
+  margin-top: 2em;  /* 목록 후 섹션 헤더는 더 큰 여백 */
+}
+
+/* 리스트 아이템 내부의 볼드 - 인라인 스타일 유지 */
+/* 채팅 기능, 업무 관리 기능 같은 하위 항목 */
+:deep(.markdown-content li strong) {
+  display: inline;
+  font-size: 1em;
+  font-weight: 700;
+  color: var(--color-text-primary);
 }
 
 :deep(.markdown-content em) {
   font-style: italic;
-  color: var(--color-info);
-  background: rgba(30, 64, 175, 0.05);
-  padding: 1px 3px;
-  border-radius: 2px;
+  color: var(--color-text-primary);
 }
 
 :deep(.markdown-content ul),
 :deep(.markdown-content ol) {
-  margin: 0.75em 0;  /* 4px → 0.75em: 목록 전후 여백 확대 */
-  padding-left: 1.2em;
+  margin: 1em 0;  /* PDF 스타일: 목록 전후 여백 */
+  padding-left: 1.5em;
 }
 
-/* 연속된 목록 사이 간격 줄이기 */
+/* 연속된 목록 사이 간격 */
 :deep(.markdown-content ul + ul),
 :deep(.markdown-content ol + ol),
-:deep(.markdown-content ul + ol),
-:deep(.markdown-content ol + ul) {
+:deep(.markdown-content ul + ol) {
   margin-top: 2px;
+}
+
+/* 순서 목록 다음의 불릿 목록은 들여쓰기 (계층 구조 표현) */
+:deep(.markdown-content ol + ul) {
+  margin-top: 4px;
+  margin-left: 1.5em;
+  margin-bottom: 0.75em;
 }
 
 :deep(.markdown-content ul) {
@@ -885,45 +941,51 @@ onUpdated(() => {
 
 :deep(.markdown-content ul li) {
   position: relative;
-  margin: 0.5em 0;  /* 2px → 0.5em: 리스트 항목 간 여백 확대 */
-  padding-left: 1em;
-  line-height: 1.6;
+  margin: 0.7em 0;  /* PDF 스타일: 불릿 항목 간 넉넉한 여백 */
+  padding-left: 1.2em;
+  line-height: 1.8;  /* 줄간격 */
 }
 
+/* 불릿 리스트 - PDF 스타일 점 */
 :deep(.markdown-content ul li::before) {
-  content: '▶';
+  content: '•';
   position: absolute;
   left: 0;
-  color: var(--color-primary);
-  font-weight: bold;
+  color: #666;
+  font-weight: normal;
+  font-size: 0.9em;
 }
 
 :deep(.markdown-content ol) {
   counter-reset: item;
-  padding-left: 2em;
+  padding-left: 1.8em;
 }
 
 :deep(.markdown-content ol li) {
   display: block;
   position: relative;
-  margin: 0.5em 0;  /* 4px → 0.5em: 순서 목록 항목 간 여백 확대 */
+  margin: 1.2em 0;  /* PDF 스타일: 번호 항목 간 큰 여백 */
   padding-left: 0.5em;
-  line-height: 1.6;
+  line-height: 1.8;
+  font-weight: 600;  /* 번호 항목은 볼드 */
 }
 
+/* 번호 리스트 - PDF 스타일 */
 :deep(.markdown-content ol li::before) {
   content: counter(item) ".";
   counter-increment: item;
   position: absolute;
-  left: -1.8em;
-  color: var(--color-primary);
-  font-weight: bold;
-  background: var(--color-primary-light);
-  padding: 2px 6px;
-  border-radius: 50%;
-  font-size: 0.9em;
+  left: -1.6em;
+  color: var(--color-text-primary);
+  font-weight: 700;
+  font-size: 1em;
   min-width: 1.2em;
-  text-align: center;
+  text-align: left;
+}
+
+/* 순서 목록 다음 불릿은 일반 굵기 (세부 내용) */
+:deep(.markdown-content ol + ul li) {
+  font-weight: 400;  /* 불릿 항목은 일반 굵기 */
 }
 
 /* 중첩된 순서 있는 목록 스타일 */
@@ -934,11 +996,11 @@ onUpdated(() => {
 }
 
 :deep(.markdown-content ol ol li::before) {
-  content: counter(item) "." counter(subitem);
+  content: counter(subitem) ")";
   counter-increment: subitem;
-  left: -2.5em;
-  background: var(--color-bg-tertiary);
-  font-size: 0.85em;
+  left: -1.5em;
+  font-size: 0.95em;
+  font-weight: 500;
 }
 
 /* 3단계 중첩 목록 */
@@ -948,33 +1010,31 @@ onUpdated(() => {
 }
 
 :deep(.markdown-content ol ol ol li::before) {
-  content: counter(item) "." counter(subitem) "." counter(subsubitem);
+  content: "- ";
   counter-increment: subsubitem;
-  left: -3em;
-  background: var(--color-bg-secondary);
-  font-size: 0.8em;
+  left: -1em;
+  font-size: 0.9em;
+  font-weight: normal;
 }
 
+/* 인용 블록 - 단순화 */
 :deep(.markdown-content blockquote) {
-  border-left: 4px solid var(--color-primary);
-  background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-bg-secondary) 100%);
-  margin: 1em 0;  /* 12px → 1em: 인용 블록 전후 여백 확대 */
-  padding: 1em 1.25em;  /* 패딩도 확대 */
+  border-left: 3px solid var(--color-card-border);
+  background: var(--color-bg-secondary);
+  margin: 1em 0;
+  padding: 0.75em 1em;
   font-style: normal;
-  border-radius: 0 12px 12px 0;
-  box-shadow: 0 2px 6px rgba(2, 71, 138, 0.08);
-  position: relative;
+  border-radius: 0 8px 8px 0;
 }
 
-/* blockquote 앞의 아이콘 제거 - AI가 이미 💡 이모지를 포함함 */
 :deep(.markdown-content blockquote::before) {
   display: none;
 }
 
 :deep(.markdown-content blockquote p) {
   margin: 0;
-  font-weight: 500;
-  color: var(--color-info);
+  font-weight: 400;
+  color: var(--color-text-primary);
 }
 
 :deep(.markdown-content code) {
@@ -1004,8 +1064,8 @@ onUpdated(() => {
 
 :deep(.markdown-content hr) {
   border: none;
-  border-top: 1px solid var(--color-card-border);
-  margin: 8px 0;
+  border-top: 1px solid #e0e0e0;
+  margin: 1.5em 0;  /* PDF 스타일: 구분선 상하 여백 */
   background: linear-gradient(to right, var(--color-primary), var(--color-card-border), var(--color-primary));
   height: 1px;
 }

@@ -637,9 +637,190 @@ export const aiSettingsAPI = {
     };
     errors: string[];
   }> => {
-    const AI_RAG_URL = import.meta.env.VITE_GEMINI_FASTAPI_URL || '/gemini-api';
+    let AI_RAG_URL = import.meta.env.VITE_GEMINI_FASTAPI_URL || '/gemini-api';
+
+    // 프로덕션 환경에서 직접 Railway URL 사용 (커스텀 도메인 지원)
+    if (!AI_RAG_URL || AI_RAG_URL === '/gemini-api' || AI_RAG_URL.includes('.railway.internal')) {
+      if (typeof window !== 'undefined') {
+        const hostname = window.location.hostname;
+        if (hostname.includes('railway.app') ||
+            hostname.includes('euljigpt.com') ||
+            hostname === 'www.euljigpt.com') {
+          AI_RAG_URL = 'https://ai-rag-production.up.railway.app';
+        }
+      }
+    }
+
     return apiRequest(`${AI_RAG_URL}/admin/sync-notion`, {
       method: 'POST'
     });
+  }
+};
+
+// ==================== Knowledge Management API ====================
+
+// Knowledge 관련 타입 정의
+export interface KnowledgeFile {
+  name: string;
+  display_name: string;
+  entry_count: number;
+}
+
+export interface KnowledgeEntry {
+  id: string;
+  db_id: number;
+  index: number;
+  title: string;
+  content: string;
+  category: string;
+  subcategory: string;
+  campus: string;
+  source_file: string;
+  raw_data: Record<string, unknown>;
+  is_indexed: boolean;
+}
+
+export interface KnowledgeEntriesResponse {
+  items: KnowledgeEntry[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+}
+
+export interface ReindexStatus {
+  status: 'idle' | 'pending' | 'running' | 'completed' | 'failed';
+  progress: number;
+  message: string | null;
+  last_indexed: string | null;
+  document_count: number;
+  error: string | null;
+}
+
+export interface ReindexResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+  document_count: number;
+  status?: ReindexStatus;
+}
+
+// Knowledge Management API (PostgreSQL 기반 - Backend 경유)
+export const knowledgeAPI = {
+  // GET /knowledge/files - 파일 목록 조회
+  getFiles: (): Promise<KnowledgeFile[]> => {
+    return apiRequest<KnowledgeFile[]>('/knowledge/files', {
+      method: 'GET'
+    });
+  },
+
+  // GET /knowledge/files/{file_name} - 항목 목록 조회
+  getEntries: (fileName: string, params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    category?: string;
+    campus?: string;
+  } = {}): Promise<KnowledgeEntriesResponse> => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.search) queryParams.append('search', params.search);
+    if (params.category) queryParams.append('category', params.category);
+    if (params.campus) queryParams.append('campus', params.campus);
+
+    const queryString = queryParams.toString();
+    const endpoint = `/knowledge/files/${fileName}${queryString ? `?${queryString}` : ''}`;
+
+    return apiRequest<KnowledgeEntriesResponse>(endpoint, {
+      method: 'GET'
+    });
+  },
+
+  // GET /knowledge/files/{file_name}/entries/{entry_id} - 항목 상세 조회
+  getEntry: (fileName: string, entryId: string): Promise<KnowledgeEntry> => {
+    return apiRequest<KnowledgeEntry>(`/knowledge/files/${fileName}/entries/${entryId}`, {
+      method: 'GET'
+    });
+  },
+
+  // POST /knowledge/files/{file_name}/entries - 항목 생성
+  createEntry: (fileName: string, data: Record<string, unknown>): Promise<{ success: boolean; entry: KnowledgeEntry }> => {
+    return apiRequest<{ success: boolean; entry: KnowledgeEntry }>(`/knowledge/files/${fileName}/entries`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  // PUT /knowledge/files/{file_name}/entries/{entry_id} - 항목 수정
+  updateEntry: (fileName: string, entryId: string, data: Record<string, unknown>): Promise<{ success: boolean; entry: KnowledgeEntry }> => {
+    return apiRequest<{ success: boolean; entry: KnowledgeEntry }>(`/knowledge/files/${fileName}/entries/${entryId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  },
+
+  // DELETE /knowledge/files/{file_name}/entries/{entry_id} - 항목 삭제
+  deleteEntry: (fileName: string, entryId: string): Promise<{ success: boolean }> => {
+    return apiRequest<{ success: boolean }>(`/knowledge/files/${fileName}/entries/${entryId}`, {
+      method: 'DELETE'
+    });
+  },
+
+  // GET /knowledge/files/{file_name}/categories - 카테고리 목록 조회
+  getCategories: (fileName: string): Promise<{ categories: string[] }> => {
+    return apiRequest<{ categories: string[] }>(`/knowledge/files/${fileName}/categories`, {
+      method: 'GET'
+    });
+  },
+
+  // GET /knowledge/files/{file_name}/campuses - 캠퍼스 목록 조회
+  getCampuses: (fileName: string): Promise<{ campuses: string[] }> => {
+    return apiRequest<{ campuses: string[] }>(`/knowledge/files/${fileName}/campuses`, {
+      method: 'GET'
+    });
+  },
+
+  // POST /knowledge/import - JSON 파일 임포트
+  importJsonFiles: (): Promise<{ success: boolean; message: string; results: Record<string, number | string> }> => {
+    return apiRequest<{ success: boolean; message: string; results: Record<string, number | string> }>('/knowledge/import', {
+      method: 'POST'
+    });
+  },
+
+  // POST /knowledge/reindex - 재인덱싱 실행
+  reindex: (): Promise<ReindexResponse> => {
+    return apiRequest<ReindexResponse>('/knowledge/reindex', {
+      method: 'POST'
+    });
+  },
+
+  // GET /knowledge/reindex/status - 재인덱싱 상태 조회
+  getReindexStatus: async (): Promise<ReindexStatus> => {
+    // AI-RAG 백엔드에서 상태 조회
+    let AI_RAG_URL = import.meta.env.VITE_GEMINI_FASTAPI_URL || '/gemini-api';
+
+    // 프로덕션 환경에서 직접 Railway URL 사용 (커스텀 도메인 지원)
+    if (!AI_RAG_URL || AI_RAG_URL === '/gemini-api' || AI_RAG_URL.includes('.railway.internal')) {
+      if (typeof window !== 'undefined') {
+        const hostname = window.location.hostname;
+        if (hostname.includes('railway.app') ||
+            hostname.includes('euljigpt.com') ||
+            hostname === 'www.euljigpt.com') {
+          AI_RAG_URL = 'https://ai-rag-production.up.railway.app';
+        }
+      }
+    }
+
+    const response = await fetch(`${AI_RAG_URL}/admin/knowledge/reindex/status`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
   }
 };

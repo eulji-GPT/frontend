@@ -2,7 +2,14 @@
   <div class="frame-10">
     <div class="chat-list-link">
       <span class="conversation-list">대화 리스트</span>
-      <button @click="$emit('startNewChat')" class="new-chat-button">새 대화</button>
+      <button
+        @click="$emit('startNewChat')"
+        class="new-chat-button"
+        type="button"
+        aria-label="새 대화"
+        title="새 대화">
+        <span class="edit-icon"></span>
+      </button>
     </div>
     <div class="frame-11">
       <div v-if="chatHistory.length === 0" class="chat-list-container">
@@ -191,7 +198,7 @@ onUnmounted(() => {
   gap: 10px;
   position: relative;
   width: 100%;
-  height: 532px;
+  flex:1;
   padding: 0 clamp(10px, 5%, 20px);
   z-index: 36;
   min-width: 0;
@@ -223,24 +230,36 @@ onUnmounted(() => {
 }
 
 .new-chat-button {
-  background-color: var(--color-bg-secondary);
-  border: 1px solid var(--color-card-border);
+  background-color: var(#ffffff);
+  border: 1px solid var(#ffffff);
   border-radius: 6px;
-  padding: 4px 10px;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--color-text-primary);
-  font-family: Pretendard, var(--default-font-family);
+
+  /* 아이콘 버튼 크기/정렬 */
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
   cursor: pointer;
   transition: all 0.2s ease;
-  white-space: nowrap;
   flex-shrink: 0;
   min-width: fit-content;
 }
 
 .new-chat-button:hover {
-  background-color: var(--color-bg-tertiary);
-  transform: translateY(-1px);
+  background-color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.new-chat-button .edit-icon {
+  width: 20px;
+  height: 20px;
+  display: block;
+  background: url(https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-07-31/SLV8Hf7yf3.png)
+    no-repeat center;
+  background-size: cover;
 }
 
 
@@ -250,8 +269,13 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 5px;
   width: 100%;
-  overflow-y: hidden;
+  overflow-y:scroll;
 }
+
+.chat-list-container-history::-webkit-scrollbar{
+  display:none;
+}
+
 
 .chat-history-item {
   display: flex;
@@ -347,11 +371,13 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: flex-start;
   flex-wrap: nowrap;
-  flex-shrink: 0;
+  flex: 1;            
+  min-height: 0;
   gap: 5px;
   position: relative;
   width: 100%;
   z-index: 39;
+  
 }
 .chat-list-container {
   display: flex;
