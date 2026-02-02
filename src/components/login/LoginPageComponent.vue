@@ -1,42 +1,36 @@
 <template>
   <div class="root-wrapper">
+    <!-- Toast Notification -->
     <ToastNotification 
       :show="showToast" 
       :message="toastMessage" 
       @hide="showToast = false" 
     />
 
+    <!-- Header -->
     <HeaderSection />
 
+    <!-- Footer -->
     <div class="common-footer-notice">
       <span class="footer-text">개인정보 처리방침</span>
       <span class="footer-separator">|</span>
       <span class="footer-copyright">Copyright ⓒ EULGPT. All Rights Reserved</span>
     </div>
 
+    <!-- Main Content -->
     <div class="main-content">
       <div class="login-container">
         <div class="title-section">
           <span class="login-title">
             내가 찾던 정보, 이제 쉽게 만나요.
           </span>
+          <!-- 이메일 로그인 폼 완전 제거 (카카오 로그인 전용) -->
         </div>
 
-        <div class="divider-section">
-          <div v-if="isDevMode" class="dev-login-box">
-            <div class="dev-header">
-              <span class="dev-tag">DEVELOPER ONLY</span>
-              <p class="dev-info">ID: admin / PW: admin123</p>
-            </div>
-            <div class="dev-inputs">
-              <input v-model="devId" type="text" placeholder="아이디" class="dev-field" />
-              <input v-model="devPw" type="password" placeholder="비밀번호" class="dev-field" @keyup.enter="handleDevLogin" />
-            </div>
-            <button @click="handleDevLogin" class="dev-enter-btn">
-              로그인 없이 바로 시작하기
-            </button>
-          </div>
+        <!-- 이메일 로그인 버튼 완전 제거 -->
 
+        <div class="divider-section">
+          <!-- 구분선 제거 (카카오 로그인만 있으므로 불필요) -->
           <div class="alternative-login">
             <button class="kakao-button" @click="handleKakaoLogin">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -44,11 +38,7 @@
               </svg>
               <span class="kakao-text">카카오 계정으로 로그인</span>
             </button>
-          </div>
-          
-          <div class="login-footer-link">
-            <span class="question-text">이미 계정이 있으신가요?</span>
-            <span class="login-link" @click="handleKakaoLogin" style="cursor: pointer;">로그인</span>
+            <!-- 하단 링크 완전 제거 (카카오 로그인 전용) -->
           </div>
         </div>
       </div>
@@ -65,35 +55,84 @@ import { setAccessToken, setUserInfo } from '../../utils/auth'
 import { getApiBaseUrl } from '@/utils/ports-config'
 
 const router = useRouter()
+
 const API_BASE_URL = getApiBaseUrl()
 
-// 🚀 개발자 모드 변수 설정
-const isDevMode = import.meta.env.DEV 
-const devId = ref('')
-const devPw = ref('')
-
+const email = ref('')
+const password = ref('')
+const showPassword = ref(false)
 const showToast = ref(false)
 const toastMessage = ref('')
+const isLoading = ref(false)
 
-// 🚀 백엔드 없이 들어가는 개발자 로그인 로직
-const handleDevLogin = () => {
-  if (devId.value === 'admin' && devPw.value === 'admin123') {
-    // Pro 기능을 사용할 수 있도록 토큰과 유저 정보 강제 주입
-    setAccessToken('dev-pro-token-2026-tester');
-    setUserInfo({
-      name: '지윤(개발자)',
-      email: 'admin@eulgpt.com',
-      is_pro: true
-    });
-    
-    showToastMessage('개발자 모드로 입장합니다.');
-    
-    // 0.5초 후 채팅 페이지로 이동
-    setTimeout(() => {
-      router.push('/chat');
-    }, 500);
-  } else {
-    showToastMessage('개발자 계정 정보를 확인해주세요.');
+const togglePassword = () => {
+  showPassword.value = !showPassword.value
+}
+
+const handleLogin = async () => {
+  if (!email.value || !password.value) {
+    showToastMessage('이메일과 비밀번호를 입력해주세요.')
+    return
+  }
+
+  isLoading.value = true
+
+  try {
+    console.log('로그인 시도:', { email: email.value })
+
+    const response = await fetch(`${API_BASE_URL}/member/signin`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include', // 쿠키 포함
+      body: JSON.stringify({
+        email: email.value,
+        password: password.value
+      }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.detail || '로그인에 실패했습니다.')
+    }
+
+    const result = await response.json()
+    console.log('로그인 성공:', result)
+
+    // 액세스 토큰을 localStorage에 저장
+    setAccessToken(result.access_token)
+
+    // 사용자 정보 조회 및 저장
+    try {
+      const meResponse = await fetch(`${API_BASE_URL}/member/me`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${result.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+      if (meResponse.ok) {
+        const userInfo = await meResponse.json()
+        setUserInfo(userInfo)
+      }
+    } catch (e) {
+      console.error('Failed to fetch user info:', e)
+    }
+
+    // redirect 쿼리 파라미터가 있으면 그 경로로, 없으면 메인 페이지로 이동
+    const redirect = (router.currentRoute.value.query.redirect as string) || '/'
+    router.push(redirect)
+
+  } catch (error: any) {
+    console.error('로그인 오류:', error)
+    if (error.message.includes('이메일 또는 비밀번호가 올바르지 않습니다')) {
+      showToastMessage('이메일 ID 또는 비밀번호가 일치하지 않아요')
+    } else {
+      showToastMessage(error.message || '로그인 중 오류가 발생했습니다.')
+    }
+  } finally {
+    isLoading.value = false
   }
 }
 
@@ -103,42 +142,320 @@ const showToastMessage = (message: string) => {
 }
 
 const handleKakaoLogin = () => {
+  console.log('카카오 로그인 시도')
+  // 백엔드 카카오 로그인 엔드포인트로 리다이렉트
   window.location.href = `${API_BASE_URL}/member/kakao/login`
 }
 </script>
 
 <style scoped>
-/* 🚀 개발자 로그인 디자인 (파란색 포인트) */
-.dev-login-box {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-  border: 2px dashed #02478A; /* 지윤님이 선호하는 파란색 */
-  border-radius: 12px;
-  background-color: #f0f7ff;
-  margin-bottom: 10px;
+.root-wrapper {
+  min-height: 100vh;
+  background-color: var(--color-bg-primary);
+  position: relative;
+  font-family: 'Pretendard', -apple-system, Roboto, Helvetica, sans-serif;
 }
-.dev-header { display: flex; flex-direction: column; gap: 4px; }
-.dev-tag { background: #02478A; color: white; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; width: fit-content; }
-.dev-info { font-size: 11px; color: #475569; margin: 0; }
-.dev-inputs { display: flex; gap: 8px; }
-.dev-field { flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; outline: none; }
-.dev-field:focus { border-color: #02478A; }
-.dev-enter-btn { background: #02478A; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.2s; }
-.dev-enter-btn:hover { background: #013566; }
 
-/* 기존 스타일 유지 */
-.root-wrapper { min-height: 100vh; background-color: var(--color-bg-primary); position: relative; font-family: 'Pretendard', sans-serif; }
-.common-footer-notice { display: flex; justify-content: flex-start; align-items: center; gap: 5px; width: 277px; position: absolute; left: calc(50% - 138px); top: 710px; }
-.footer-text, .footer-separator, .footer-copyright { color: var(--color-text-tertiary); font-size: 10px; font-weight: 500; }
-.main-content { display: flex; justify-content: center; align-items: center; flex:1; width:100%; min-height: calc(100vh - 150px); }
-.login-container { display: flex; flex-direction: column; align-items: center; gap: 30px; width: 408px; margin: 0 auto; }
-.login-title { color: var(--color-text-primary); font-size: 24px; font-weight: 700; line-height: 140%; text-align: center; width: 100%; margin-bottom: -10px; }
-.divider-section { display: flex; flex-direction: column; gap: 30px; align-self: stretch; }
-.alternative-login { display: flex; flex-direction: column; align-items: center; gap: 3px; align-self: stretch; }
-.kakao-button { display: flex; justify-content: center; align-items: center; gap: 8px; border-radius: 40px; align-self: stretch; height: 46px; background-color: rgb(254, 229, 2); border: none; cursor: pointer; }
-.kakao-text { color: black; font-size: 16px; font-weight: 600; }
-.login-footer-link { font-size: 14px; color: #9CA3AF; display: flex; gap: 8px; border-top: 2px solid #E5E7EB; padding-top: 10px; width: 100%; justify-content: center; }
-.login-link { color: #02478A; font-weight: 600; cursor: pointer; }
+/* Footer Styles */
+.common-footer-notice {
+  display: flex;
+  justify-content: flex-start;
+  flex-direction: row;
+  align-items: center;
+  gap: 5px;
+  width: 277px;
+  height: 12px;
+  box-sizing: border-box;
+  position: absolute;
+  left: calc(50% - 138px);
+  top: 710px;
+}
+
+.footer-text {
+  color: var(--color-text-tertiary);
+  text-overflow: ellipsis;
+  font-size: 10px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 500;
+  text-align: left;
+}
+
+.footer-separator {
+  color: var(--color-text-tertiary);
+  text-overflow: ellipsis;
+  font-size: 10px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 500;
+  text-align: left;
+  width: 4px;
+}
+
+.footer-copyright {
+  color: var(--color-text-tertiary);
+  text-overflow: ellipsis;
+  font-size: 10px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 500;
+  text-align: left;
+  width: 191px;
+}
+
+/* Main Content */
+.main-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex:1;
+  width:100%;
+  min-height: calc(100vh - 150px);
+  box-sizing: border-box;
+  /* padding: 50px 20px 20px 20px; 수동으로 패딩 조정 가능: top right bottom left */
+}
+
+.login-container {
+  display: flex;
+  justify-content: flex-start;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  width: 408px;
+  height: 200px; /* 수동으로 높이 조정 가능 */
+  background-color: var(--color-bg-primary);
+  box-sizing: border-box;
+  margin: 0 auto; /* 중앙 정렬 추가 */
+}
+
+.title-section {
+  display: flex;
+  justify-content: flex-start;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 30px;
+  align-self: stretch;
+  box-sizing: border-box;
+}
+
+.login-title {
+  color: var(--color-text-primary);
+  text-overflow: ellipsis;
+  font-size: 24px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 700;
+  line-height: 140%;
+  text-align: center;
+  align-self: stretch;
+  align-items: center;
+  margin-bottom: -10px;
+}
+
+.form-container {
+  display: flex;
+  justify-content: flex-start;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  align-self: stretch;
+  box-sizing: border-box;
+}
+
+.input-group {
+  display: flex;
+  justify-content: flex-start;
+  flex-direction: row;
+  align-items: center;
+  border: solid 1px var(--color-card-border);
+  border-radius: 10px;
+  align-self: stretch;
+  box-sizing: border-box;
+  padding: 14px 20px;
+}
+
+.password-group {
+  display: flex;
+  justify-content: space-between;
+  flex-direction: row;
+  align-items: center;
+  border: solid 1px var(--color-card-border);
+  border-radius: 10px;
+  align-self: stretch;
+  box-sizing: border-box;
+  padding: 14px 20px;
+}
+
+.input-field {
+  color: var(--color-text-tertiary);
+  font-size: 16px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 500;
+  line-height: 25px;
+  border: none;
+  outline: none;
+  background: transparent;
+  flex: 1;
+}
+
+.input-field:focus {
+  color: var(--color-text-primary);
+}
+
+.eye-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-tertiary);
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.login-button {
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  border-radius: 12px;
+  align-self: stretch;
+  background-color: var(--color-primary-light);
+  box-sizing: border-box;
+  padding: 14px 60px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.login-button:hover:not(:disabled) {
+  background-color: var(--color-button-primary-bg);
+}
+
+.login-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.button-text {
+  color: var(--color-primary);
+  text-overflow: ellipsis;
+  font-size: 18px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 700;
+  text-align: left;
+}
+
+.divider-section {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 30px;
+  align-self: stretch;
+  box-sizing: border-box;
+}
+
+.divider-line {
+  height: 0px;
+  border-top: solid 1px var(--color-card-border);
+  align-self: stretch;
+}
+
+.alternative-login {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  align-self: stretch;
+  box-sizing: border-box;
+}
+
+.kakao-button {
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  border-radius: 40px;
+  align-self: stretch;
+  height: 46px;
+  background-color: rgb(254, 229, 2);
+  box-sizing: border-box;
+  padding: 15px 60px;
+  border: none;
+  cursor: pointer;
+  margin-bottom: -2px;
+}
+
+.kakao-text {
+  color: black;
+  text-overflow: ellipsis;
+  font-size: 16px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 600;
+  line-height: 25px;
+  text-align: center;
+}
+
+.bottom-links {
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+  align-items: center;
+  gap: 15px;
+  align-self: stretch;
+  box-sizing: border-box;
+  padding: 0px 10px;
+}
+
+.link-text {
+  color: var(--color-text-tertiary);
+  text-overflow: ellipsis;
+  font-size: 14px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 500;
+  line-height: 23px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.separator {
+  color: rgb(229, 231, 235);
+  text-overflow: ellipsis;
+  font-size: 14px;
+  font-family: Pretendard, sans-serif;
+  font-weight: 500;
+  line-height: 23px;
+  text-align: left;
+}
+.login-footer-link {
+  font-size: 14px;
+  color: #9CA3AF;      /* 질문 문구는 흐린 회색 */
+  display: flex;
+  gap: 8px;            /* "있으신가요?"와 "로그인" 사이 간격 */
+  border-top: 2px solid #E5E7EB; /* 연한 가로선 추가 */
+  padding-top: 10px;             /* 선과 글자 사이 여백 */
+  width: 100%;                   /* 선이 길게 늘어나도록 설정 */
+  justify-content: center;
+}
+
+.login-link {
+  color: #02478A;      /* "로그인" 글자는 이미지처럼 파란색 */
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.login-link:hover {
+  text-decoration: underline; /* 마우스 올렸을 때 밑줄 효과 */
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .login-container {
+    width: 90%;
+    max-width: 407px;
+  }
+  
+  .main-content {
+    padding: 84px 20px 20px;
+  }
+}
 </style>
