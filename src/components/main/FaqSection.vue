@@ -266,7 +266,7 @@ onMounted(() => {
   background: transparent;
   border-radius: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: flex-start;
   gap: 6px;
   padding: 24px 0;

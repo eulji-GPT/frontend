@@ -102,6 +102,9 @@ export default {
   }
 }
 @media (max-width : 1024px) {
+  .footer-links {
+    justify-content: center;
+  }
   .div {
     text-align: center;
   }
