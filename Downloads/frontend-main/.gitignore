@@ -1,0 +1,39 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment files (로컬 환경 변수만 무시, development/production은 커밋)
+.env.local
+.env.*.local
+
+# Development tool directories
+.claude/
+.playwright-mcp/
+.mcp.json
+
+# CI/CD (use Railway/Vercel instead)
+.github/
+
+temp-assets
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/
+.idea
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
