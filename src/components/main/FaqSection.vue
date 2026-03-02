@@ -15,7 +15,7 @@
       <div v-else-if="faqList.length === 0" class="faq-empty">자주 묻는 질문이 없습니다.</div>
       <!-- FAQ 목록 -->
       <div v-for="(faq, idx) in faqList" :key="idx" class="faq-row">
-        <div class="faq-question-row" @click="toggleFaq(idx)">
+        <div class="faq-question-row" @mouseup="toggleUpFaq(idx, $event)" @mousedown="toggleDownFaq($event)">
           <span class="faq-q-label">Q.</span>
           <span class="faq-q-text">{{ faq.q }}</span>
           <span class="faq-arrow-btn">
@@ -61,10 +61,29 @@ function setAnswerRef(el: HTMLElement | Element | ComponentPublicInstance | null
   }
 }
 
-async function toggleFaq(idx: number) {
-  const isOpening = openFaqIdx.value !== idx
+let startX = 0;
+let startY = 0; 
 
-  if (isOpening) {
+const toggleDownFaq=( event: MouseEvent)=>{
+  startX=event.clientX;
+  startY = event.clientY;
+  console.log('마우스 누름 (Start):', startX, startY);
+}
+
+
+async function toggleUpFaq(idx: number, event: MouseEvent) {
+  
+  const isOpening = openFaqIdx.value !== idx
+  const endX=event.clientX;
+  const endY = event.clientY;
+  console.log('마우스 뗌 (End):', endX, endY);
+
+  const x = Math.abs(startX-endX)
+  const y = Math.abs(startY-endY)
+  console.log(`이동 거리 - 가로: ${x}px, 세로: ${y}px`); // 이 값이 3 미만이어야 열림!
+  if(x<3&&y<3){
+    console.log('👉 클릭으로 인정! 토글 실행');
+    if (isOpening) {
     openFaqIdx.value = idx
     await nextTick()
 
@@ -75,6 +94,7 @@ async function toggleFaq(idx: number) {
     }
   } else {
     openFaqIdx.value = null
+  }
   }
 }
 
