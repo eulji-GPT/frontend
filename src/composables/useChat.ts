@@ -173,12 +173,12 @@ export function useChat() {
 
   // 자동 스크롤 함수
   const scrollToBottom = () => {
-    setTimeout(() => {
-      const chatMainArea = document.querySelector('.chat-main-area');
-      if (chatMainArea) {
-        chatMainArea.scrollTop = chatMainArea.scrollHeight;
+    nextTick(() => {
+      const container = document.querySelector('.chat-messages-container');
+      if (container) {
+        container.scrollTop = container.scrollHeight;
       }
-    }, 100);
+    });
   };
 
   // 긴 답변을 아티팩트로 변환할지 판단하는 함수
@@ -1283,70 +1283,94 @@ export function useChat() {
         throw new Error("응답 스트림을 읽을 수 없습니다.");
       }
 
+      // SSE 라인 처리 함수
+      const processSSELine = (line: string) => {
+        if (!line.trim() || !line.startsWith('data: ')) return;
+
+        try {
+          const jsonStr = line.slice(6);
+          const data = JSON.parse(jsonStr);
+
+          if (data.type === 'start') {
+            // 세션 ID 저장
+            if (data.session_id && currentChat) {
+              currentChat.sessionId = data.session_id;
+              log.debug("Session ID saved");
+            }
+          } else if (data.type === 'sources') {
+            // RAG 소스 정보 저장
+            if (currentChat.messages[messageIndex] && data.sources) {
+              currentChat.messages[messageIndex].ragSources = data.sources.map((source: any) => ({
+                title: source.title || '제목 없음',
+                content: source.content || '',
+                domain: 'eulji.ac.kr',
+                category: source.category || '기타',
+                score: source.score || 0
+              }));
+              log.debug("RAG sources received:", data.sources.length);
+            }
+          } else if (data.type === 'chunk') {
+            // 실시간 스트리밍 청크 추가
+            fullResponseText += data.content;
+            if (currentChat.messages[messageIndex]) {
+              currentChat.messages[messageIndex].text = fullResponseText;
+              currentChat.messages[messageIndex].currentStep = undefined;
+              messages.value = [...currentChat.messages];
+            }
+            setTimeout(() => scrollToBottom(), 10);
+          } else if (data.type === 'done') {
+            log.debug("RAG streaming completed");
+          } else if (data.type === 'error') {
+            throw new Error(data.error);
+          }
+        } catch (parseError) {
+          log.warn("JSON parsing failed:", line, parseError);
+        }
+      };
+
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
+
+        if (done) {
+          // 스트리밍 종료 시 버퍼에 남은 데이터 처리
+          if (buffer.trim()) {
+            log.debug("Processing remaining buffer:", buffer.substring(0, 100));
+            processSSELine(buffer);
+          }
+          break;
+        }
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
         buffer = lines.pop() || '';
 
         for (const line of lines) {
-          if (!line.trim() || !line.startsWith('data: ')) continue;
-
-          try {
-            const jsonStr = line.slice(6);
-            const data = JSON.parse(jsonStr);
-
-            if (data.type === 'start') {
-              // 세션 ID 저장
-              if (data.session_id && currentChat) {
-                currentChat.sessionId = data.session_id;
-                log.debug("Session ID saved");
-              }
-            } else if (data.type === 'sources') {
-              // RAG 소스 정보 저장
-              if (currentChat.messages[messageIndex] && data.sources) {
-                currentChat.messages[messageIndex].ragSources = data.sources.map((source: any) => ({
-                  title: source.title || '제목 없음',
-                  content: source.content || '',
-                  domain: 'eulji.ac.kr',
-                  category: source.category || '기타',
-                  score: source.score || 0
-                }));
-                log.debug("RAG sources received:", data.sources.length);
-              }
-            } else if (data.type === 'chunk') {
-              // 실시간 스트리밍 청크 추가
-              fullResponseText += data.content;
-              if (currentChat.messages[messageIndex]) {
-                currentChat.messages[messageIndex].text = fullResponseText;
-                currentChat.messages[messageIndex].currentStep = undefined;
-                messages.value = [...currentChat.messages];
-              }
-              setTimeout(() => scrollToBottom(), 10);
-            } else if (data.type === 'done') {
-              log.debug("RAG streaming completed");
-            } else if (data.type === 'error') {
-              throw new Error(data.error);
-            }
-          } catch (parseError) {
-            log.warn("JSON parsing failed:", line, parseError);
-          }
+          processSSELine(line);
         }
       }
 
       // 스트리밍 완료 후 처리
       if (currentChat.messages[messageIndex]) {
         const normalizedAnswer = normalizeWhitespace(fullResponseText);
-        currentChat.messages[messageIndex].text = normalizedAnswer;
+
+        // 빈 응답 처리
+        if (!normalizedAnswer.trim()) {
+          log.warn("RAG returned empty response");
+          currentChat.messages[messageIndex].text = '관련 정보를 찾지 못했습니다. 다른 질문을 해보세요.';
+          currentChat.messages[messageIndex].hasError = true;
+        } else {
+          currentChat.messages[messageIndex].text = normalizedAnswer;
+        }
+
         currentChat.messages[messageIndex].isStreaming = false;
         currentChat.messages[messageIndex].currentStep = undefined;
 
         messages.value = [...currentChat.messages];
 
-        // AI 메시지를 백엔드에 저장
-        await saveMessageToBackend(currentChat.id, false, normalizedAnswer, getModelName(chatMode.value));
+        // AI 메시지를 백엔드에 저장 (빈 응답이 아닌 경우만)
+        if (normalizedAnswer.trim()) {
+          await saveMessageToBackend(currentChat.id, false, normalizedAnswer, getModelName(chatMode.value));
+        }
       }
 
       isStreaming.value = false;

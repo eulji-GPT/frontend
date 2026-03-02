@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { isAuthenticated, isAdmin } from '../utils/auth'
+import { isAuthenticated, isManager } from '../utils/auth'
 
 const routes = [
   {
@@ -142,9 +142,9 @@ router.beforeEach((to, _from, next) => {
       return
     }
 
-    // requiresAdmin 메타 필드가 true인 경로 체크
-    if (to.meta.requiresAdmin && !isAdmin()) {
-      console.log('Non-admin user - redirecting to main page')
+    // requiresAdmin 메타 필드가 true인 경로 체크 (admin_role 기반)
+    if (to.meta.requiresAdmin && isManager() === null) {
+      console.log('Non-manager user - redirecting to main page')
       next({ path: '/' })
       return
     }

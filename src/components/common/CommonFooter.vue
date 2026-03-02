@@ -24,7 +24,7 @@ export default {
 
 <style scoped>
 .common-footer {
-  align-items: center;
+  /* align-items: center; */
   background-color: var(--color-footer-bg);
   display: flex;
   flex-direction: column;
@@ -91,7 +91,7 @@ export default {
 }
 
 .div, .text-wrapper-2 {
-  text-align: center;
+  /* text-align: center; */
 }
 
 /* 태블릿 반응형 */
@@ -102,6 +102,9 @@ export default {
   }
 }
 @media (max-width : 1024px) {
+  .footer-links {
+    justify-content: center;
+  }
   .div {
     text-align: center;
   }

@@ -22,7 +22,7 @@
             {{ source.category }}
           </div>
           <div class="source-score" v-if="source.score">
-            {{ Math.round(source.score * 100) }}%
+            {{ Math.round(source.score) }}%
           </div>
         </div>
         <div class="source-title">{{ source.title }}</div>

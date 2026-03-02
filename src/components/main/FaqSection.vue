@@ -1,7 +1,7 @@
 <template>
-  <div class="frame" id="faq">
-    <div class="text-wrapper-4">자주 묻는 질문</div>
-    <div class="div-2">
+  <section id="faq" class="faq-section">
+    <div class="faq-header text-wrapper-4">자주 묻는 질문</div>
+    <div class="faq-list">
       <!-- 로딩 상태 -->
       <div v-if="isLoading" class="faq-loading">
         <SkeletonLoader :count="4" height="70px" gap="12px" :showSubline="false" />
@@ -14,26 +14,39 @@
       <!-- 빈 상태 -->
       <div v-else-if="faqList.length === 0" class="faq-empty">자주 묻는 질문이 없습니다.</div>
       <!-- FAQ 목록 -->
-      <div v-for="(faq, idx) in faqList" :key="idx" class="faq-row">
-        <div class="faq-question-row" @mouseup="toggleUpFaq(idx, $event)" @mousedown="toggleDownFaq($event)">
-          <span class="faq-q-label">Q.</span>
-          <span class="faq-q-text">{{ faq.q }}</span>
-          <span class="faq-arrow-btn">
-            <img :class="['faq-arrow-icon', {open: openFaqIdx === idx}]" src="../../assets/FaqSection/icn_under_^.svg" alt="arrow" />
-          </span>
+      <div
+        v-else
+        v-for="(faq, idx) in faqList"
+        :key="idx"
+        class="faq-row"
+        :class="{ 'is-expanded': openFaqIdx === idx }"
+       @mouseup="toggleUpFaq(idx, $event)" @mousedown="toggleDownFaq($event)"
+      >
+        <div class="faq-row-header">
+          <div class="faq-row-content">
+            <div class="faq-title"><span class="faq-q-label">Q.</span>{{ faq.q }}</div>
+          </div>
+          <div class="faq-chevron" :class="{ rotated: openFaqIdx === idx }">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
         </div>
-        <div 
-          :class="['faq-answer-wrapper', { open: openFaqIdx === idx }]"
+        <div
+          class="faq-expand-area"
+          :class="{ expanded: openFaqIdx === idx }"
           :style="{ maxHeight: openFaqIdx === idx ? `${answerHeights[idx] || 200}px` : '0px' }"
         >
-          <div class="faq-answer-card" :ref="el => setAnswerRef(el, idx)">
-            <span class="faq-a-label">A.</span>
-            <span class="faq-a-text">{{ faq.a }}</span>
+          <div class="faq-expand-inner">
+            <div class="faq-answer-card" :ref="el => setAnswerRef(el, idx)">
+              <span class="faq-a-label">A.</span>
+              <span class="faq-a-text">{{ faq.a }}</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 </template>
 
 <script setup lang="ts">
@@ -76,13 +89,10 @@ async function toggleUpFaq(idx: number, event: MouseEvent) {
   const isOpening = openFaqIdx.value !== idx
   const endX=event.clientX;
   const endY = event.clientY;
-  console.log('마우스 뗌 (End):', endX, endY);
 
   const x = Math.abs(startX-endX)
   const y = Math.abs(startY-endY)
-  console.log(`이동 거리 - 가로: ${x}px, 세로: ${y}px`); // 이 값이 3 미만이어야 열림!
   if(x<3&&y<3){
-    console.log('👉 클릭으로 인정! 토글 실행');
     if (isOpening) {
     openFaqIdx.value = idx
     await nextTick()
@@ -97,6 +107,7 @@ async function toggleUpFaq(idx: number, event: MouseEvent) {
   }
   }
 }
+
 
 const fetchFaqData = async () => {
   isLoading.value = true
@@ -150,24 +161,30 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.frame {
-  align-items: flex-start;
-  background-color: var(--color-bg-primary);
+.faq-section {
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 30px;
-  min-height: 600px;
-  padding: 100px 40px;
-  position: relative;
-  width: 100%;
-  max-width: 1066px;
-  margin: 0 auto;
-  box-sizing: border-box;
+  align-items: center;
+  background: var(--color-bg-primary);
+  border-radius: 18px;
+  box-shadow: 0 2px 12px 0 rgba(79, 110, 219, 0.04);
+  padding: 2.5rem 0 5rem 0;
+  margin-top: 0;
+  margin-bottom: 0;
   scroll-margin-top: 84px;
+}a
+
+.faq-header {
+  width: 100%;
+  max-width: 1100px;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.01em;
+  text-align: left;
+  padding-left: 2.5rem;
 }
 
 .text-wrapper-4 {
-  align-self: stretch;
   color: var(--color-text-primary);
   font-size: 2.2rem;
   font-weight: 700;
@@ -175,130 +192,122 @@ onMounted(() => {
   position: relative;
 }
 
-.div-2 {
-  align-items: flex-start;
+.faq-list {
   width: 100%;
+  max-width: 1100px;
   display: flex;
   flex-direction: column;
-  position: relative;
+  align-items: stretch;
+  padding: 0 2.5rem;
+  gap: 0;
 }
 
+/* --- FAQ Row --- */
 .faq-row {
-  width: 100%;
-  border-bottom: 1px solid var(--color-card-border);
-  margin-bottom: 0;
-}
-
-.faq-question-row {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  padding: 24px 0;
   cursor: pointer;
-  gap: 18px;
-  transition: background-color 0.2s ease;
+  padding: 24px 8px 24px 48px;
 }
 
-.faq-question-row {
-  position: relative;
+.faq-row:hover {
+  background-color: rgba(0, 0, 0, 0.01);
+  border-radius: 8px;
 }
 
-.faq-question-row::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -40px;
-  right: -40px;
-  bottom: 0;
-  background-color: var(--color-bg-secondary);
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  z-index: -1;
+.faq-row-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
 }
 
-.faq-question-row:hover::before {
-  opacity: 1;
+.faq-row-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.faq-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+  line-height: 1.5;
 }
 
 .faq-q-label {
-  font-size: 2rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--color-text-primary);
-  margin-right: 2px;
+  margin-right: 6px;
+}
+
+/* --- Chevron --- */
+.faq-chevron {
   flex-shrink: 0;
-}
-
-.faq-q-text {
-  font-size: 1.35rem;
-  font-weight: 600;
-  color: var(--color-text-primary);
-  flex: 1;
-  line-height: 1.4;
-}
-
-.faq-arrow-btn {
-  margin-left: auto;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
-  flex-shrink: 0;
+  justify-content: center;
+  color: #D1D5DB;
+  transition: transform 0.3s ease, color 0.2s ease;
 }
 
-.faq-arrow-icon {
-  font-size: 1.2rem;
-  color: var(--color-text-tertiary);
-  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), color 0.2s ease;
-  display: inline-block;
-}
-
-.faq-arrow-icon.open {
+.faq-chevron.rotated {
   transform: rotate(180deg);
-  color: var(--color-text-primary);
+  color: #9CA3AF;
 }
 
-.faq-answer-wrapper {
-  width: 100%;
+/* --- Accordion --- */
+.faq-expand-area {
   overflow: hidden;
-  transition: max-height 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+  transition: max-height 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
               opacity 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   max-height: 0;
   opacity: 0;
-  margin-left: -2px;
+  background: #F8FBFF;
+  margin-left: -48px;
+  margin-right: -8px;
+  padding-left: 48px;
+  padding-right: 8px;
 }
 
-.faq-answer-wrapper.open {
+.faq-expand-area.expanded {
   opacity: 1;
+}
+
+.faq-expand-inner {
+  padding: 0;
 }
 
 .faq-answer-card {
   width: 100%;
-  background: var(--color-bg-secondary);
-  border-radius: 16px;
+  background: transparent;
+  border-radius: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: flex-start;
-  gap: 18px;
-  padding: 24px 0 24px 2px;
-  /* margin-bottom: 24px; */
+  gap: 6px;
+  padding: 24px 0;
   box-sizing: border-box;
   transform: translateY(0);
   transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-.faq-answer-wrapper:not(.open) .faq-answer-card {
+.faq-expand-area:not(.expanded) .faq-answer-card {
   transform: translateY(-8px);
 }
 
 .faq-a-label {
-  font-size: 2rem;
+  font-size: 1.25rem;
   font-weight: 700;
-  color: var(--color-primary);
+  color: #02478A;
   flex-shrink: 0;
 }
 
 .faq-a-text {
-  font-size: 1.35rem;
-  font-weight: 500;
-  color: var(--color-text-primary);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #02478A;
   line-height: 1.6;
   flex: 1;
   text-align: left;
@@ -307,17 +316,18 @@ onMounted(() => {
   height: 100%;
 }
 
+/* --- States --- */
 .faq-empty {
-  color: var(--color-text-disabled);
+  text-align: left;
+  color: var(--color-text-tertiary);
   font-size: 1.1rem;
   font-weight: 400;
-  padding: 2rem 0;
-  text-align: center;
+  padding: 1rem 0.2rem;
 }
 
 .faq-loading {
   width: 100%;
-  padding: 1rem 0;
+  padding: 0.5rem 0;
 }
 
 .faq-error {
@@ -348,126 +358,104 @@ onMounted(() => {
   background-color: var(--color-button-primary-hover);
 }
 
-/* 반응형 디자인 */
-@media (max-width: 1106px) {
-  .frame {
-    padding: 80px 30px;
+/* --- Responsive: Tablet --- */
+@media (max-width: 1024px) {
+  .faq-section {
+    padding-bottom: 80px;
   }
-  
-  .faq-question-row::before {
-    left: -30px;
-    right: -30px;
+  .faq-header {
+    width: 90%;
+    margin: 0 auto;
+    font-size: 2.2rem;
+    margin-bottom: 40px;
   }
-  
-  .faq-answer-card {
-    padding: 24px 36px;
+  .faq-list {
+    width: 90%;
+    margin: 0 auto;
   }
 }
 
-@media (max-width : 1024px) {
-  .text-wrapper-4 {
-    width : 90%;
-    margin : 0 auto;
+@media (max-width: 900px) {
+  .faq-section {
+    padding: 1.2rem 0 3rem 0;
   }
-  .div-2 {
-    margin : 0 auto;
-    width : 90%;
+  .faq-header {
+    font-size: 1.1rem;
+    padding-left: 1.2rem;
+  }
+  .faq-list {
+    padding: 0 1.2rem;
+  }
+  .faq-row {
+    padding: 18px 6px 18px 32px;
+  }
+  .faq-title {
+    font-size: 1.1rem;
+  }
+  .faq-q-label {
+    font-size: 1.1rem;
+  }
+  .faq-a-label {
+    font-size: 1.1rem;
+  }
+  .faq-a-text {
+    font-size: 0.95rem;
+  }
+  .faq-expand-area {
+    margin-left: -32px;
+    margin-right: -6px;
+    padding-left: 32px;
+    padding-right: 6px;
   }
 }
 
 @media (max-width: 768px) {
-  .frame {
-    padding: 60px 20px;
-    gap: 20px;
-  }
-  
-  .text-wrapper-4 {
+  .faq-header {
     font-size: 1.8rem;
-  }
-  
-  .faq-question-row {
-    padding: 20px 0;
-    gap: 12px;
-  }
-  
-  .faq-question-row::before {
-    left: -20px;
-    right: -20px;
-  }
-  
-  .faq-q-label {
-    font-size: 1.6rem;
-  }
-  
-  .faq-q-text {
-    font-size: 1.1rem;
-  }
-  
-  .faq-answer-card {
-    padding: 20px 28px;
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-  
-  .faq-a-label {
-    font-size: 1.6rem;
-  }
-  
-  .faq-a-text {
-    font-size: 1.1rem;
+    margin-bottom: 35px;
   }
 }
 
-@media (max-width: 480px) {
-  .frame {
-    padding: 40px 16px;
+@media (max-width: 600px) {
+  .faq-section {
+    padding: 0.5rem 0 2rem 0;
+    margin-top: 1.2rem;
+    margin-bottom: 1.2rem;
   }
-  
-  .text-wrapper-4 {
-    font-size: 1.6rem;
+  .faq-header {
+    font-size: 1rem;
+    padding-left: 0.5rem;
   }
-  
-  .faq-question-row {
-    padding: 16px 0;
-    gap: 8px;
+  .faq-list {
+    padding: 0 0.5rem;
   }
-  
-  .faq-question-row::before {
-    left: -16px;
-    right: -16px;
+  .faq-row {
+    padding: 14px 4px 14px 20px;
   }
-  
+  .faq-title {
+    font-size: 0.98rem;
+  }
   .faq-q-label {
-    font-size: 1.4rem;
+    font-size: 0.98rem;
   }
-  
-  .faq-q-text {
-    font-size: 1rem;
-  }
-  
-  .faq-answer-card {
-    padding: 18px 24px;
-    gap: 10px;
-    margin-bottom: 16px;
-  }
-  
   .faq-a-label {
-    font-size: 1.4rem;
+    font-size: 0.98rem;
   }
-  
   .faq-a-text {
-    font-size: 1rem;
+    font-size: 0.93rem;
+  }
+  .faq-expand-area {
+    margin-left: -20px;
+    margin-right: -4px;
+    padding-left: 20px;
+    padding-right: 4px;
   }
 }
 
-@media (min-width : 320px) and (max-width : 480px) {
-  .text-wrapper-4 {
-    width : 90%;
-    margin : 0 auto;
-  }
-  .div-2 {
-    margin : 0 auto;
-    width : 90%;
+@media (min-width: 320px) and (max-width: 480px) {
+  .faq-header {
+    font-size: 1.6rem;
+    margin-bottom: 30px;
   }
 }
 </style>

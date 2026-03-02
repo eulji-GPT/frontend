@@ -191,6 +191,9 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
+import { getApiBaseUrl } from '../../utils/ports-config'
+
+const API_BASE_URL = getApiBaseUrl()
 
 interface NewsItem {
   title: string
@@ -252,7 +255,7 @@ const getAuthHeaders = () => {
 const loadNews = async () => {
   loadingNews.value = true
   try {
-    const response = await fetch('/api/news/admin', {
+    const response = await fetch(`${API_BASE_URL}/news/admin`, {
       headers: getAuthHeaders()
     })
     if (response.ok) {
@@ -269,7 +272,7 @@ const loadNews = async () => {
 const loadFaq = async () => {
   loadingFaq.value = true
   try {
-    const response = await fetch('/api/faq/admin', {
+    const response = await fetch(`${API_BASE_URL}/faq/admin`, {
       headers: getAuthHeaders()
     })
     if (response.ok) {
@@ -303,7 +306,7 @@ const saveNews = async () => {
   try {
     const rowNumber = editingNewsRowNumber.value
     const method = rowNumber ? 'PUT' : 'POST'
-    const url = rowNumber ? `/api/news/${rowNumber}` : '/api/news'
+    const url = rowNumber ? `${API_BASE_URL}/news/${rowNumber}` : `${API_BASE_URL}/news`
 
     const response = await fetch(url, {
       method,
@@ -348,7 +351,7 @@ const saveFaq = async () => {
   try {
     const rowNumber = editingFaqRowNumber.value
     const method = rowNumber ? 'PUT' : 'POST'
-    const url = rowNumber ? `/api/faq/${rowNumber}` : '/api/faq'
+    const url = rowNumber ? `${API_BASE_URL}/faq/${rowNumber}` : `${API_BASE_URL}/faq`
 
     const response = await fetch(url, {
       method,
@@ -391,7 +394,7 @@ const executeDelete = async () => {
   if (deleteRowNumber.value === null) return
 
   try {
-    const url = deleteType.value === 'news' ? `/api/news/${deleteRowNumber.value}` : `/api/faq/${deleteRowNumber.value}`
+    const url = deleteType.value === 'news' ? `${API_BASE_URL}/news/${deleteRowNumber.value}` : `${API_BASE_URL}/faq/${deleteRowNumber.value}`
 
     const response = await fetch(url, {
       method: 'DELETE',

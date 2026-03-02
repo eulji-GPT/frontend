@@ -1,3 +1,4 @@
+chatbubble
 <template>
   <div :class="['chat-bubble-wrapper', align]">
     <div :class="['chat-bubble', align, { 'streaming': isStreaming }]">
@@ -281,11 +282,27 @@ const normalizeLineBreaks = (text: string): string => {
   // 먼저 tool_call 태그 제거
   let normalized = stripToolCallTags(text);
 
+  // 시간 범위의 물결표(~) 이스케이프 (예: 09:00~17:00, 12:00~13:00)
+  // 마크다운 취소선으로 잘못 해석되는 것 방지
+  normalized = normalized.replace(/(\d{1,2}:\d{2})~(\d{1,2}:\d{2})/g, '$1\u223C$2');
+
   // 3개 이상 연속 개행을 2개로 줄임
   normalized = normalized.replace(/\n{3,}/g, '\n\n');
 
-  // 목록 항목 사이의 과도한 빈 줄 제거 (숫자 목록)
-  normalized = normalized.replace(/(\d+\.\s+[^\n]+)\n{2,}(?=\d+\.)/g, '$1\n');
+  // [중요] 볼드 섹션 헤더 앞에 빈 줄 추가
+  // 리스트 안에 잘못 들어가는 것을 방지
+
+  // 1. 번호 있는 볼드 헤더 (예: **2. 제목**)
+  normalized = normalized.replace(/([^\n])\n(\*\*\d+\.\s+[^*]+\*\*)/g, '$1\n\n$2');
+
+  // 2. 번호 없는 볼드 헤더 (예: **비용**, **운행 시간**)
+  // 리스트 아이템(•, -, 숫자.) 뒤에 오는 볼드 텍스트
+  normalized = normalized.replace(/(•\s+[^\n]+)\n(\*\*[^*\n]+\*\*)/g, '$1\n\n$2');
+  normalized = normalized.replace(/([-]\s+[^\n]+)\n(\*\*[^*\n]+\*\*)/g, '$1\n\n$2');
+  normalized = normalized.replace(/(\d+\.\s+[^\n]+)\n(\*\*[^*\n]+\*\*)/g, '$1\n\n$2');
+
+  // 목록 항목 사이의 과도한 빈 줄 제거 (숫자 목록) - 단, 볼드 섹션은 제외
+  normalized = normalized.replace(/(\d+\.\s+[^\n*]+)\n{2,}(?=\d+\.)/g, '$1\n');
 
   // 불릿 목록 사이의 과도한 빈 줄 제거
   normalized = normalized.replace(/([-*]\s+[^\n]+)\n{2,}(?=[-*]\s)/g, '$1\n');
@@ -473,6 +490,11 @@ onUpdated(() => {
   width: fit-content;
   max-width: calc(100% - 20px); /* 오른쪽 여유 공간 확보 */
   overflow: visible;
+  margin-top:3px;
+}
+
+.chat-bubble-wrapper:first-child {
+  margin-top: 5px;
 }
 
 .chat-bubble-wrapper.right {
@@ -487,11 +509,11 @@ onUpdated(() => {
 
 .feedback-container {
   width: 100%;
-  margin-top: 10px;
+  margin-top: 5px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 4px;
   /* 데스크톱에서 기본적으로 숨김 */
   opacity: 0;
   visibility: hidden;
@@ -602,7 +624,7 @@ onUpdated(() => {
   color: var(--color-text-primary);
   word-break: break-word;
   font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Helvetica, Arial, sans-serif;
-  margin: 8px 0;
+  margin: 4px 0;
   line-height: 1.5;
   position: relative;
   transition: all 0.3s ease;
@@ -736,11 +758,12 @@ onUpdated(() => {
   line-height: 1.4;
 }
 
-/* 마크다운 스타일링 - ChatGPT/Claude 수준의 가독성 */
+/* 마크다운 스타일링 - PDF 참조 디자인 적용 */
 :deep(.markdown-content) {
-  line-height: 1.75;  /* 1.5 → 1.75: 더 넉넉한 줄 간격 */
+  line-height: 1.9;  /* PDF 스타일: 넉넉한 줄 간격 */
   white-space: normal;
-  letter-spacing: -0.01em;  /* 한글 가독성 향상 */
+  letter-spacing: 0.01em;  /* 한글 가독성: 약간의 자간 */
+  font-size: 15px;  /* 기본 글씨 크기 */
 }
 
 /* 제목 스타일 - 깔끔한 섹션 구분 */
@@ -831,11 +854,12 @@ onUpdated(() => {
 }
 
 :deep(.markdown-content p) {
-  margin: 0 0 1em 0;  /* 4px → 1em: 단락 간 충분한 여백 */
+  margin: 0 0 1.2em 0;  /* PDF 스타일: 단락 간 여백 */
+  line-height: 1.9;
 }
 
 :deep(.markdown-content p:last-child) {
-  margin-bottom: 0;  /* 마지막 단락은 하단 여백 제거 */
+  margin-bottom: 0;
 }
 
 /* 빈 단락 숨김 */
@@ -859,8 +883,35 @@ onUpdated(() => {
   margin-top: 0.6em;  /* 0.3em → 0.6em: 줄바꿈 시 더 명확한 간격 */
 }
 
-/* 강조 스타일 - 볼드만 적용, 색상은 블랙 */
+/* 강조 스타일 - PDF 참조: 섹션 제목용 볼드 */
 :deep(.markdown-content strong) {
+  font-weight: 700;
+  font-size: 1.1em;  /* 볼드 텍스트는 약간 크게 */
+  color: var(--color-text-primary);
+  display: inline;
+}
+
+/* 단락 시작의 볼드는 섹션 제목으로 처리 */
+:deep(.markdown-content p > strong:first-child:last-child),
+:deep(.markdown-content p > strong:only-child) {
+  display: block;
+  font-size: 1.15em;
+  margin: 1.8em 0 0.8em 0;  /* 상단 여백 증가: 1.5em → 1.8em */
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--color-card-border);
+}
+
+/* 목록 다음에 오는 섹션 제목 - 더 큰 여백 */
+:deep(.markdown-content ul + p > strong:first-child),
+:deep(.markdown-content ol + p > strong:first-child) {
+  margin-top: 2em;  /* 목록 후 섹션 헤더는 더 큰 여백 */
+}
+
+/* 리스트 아이템 내부의 볼드 - 인라인 스타일 유지 */
+/* 채팅 기능, 업무 관리 기능 같은 하위 항목 */
+:deep(.markdown-content li strong) {
+  display: inline;
+  font-size: 1em;
   font-weight: 700;
   color: var(--color-text-primary);
 }
@@ -872,11 +923,11 @@ onUpdated(() => {
 
 :deep(.markdown-content ul),
 :deep(.markdown-content ol) {
-  margin: 0.75em 0;  /* 4px → 0.75em: 목록 전후 여백 확대 */
-  padding-left: 1.2em;
+  margin: 1em 0;  /* PDF 스타일: 목록 전후 여백 */
+  padding-left: 1.5em;
 }
 
-/* 연속된 목록 사이 간격 줄이기 */
+/* 연속된 목록 사이 간격 */
 :deep(.markdown-content ul + ul),
 :deep(.markdown-content ol + ol),
 :deep(.markdown-content ul + ol) {
@@ -896,44 +947,51 @@ onUpdated(() => {
 
 :deep(.markdown-content ul li) {
   position: relative;
-  margin: 0.5em 0;  /* 2px → 0.5em: 리스트 항목 간 여백 확대 */
-  padding-left: 1em;
-  line-height: 1.6;
+  margin: 0.7em 0;  /* PDF 스타일: 불릿 항목 간 넉넉한 여백 */
+  padding-left: 1.2em;
+  line-height: 1.8;  /* 줄간격 */
 }
 
-/* 불릿 리스트 - 단순한 점 스타일 */
+/* 불릿 리스트 - PDF 스타일 점 */
 :deep(.markdown-content ul li::before) {
   content: '•';
   position: absolute;
   left: 0;
-  color: var(--color-text-primary);
+  color: #666;
   font-weight: normal;
+  font-size: 0.9em;
 }
 
 :deep(.markdown-content ol) {
   counter-reset: item;
-  padding-left: 2em;
+  padding-left: 1.8em;
 }
 
 :deep(.markdown-content ol li) {
   display: block;
   position: relative;
-  margin: 0.5em 0;  /* 4px → 0.5em: 순서 목록 항목 간 여백 확대 */
+  margin: 1.2em 0;  /* PDF 스타일: 번호 항목 간 큰 여백 */
   padding-left: 0.5em;
-  line-height: 1.6;
+  line-height: 1.8;
+  font-weight: 600;  /* 번호 항목은 볼드 */
 }
 
-/* 번호 리스트 - 단순한 숫자 스타일 */
+/* 번호 리스트 - PDF 스타일 */
 :deep(.markdown-content ol li::before) {
   content: counter(item) ".";
   counter-increment: item;
   position: absolute;
-  left: -1.8em;
+  left: -1.6em;
   color: var(--color-text-primary);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 1em;
   min-width: 1.2em;
   text-align: left;
+}
+
+/* 순서 목록 다음 불릿은 일반 굵기 (세부 내용) */
+:deep(.markdown-content ol + ul li) {
+  font-weight: 400;  /* 불릿 항목은 일반 굵기 */
 }
 
 /* 중첩된 순서 있는 목록 스타일 */
@@ -1012,8 +1070,8 @@ onUpdated(() => {
 
 :deep(.markdown-content hr) {
   border: none;
-  border-top: 1px solid var(--color-card-border);
-  margin: 8px 0;
+  border-top: 1px solid #e0e0e0;
+  margin: 1.5em 0;  /* PDF 스타일: 구분선 상하 여백 */
   background: linear-gradient(to right, var(--color-primary), var(--color-card-border), var(--color-primary));
   height: 1px;
 }
@@ -1423,6 +1481,7 @@ onUpdated(() => {
 
   .chat-bubble-wrapper {
     max-width: calc(100% - 12px);
+    /* margin-top :40px; */
   }
 
   .chat-bubble-wrapper.right {

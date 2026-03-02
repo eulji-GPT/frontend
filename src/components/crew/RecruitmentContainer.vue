@@ -19,8 +19,8 @@
             <span class="department-name">Front-end</span>
             <span class="department-description">
               유저가 마주하는 모든 화면과 경험을 만드는 팀입니다.<br/>
-              React, Vue, Next.js 등을 사용해 UI/UX를 구현합니다.<br/>
-              Figma로 디자인된 시안을 바탕으로 인터랙션을 개발하고, 실제 서비스로 연결합니다.
+              Vue 3 + TypeScript + Vite로 빠르고 반응적인 UI를 구현합니다.<br/>
+              Tailwind CSS로 스타일링하고, Figma 디자인을 서비스로 연결합니다.
             </span>
           </div>
           
@@ -28,17 +28,17 @@
             <span class="department-name">Back-end</span>
             <span class="department-description">
               서버 및 DB 설계와 개발을 맡는 핵심 팀이에요.<br/>
-              Spring, Django, FastAPI 등 익숙한 프레임워크가 있다면 환영!<br/>
-              LLM 기반 기능과 연동되는 API를 개발하고, 안정적인 시스템을 구현합니다.
+              FastAPI + PostgreSQL 기반으로 인증, 채팅 이력, 예약 시스템을 개발합니다.<br/>
+              RESTful API 설계와 배포 자동화로 안정적인 서비스를 운영합니다.
             </span>
           </div>
           
           <div class="department-item">
             <span class="department-name">AI / RAG</span>
             <span class="department-description">
-              GPT, RAG, LLM 관련 기술을 연구하고 적용하는 팀이에요.<br/>
-              Vector DB, Embedding, Retrieval 등 최신 AI 기술을 다룹니다.<br/>
-              AI 챗봇의 자연스러운 응답 흐름과 정확도를 높이는 역할을 합니다.
+              RAG 기반 AI 챗봇의 핵심 기술을 연구하고 적용하는 팀이에요.<br/>
+              ChromaDB + LangChain으로 벡터 검색을, BM25로 하이브리드 검색을 구현합니다.<br/>
+              을지대 정보에 특화된 정확하고 자연스러운 AI 응답을 만들어갑니다.
             </span>
           </div>
           
@@ -52,7 +52,7 @@
           </div>
           
           <div class="department-item">
-            <span class="department-name">Support</span>
+            <span class="department-name">Parrot</span>
             <span class="department-description">
               프로젝트 흐름을 함께 관찰하고, 본인의 흥미와 역량에 맞는 분야를 탐색하는 팀입니다.<br/>
               향후 관심 있는 팀(프론트, 백엔드 , 디자인 등)에 점차 합류하며<br/>
@@ -178,7 +178,7 @@
 }
 
 .department-item:nth-child(5) {
-  gap: 184px;
+  gap: 196px;
 }
 
 .department-name {

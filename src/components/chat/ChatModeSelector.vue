@@ -106,6 +106,7 @@ defineEmits<{
     justify-content: center;
     width: 100%;
     max-width: 100%;
+    display : none;
   }
 }
 </style>

@@ -87,7 +87,7 @@
               <option value="backend">Back-end</option>
               <option value="ai">AI / RAG</option>
               <option value="design">Design</option>
-              <option value="support">Support</option>
+              <option value="parrot">Parrot</option>
             </select>
           </div>
 

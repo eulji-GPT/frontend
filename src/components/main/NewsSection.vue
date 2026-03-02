@@ -1,7 +1,7 @@
 <template>
-  <section id="news" class="news-section-image">
-    <div class="news-header-image text-wrapper-4">새로운 소식</div>
-    <div class="news-list-image">
+  <section id="news" class="news-section">
+    <div class="news-header text-wrapper-4">새로운 소식</div>
+    <div class="news-list">
       <!-- 로딩 상태 -->
       <div v-if="isLoading" class="news-loading">
         <SkeletonLoader :count="3" height="60px" gap="16px" :showSubline="true" />
@@ -12,12 +12,32 @@
         <button class="retry-button" @click="fetchNewsData">다시 시도</button>
       </div>
       <!-- 빈 상태 -->
-      <div v-else-if="newsList.length === 0" class="news-empty-image">새로운 소식이 없습니다.</div>
+      <div v-else-if="newsList.length === 0" class="news-empty">새로운 소식이 없습니다.</div>
       <!-- 뉴스 목록 -->
-      <div v-for="(news, idx) in newsList" :key="idx" class="news-row-image">
-        <div class="news-title-image">{{ news.title }}</div>
-        <div class="news-date-image">{{ news.date }}</div>
-        <div v-if="news.desc" class="news-desc-image">{{ news.desc }}</div>
+      <div
+        v-else
+        v-for="(news, idx) in newsList"
+        :key="idx"
+        class="news-row"
+        :class="{ 'is-expanded': expandedIndex === idx }"
+        @click="toggleExpand(idx)"
+      >
+        <div class="news-row-header">
+          <div class="news-row-content">
+            <div class="news-title">{{ news.title }}</div>
+          </div>
+          <div class="news-chevron" :class="{ rotated: expandedIndex === idx }">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+        <div class="news-expand-area" :class="{ expanded: expandedIndex === idx }">
+          <div class="news-expand-inner">
+            <div v-if="news.desc" class="news-desc">{{ news.desc }}</div>
+          </div>
+        </div>
+        <div class="news-date">{{ news.date }}</div>
       </div>
     </div>
   </section>
@@ -37,8 +57,17 @@ interface NewsItem {
 const newsList = ref<NewsItem[]>([])
 const isLoading = ref(true)
 const error = ref<string | null>(null)
+const expandedIndex = ref<number | null>(0)
 
 const API_BASE_URL = getApiBaseUrl()
+
+const toggleExpand = (idx: number) => {
+  if (expandedIndex.value === idx) {
+    expandedIndex.value = null
+  } else {
+    expandedIndex.value = idx
+  }
+}
 
 const fetchNewsData = async () => {
   isLoading.value = true
@@ -76,7 +105,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.news-section-image {
+.news-section {
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -84,19 +113,21 @@ onMounted(() => {
   background: var(--color-bg-primary);
   border-radius: 18px;
   box-shadow: 0 2px 12px 0 rgba(79, 110, 219, 0.04);
-  padding: 2.5rem 0 30rem 0;
+  padding: 2.5rem 0 5rem 0;
   margin-top: 0;
   margin-bottom: 0;
   scroll-margin-top: 84px;
 }
-.news-header-image {
+
+.news-header {
   width: 100%;
   max-width: 1100px;
-  margin-bottom: 2.2rem;
+  margin-bottom: 1.5rem;
   letter-spacing: -0.01em;
   text-align: left;
   padding-left: 2.5rem;
 }
+
 .text-wrapper-4 {
   color: var(--color-text-primary);
   font-size: 2.2rem;
@@ -104,47 +135,107 @@ onMounted(() => {
   margin-top: -1.00px;
   position: relative;
 }
-.news-list-image {
+
+.news-list {
   width: 100%;
   max-width: 1100px;
   display: flex;
   flex-direction: column;
-  gap: 2.5rem;
-  align-items: flex-start;
+  align-items: stretch;
   padding: 0 2.5rem;
+  gap: 0;
 }
-.news-row-image {
+
+/* --- News Row --- */
+.news-row {
+  cursor: pointer;
+  padding: 24px 8px 24px 48px;
+}
+
+.news-row:hover {
+  background-color: rgba(0, 0, 0, 0.01);
+  border-radius: 8px;
+}
+
+.news-row-header {
   display: flex;
-  flex-direction: column;
   align-items: flex-start;
-  gap: 0.3rem;
+  justify-content: space-between;
+  gap: 16px;
 }
-.news-title-image {
-  font-size: 1.35rem;
-  font-weight: 800;
+
+.news-row-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.news-title {
+  font-size: 1.25rem;
+  font-weight: 700;
   color: var(--color-text-primary);
-  margin-bottom: 0.1rem;
   letter-spacing: -0.01em;
+  line-height: 1.5;
 }
-.news-date-image {
-  font-size: 1rem;
-  color: var(--color-text-tertiary);
-  font-weight: 600;
-  margin-bottom: 0.1rem;
-  letter-spacing: 0.01em;
-}
-.news-desc-image {
-  color: var(--color-primary);
-  font-size: 1.05rem;
-  margin-top: 0.1rem;
+
+.news-date {
+  font-size: 0.9rem;
+  color: #9CA3AF;
   font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+  margin-top: 6px;
+  padding-left: 0;
 }
-.news-empty-image {
+
+/* --- Chevron --- */
+.news-chevron {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #D1D5DB;
+  transition: transform 0.3s ease, color 0.2s ease;
+}
+
+.news-chevron.rotated {
+  transform: rotate(180deg);
+  color: #9CA3AF;
+}
+
+/* --- Accordion --- */
+.news-expand-area {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.25s ease;
+  opacity: 0;
+}
+
+.news-expand-area.expanded {
+  max-height: 300px;
+  opacity: 1;
+}
+
+.news-expand-inner {
+  padding: 0;
+}
+
+.news-desc {
+  padding: 4px 0 8px 0;
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: #6B7280;
+  line-height: 1.7;
+}
+
+/* --- States --- */
+.news-empty {
   text-align: left;
   color: var(--color-text-tertiary);
   font-size: 1.1rem;
   font-weight: 400;
-  padding-left: 0.2rem;
+  padding: 1rem 0.2rem;
 }
 
 .news-loading {
@@ -180,86 +271,86 @@ onMounted(() => {
   background-color: var(--color-button-primary-hover);
 }
 
-@media (max-width: 900px) {
-  .news-section-image {
-    padding: 1.2rem 0 1.2rem 0;
+/* --- Responsive: Tablet --- */
+@media (max-width: 1024px) {
+  .news-section {
+    padding-bottom: 80px;
   }
-  .news-header-image {
+  .news-header {
+    width: 90%;
+    margin: 0 auto;
+    font-size: 2.2rem;
+    margin-bottom: 40px;
+  }
+  .news-list {
+    width: 90%;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 900px) {
+  .news-section {
+    padding: 1.2rem 0 3rem 0;
+  }
+  .news-header {
     font-size: 1.1rem;
     padding-left: 1.2rem;
   }
-  .news-list-image {
+  .news-list {
     padding: 0 1.2rem;
-    gap: 1.2rem;
   }
-  .news-title-image {
-    font-size: 1.05rem;
+  .news-row {
+    padding: 18px 6px 18px 32px;
   }
-  .news-date-image {
+  .news-title {
+    font-size: 1.1rem;
+  }
+  .news-date {
+    font-size: 0.85rem;
+  }
+  .news-desc {
     font-size: 0.95rem;
   }
-  .news-desc-image {
-    font-size: 0.98rem;
+}
+
+@media (max-width: 768px) {
+  .news-header {
+    font-size: 1.8rem;
+    margin-bottom: 35px;
   }
 }
+
 @media (max-width: 600px) {
-  .news-section-image {
-    padding: 0.5rem 0 0.5rem 0;
+  .news-section {
+    padding: 0.5rem 0 2rem 0;
     margin-top: 1.2rem;
     margin-bottom: 1.2rem;
   }
-  .news-header-image {
+  .news-header {
     font-size: 1rem;
     padding-left: 0.5rem;
   }
-  .news-list-image {
+  .news-list {
     padding: 0 0.5rem;
-    gap: 0.7rem;
   }
-  .news-title-image {
+  .news-row {
+    padding: 14px 4px 14px 20px;
+  }
+  .news-title {
     font-size: 0.98rem;
   }
-  .news-date-image {
-    font-size: 0.9rem;
+  .news-date {
+    font-size: 0.82rem;
   }
-  .news-desc-image {
+  .news-desc {
     font-size: 0.93rem;
   }
 }
 
-@media (max-width : 1024px) {
-  .news-section-image {
-    padding-bottom: 80px;
-  }
-  .news-header-image {
-    width : 90%;
-    margin : 0 auto;
-  }
-
-  .news-list-image {
-    width : 90%;
-    margin : 0 auto;
-  }
-
-  .news-header-image {
-    font-size : 2.2rem;
-    margin-bottom: 40px;
-  }
-}
-
-@media (max-width : 768px) {
-  .news-header-image {
-    font-size : 1.8rem;
-    margin-bottom: 35px;
-  }
-
-}
-
-@media (min-width : 320px) and (max-width : 480px) {
-  .news-header-image {
-    font-size : 1.6rem;
+@media (min-width: 320px) and (max-width: 480px) {
+  .news-header {
+    font-size: 1.6rem;
     margin-bottom: 30px;
   }
 }
-
 </style>

@@ -134,7 +134,7 @@
           <div class="question-row" @click="toggleItem(3)">
             <div class="question-content">
               <span class="q-label pulse-text">Q.</span>
-              <span class="question-text">Support 팀은 구체적으로 어떤 일을 하나요?</span>
+              <span class="question-text">Parrot 팀은 구체적으로 어떤 일을 하나요?</span>
             </div>
             <div class="icon-container">
               <img 

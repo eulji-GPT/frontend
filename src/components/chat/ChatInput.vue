@@ -62,7 +62,7 @@
     </div>
     <div class="disclaimer-text">
       개인정보 처리방침 | Copyright ⓒ EULGPT. All Rights Reserved
-      <span v-if="props.lastIndexedTime" class="last-indexed-text"> | 마지막 업데이트: {{ props.lastIndexedTime }}</span>
+      <!-- <span v-if="props.lastIndexedTime" class="last-indexed-text"> | 마지막 업데이트: {{ props.lastIndexedTime }}</span> -->
     </div>
   </div>
 </template>

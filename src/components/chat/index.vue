@@ -1,3 +1,4 @@
+index
 <!-- Test comment to force re-compilation -->
 <template>
   <div class="main-container">
@@ -355,7 +356,7 @@ watch(isMobile, (newVal) => {
     isCollapsed.value = false;
     showCollapsibleContent.value = true;
     showFixedContent.value = false;
-    sidebarVisible.value = true; 
+    sidebarVisible.value = false; 
   } else {
     sidebarVisible.value = true;
   }
@@ -1026,7 +1027,7 @@ const goToPreparation = () => {
   position: relative;
   width: 100%;
   height: 36px;
-  padding: 0 20px 0 20px;
+  padding: 0 20px 0px 26px;
   background: var(--color-bg-primary);
   /* border-right removed to prevent double lines */
   z-index: 10;
@@ -1057,6 +1058,7 @@ const goToPreparation = () => {
   background: url('./icon/-three.svg') no-repeat center;
   background-size: cover;
   object-fit: cover;
+
 }
 
 .eulgpt-logo-svg {
@@ -1096,7 +1098,7 @@ const goToPreparation = () => {
   align-items: stretch;
   flex-wrap: nowrap;
   flex-shrink: 0;
-  gap: 24px;
+  gap: 12px;
   position: relative;
   width: 100%;
   padding: 0 20px 0 20px;
@@ -1120,19 +1122,20 @@ const goToPreparation = () => {
   cursor: pointer;
   transition: all 0.2s ease;
   border-radius: 8px;
-  padding: 0px 8px 0px 8px;
+  padding: 8px;
   box-sizing: border-box;
 }
 
 .frame-3.collapsed, .frame-7.collapsed, .frame-9.collapsed {
-  padding : 0px;
+  padding: 8px;
   justify-content: center;
 }
 
 .chatbot-menu-item > div:hover {
   background-color: var(--color-bg-secondary);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
+
 .frame-3 {
   z-index: 19;
 }
@@ -1495,6 +1498,9 @@ const goToPreparation = () => {
   flex: 1;
   min-height: 0;
   overflow: visible; /* 오른쪽 말풍선이 잘리지 않도록 변경 */
+  padding-top:80px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .chat-input-area {
@@ -1646,6 +1652,8 @@ const goToPreparation = () => {
   .chat-messages-container {
     padding-bottom: calc(var(--keyboard-height, 0px) + 8px);
     transition: padding-bottom 0.15s ease-out;
+    overflow-y: auto;
+    overflow-x: hidden;
     -webkit-overflow-scrolling: touch; /* iOS 부드러운 스크롤 */
     scroll-behavior: smooth;
     overscroll-behavior: contain; /* 스크롤 체이닝 방지 */

@@ -16,27 +16,26 @@
   }
 }
 
-/* Chat messages area: 적절한 스크롤 설정 */
+/* Chat messages area: 스크롤은 부모 컨테이너(.chat-messages-container)에서 처리 */
 .chat-messages-area {
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: visible;
 }
 
-/* 전체 채팅 영역 스크롤바 스타일링 */
-.chat-main-area::-webkit-scrollbar {
+/* 메시지 영역 스크롤바 스타일링 */
+.chat-messages-container::-webkit-scrollbar {
   width: 6px;
 }
 
-.chat-main-area::-webkit-scrollbar-track {
+.chat-messages-container::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.chat-main-area::-webkit-scrollbar-thumb {
+.chat-messages-container::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.2);
   border-radius: 3px;
 }
 
-.chat-main-area::-webkit-scrollbar-thumb:hover {
+.chat-messages-container::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.3);
 }
 
@@ -72,8 +71,7 @@
   width: 100%;
   height: 100%;
   max-width: min(1000px, 100%);
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   box-sizing: border-box;
 }
 
@@ -93,8 +91,8 @@
   flex: 1;
   min-height: 0;
   box-sizing: border-box;
-  overflow: visible;
-  /* 스크롤을 상위 컨테이너로 위임 */
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 
@@ -380,7 +378,6 @@ button {
   flex-shrink: 0;
   gap: 10px;
   position: relative;
-  min-width: 115px;
   width: auto;
   overflow: visible;
   z-index: 19;
