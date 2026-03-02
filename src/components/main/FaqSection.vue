@@ -20,7 +20,7 @@
         :key="idx"
         class="faq-row"
         :class="{ 'is-expanded': openFaqIdx === idx }"
-        @click="toggleFaq(idx)"
+       @mouseup="toggleUpFaq(idx, $event)" @mousedown="toggleDownFaq($event)"
       >
         <div class="faq-row-header">
           <div class="faq-row-content">
@@ -74,10 +74,26 @@ function setAnswerRef(el: HTMLElement | Element | ComponentPublicInstance | null
   }
 }
 
-async function toggleFaq(idx: number) {
-  const isOpening = openFaqIdx.value !== idx
+let startX = 0;
+let startY = 0; 
 
-  if (isOpening) {
+const toggleDownFaq=( event: MouseEvent)=>{
+  startX=event.clientX;
+  startY = event.clientY;
+  console.log('마우스 누름 (Start):', startX, startY);
+}
+
+
+async function toggleUpFaq(idx: number, event: MouseEvent) {
+  
+  const isOpening = openFaqIdx.value !== idx
+  const endX=event.clientX;
+  const endY = event.clientY;
+
+  const x = Math.abs(startX-endX)
+  const y = Math.abs(startY-endY)
+  if(x<3&&y<3){
+    if (isOpening) {
     openFaqIdx.value = idx
     await nextTick()
 
@@ -89,7 +105,9 @@ async function toggleFaq(idx: number) {
   } else {
     openFaqIdx.value = null
   }
+  }
 }
+
 
 const fetchFaqData = async () => {
   isLoading.value = true
@@ -155,7 +173,7 @@ onMounted(() => {
   margin-top: 0;
   margin-bottom: 0;
   scroll-margin-top: 84px;
-}
+}a
 
 .faq-header {
   width: 100%;
