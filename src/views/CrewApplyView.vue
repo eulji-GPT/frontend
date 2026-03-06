@@ -116,9 +116,9 @@
             <label class="form-label">포트폴리오 / GitHub 링크</label>
             <input
               v-model="formData.portfolio"
-              type="url"
+              type="text"
               class="form-input"
-              placeholder="https://"
+              placeholder="https://github.com/username"
             />
           </div>
 
@@ -186,7 +186,11 @@ const handleSubmit = async () => {
 
     if (!response.ok) {
       const errorData = await response.json()
-      throw new Error(errorData.detail || '지원서 제출에 실패했습니다.')
+      const detail = errorData.detail
+      if (Array.isArray(detail)) {
+        throw new Error('입력한 정보를 다시 확인해주세요. (이메일 형식 등)')
+      }
+      throw new Error(typeof detail === 'string' ? detail : '지원서 제출에 실패했습니다.')
     }
 
     const result = await response.json()
