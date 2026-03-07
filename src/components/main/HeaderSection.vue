@@ -72,7 +72,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import eulLogo from '../../assets/eul_logo.svg'
-import { isAuthenticated, logout } from '../../utils/auth'
+import { isAuthenticated, logout, apiRequest } from '../../utils/auth'
 import { getApiBaseUrl } from '../../utils/ports-config'
 import { useTheme } from '../../composables/useTheme'
 import DarkModeBetaWarning from '../common/DarkModeBetaWarning.vue'
@@ -135,8 +135,9 @@ const confirmDarkMode = () => {
 // 사용자 정보 가져오기
 const fetchUserInfo = async () => {
   try {
+    if (!isAuthenticated()) return
+
     const token = localStorage.getItem('accessToken')
-    if (!token) return
 
     // 개발 환경에서 Pro 계정 토큰인지 체크
     if (import.meta.env.DEV && token.startsWith('dev-pro-token-')) {
@@ -150,11 +151,8 @@ const fetchUserInfo = async () => {
       return
     }
 
-    const response = await fetch(`${API_BASE_URL}/member/me`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+    const response = await apiRequest(`${API_BASE_URL}/member/me`, {
+      method: 'GET'
     })
 
     if (response.ok) {
@@ -165,6 +163,8 @@ const fetchUserInfo = async () => {
     }
   } catch (error) {
     console.error('User info load error:', error)
+    isLoggedIn.value = false
+    userName.value = ''
   }
 }
 

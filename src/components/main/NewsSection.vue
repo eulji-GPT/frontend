@@ -20,7 +20,7 @@
         :key="idx"
         class="news-row"
         :class="{ 'is-expanded': expandedIndex === idx }"
-        @click="toggleExpand(idx)"
+        @mousedown="toggleDownFaq($event)" @mouseup="toggleExpand(idx, $event)"
       >
         <div class="news-row-header">
           <div class="news-row-content">
@@ -61,12 +61,28 @@ const expandedIndex = ref<number | null>(0)
 
 const API_BASE_URL = getApiBaseUrl()
 
-const toggleExpand = (idx: number) => {
+let startX = 0;
+let startY = 0; 
+
+const toggleDownFaq=( event: MouseEvent)=>{
+  startX=event.clientX;
+  startY = event.clientY;
+  console.log("클릭")
+}
+
+
+const toggleExpand = (idx: number, event: MouseEvent) => {
+
+  const endX=event.clientX;
+  const endY = event.clientY;
+  const x = Math.abs(startX-endX)
+  const y = Math.abs(startY-endY)
+  if(x<3&&y<3){
   if (expandedIndex.value === idx) {
     expandedIndex.value = null
   } else {
     expandedIndex.value = idx
-  }
+  }}
 }
 
 const fetchNewsData = async () => {

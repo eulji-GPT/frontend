@@ -80,7 +80,6 @@ let startY = 0;
 const toggleDownFaq=( event: MouseEvent)=>{
   startX=event.clientX;
   startY = event.clientY;
-  console.log('마우스 누름 (Start):', startX, startY);
 }
 
 
