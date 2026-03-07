@@ -73,7 +73,7 @@ function goToChatApp() {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  top: 160px;
+  top: 40px;
 }
 
 .title-and-decoration {
@@ -136,7 +136,7 @@ function goToChatApp() {
 /* 플로팅 버튼 스타일 */
 .floating-btn-wrapper {
   position: absolute;
-  bottom: 40px;
+  bottom: 240px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 9999;
@@ -200,7 +200,7 @@ function goToChatApp() {
   }
 
   .main-content-wrapper {
-    top : 100px;
+    top : 25px;
     gap : 30px;
     height: 760px;
   }
@@ -255,7 +255,7 @@ function goToChatApp() {
   }
 
   .floating-btn-wrapper {
-    bottom : 70px;
+    bottom : 195px;
   }
 }
 
@@ -287,7 +287,7 @@ function goToChatApp() {
   }
 
   .main-content-wrapper {
-    top : 80px;
+    top : 20px;
     gap : 30px;
     height: 500px;
   }
@@ -367,7 +367,7 @@ function goToChatApp() {
     height : 45px;
   }
   .floating-btn-wrapper {
-    bottom : 50px;
+    bottom : 150px;
   }
 }
 
@@ -393,7 +393,7 @@ function goToChatApp() {
 
 @media (max-width: 480px) {
   .main-content-wrapper {
-    top : 60px;
+    top : 15px;
     gap : 20px;
     height: 300px;
   }
@@ -442,7 +442,7 @@ function goToChatApp() {
     height : 40px;
   }
   .floating-btn-wrapper {
-    bottom : 30px;
+    bottom : 105px;
   }
 }
 
