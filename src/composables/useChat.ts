@@ -340,12 +340,27 @@ export function useChat() {
           log.info("Chat history loaded successfully:", histories.length, '개');
 
           // 백엔드 데이터를 프론트엔드 형식으로 변환 (UUID는 이미 string)
-          chatHistory.value = histories.map((h: any) => ({
+          const backendChats = histories.map((h: any) => ({
             id: h.id, // UUID (이미 string)
             title: h.title,
             messages: [], // 메시지는 개별 히스토리 조회 시 로드
             sessionId: undefined // AI-RAG 세션은 첫 메시지 전송 시 생성됨
           }));
+
+          // localStorage에 저장된 빈 로컬 채팅(chat- ...)이 있으면 맨 앞에 병합
+          let pendingLocalChats: ChatSession[] = [];
+          try {
+            const localHistory = localStorage.getItem('chatHistory');
+            if (localHistory) {
+              pendingLocalChats = (JSON.parse(localHistory) as ChatSession[]).filter(
+                c => c.id.startsWith('chat-') && c.messages.length === 0
+              );
+            }
+          } catch (e) {
+            log.warn('Failed to parse localStorage chatHistory:', e);
+          }
+
+          chatHistory.value = [...pendingLocalChats, ...backendChats];
           return;
         }
       } catch (error) {
@@ -355,19 +370,23 @@ export function useChat() {
     }
 
     // 비로그인 사용자 또는 백엔드 로드 실패 시 로컬스토리지에서 로드
-    const history = localStorage.getItem('chatHistory');
-    if (history) {
-      const parsedHistory = JSON.parse(history);
-      chatHistory.value = parsedHistory.map((chat: ChatSession) => ({
-        ...chat,
-        messages: chat.messages.map((msg: ChatMessage) => ({
-          ...msg,
-          timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
-          hasError: msg.hasError || false,
-          isLoading: msg.isLoading || false,
-          isStreaming: msg.isStreaming || false
-        }))
-      }));
+    try {
+      const history = localStorage.getItem('chatHistory');
+      if (history) {
+        const parsedHistory = JSON.parse(history);
+        chatHistory.value = parsedHistory.map((chat: ChatSession) => ({
+          ...chat,
+          messages: chat.messages.map((msg: ChatMessage) => ({
+            ...msg,
+            timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
+            hasError: msg.hasError || false,
+            isLoading: msg.isLoading || false,
+            isStreaming: msg.isStreaming || false
+          }))
+        }));
+      }
+    } catch (e) {
+      log.warn('Failed to parse localStorage chatHistory:', e);
     }
   }
 
@@ -397,44 +416,15 @@ export function useChat() {
   }
 
   async function startNewChat() {
-    // 로그인된 사용자인 경우 백엔드에 채팅 히스토리 생성
-    if (isAuthenticated()) {
-      try {
-        log.info("Creating new chat history in backend...");
-        const response = await apiRequest(`${BACKEND_BASE_URL}/chat/history`, {
-          method: 'POST',
-          body: JSON.stringify({ title: '새 대화' })
-        });
-
-        if (response.ok) {
-          const chatHistoryData = await response.json();
-          log.info("Chat history created:", chatHistoryData);
-
-          const backendSessionId = await createBackendSession();
-
-          const newChat: ChatSession = {
-            id: chatHistoryData.id, // UUID (이미 string)
-            title: chatHistoryData.title,
-            messages: [],
-            sessionId: backendSessionId || undefined
-          };
-          chatHistory.value.unshift(newChat);
-          currentChatId.value = newChat.id;
-          messages.value = newChat.messages;
-
-          // URL 업데이트 (UUID 포함)
-          router.push(`/chat/${newChat.id}`);
-
-          log.info("New chat created (UUID):", newChat.id);
-          return;
-        }
-      } catch (error) {
-        log.error("Failed to create chat history:", error);
-        // 에러 발생 시 로컬 방식으로 fallback
-      }
+    // 메시지가 없는 로컬 채팅(아직 백엔드 미저장)이 있으면 먼저 제거
+    const emptyLocalIndex = chatHistory.value.findIndex(
+      c => c.id.startsWith('chat-') && c.messages.length === 0
+    );
+    if (emptyLocalIndex !== -1) {
+      chatHistory.value.splice(emptyLocalIndex, 1);
     }
 
-    // 비로그인 사용자 또는 백엔드 생성 실패 시 로컬 방식
+    // 첫 메시지를 보내기 전까지는 백엔드 DB에 저장하지 않고 로컬 세션만 생성
     currentChatId.value = `chat-${Date.now()}`;
     const backendSessionId = await createBackendSession();
 
@@ -447,12 +437,13 @@ export function useChat() {
     chatHistory.value.unshift(newChat);
     messages.value = newChat.messages;
 
-    // URL 업데이트 (UUID 포함)
+    // 빈 채팅을 localStorage에 저장해 새로고침/재접속 시에도 유지
+    saveChatHistory();
+
+    // URL 업데이트
     router.push(`/chat/${newChat.id}`);
 
-    if (backendSessionId) {
-      log.info("New backend session created:", backendSessionId);
-    }
+    log.info("New local chat created (will be saved to backend on first message):", newChat.id);
   }
 
   async function selectChat(id: string) {
@@ -477,8 +468,9 @@ export function useChat() {
         log.debug(`Using existing session for chat ${id}: ${chat.sessionId}`);
       }
 
-      // 로그인된 사용자인 경우 항상 백엔드에서 최신 메시지 로드
-      if (isAuthenticated()) {
+      // 로그인된 사용자인 경우 백엔드에서 최신 메시지 로드
+      // 단, 로컬 채팅(chat- ...)은 백엔드에 존재하지 않으므로 skip
+      if (isAuthenticated() && !id.startsWith('chat-')) {
         try {
           log.info(`Loading chat messages... (ID: ${id})`);
           const response = await apiRequest(`${BACKEND_BASE_URL}/chat/history/${id}`, {
@@ -510,7 +502,7 @@ export function useChat() {
           messages.value = [];
         }
       } else {
-        // 비로그인 사용자는 로컬 메시지 사용
+        // 비로그인 사용자 또는 로컬 채팅(chat- ...)은 로컬 메시지 사용
         messages.value = [...chat.messages];
       }
     }
@@ -518,7 +510,8 @@ export function useChat() {
 
   async function deleteChat(id: string) {
     // 로그인된 사용자인 경우 백엔드에서 삭제
-    if (isAuthenticated()) {
+    // 로컬 ID(chat- ...)인 경우 아직 백엔드에 저장되지 않았으므로 API 호출 생략
+    if (isAuthenticated() && !id.startsWith('chat-')) {
       try {
         log.info(`Deleting chat history... (ID: ${id})`);
         const response = await apiRequest(`${BACKEND_BASE_URL}/chat/history/${id}`, {
@@ -1584,6 +1577,37 @@ export function useChat() {
 
     // Vue 반응성을 위해 messages.value 즉시 업데이트 (사용자 메시지가 바로 보이도록)
     messages.value = [...currentChat.messages];
+
+    // 첫 메시지이고 아직 로컬 채팅인 경우, 백엔드에 채팅 히스토리를 생성
+    if (isFirstMessage && isAuthenticated() && currentChat.id.startsWith('chat-')) {
+      try {
+        log.info("Creating backend chat history on first message...");
+        const response = await apiRequest(`${BACKEND_BASE_URL}/chat/history`, {
+          method: 'POST',
+          body: JSON.stringify({ title: '새 대화' })
+        });
+
+        if (response.ok) {
+          const chatHistoryData = await response.json();
+          const oldId = currentChat.id;
+
+          // 로컬 ID를 백엔드에서 발급한 실제 ID로 교체
+          currentChat.id = chatHistoryData.id;
+          currentChatId.value = chatHistoryData.id;
+
+          // URL도 실제 ID로 업데이트
+          router.replace(`/chat/${chatHistoryData.id}`);
+
+          // localStorage에서 구 로컬 ID 즉시 제거
+          saveChatHistory();
+
+          log.info(`Chat history created: ${chatHistoryData.id} (was local: ${oldId})`);
+        }
+      } catch (error) {
+        log.error("Failed to create backend chat history on first message:", error);
+        // 실패해도 로컬 ID 유지, 메시지는 로컬에만 기록됨 (기존 fallback과 동일)
+      }
+    }
 
     // 사용자 메시지를 백엔드에 저장
     await saveMessageToBackend(currentChat.id, true, userMessageText, undefined);
