@@ -71,6 +71,7 @@
               <th>제목</th>
               <th style="width:110px">카테고리</th>
               <th style="width:80px">캠퍼스</th>
+              <th style="width:110px">소분류</th>
               <th style="width:80px">intent</th>
               <th style="width:80px">수정자</th>
               <th style="width:100px">수정일</th>
@@ -83,6 +84,7 @@
               <td class="col-title">{{ entry.title }}</td>
               <td class="col-cat">{{ entry.category }}</td>
               <td class="col-campus">{{ entry.campus }}</td>
+              <td class="col-subcat">{{ entry.subcategory || '-' }}</td>
               <td class="col-intent">{{ (entry as any).intent }}</td>
               <td class="col-by">{{ entry.updated_by || '-' }}</td>
               <td class="col-at">{{ entry.updated_at || '-' }}</td>
@@ -500,7 +502,7 @@ function showToast(msg: string) {
 .entry-row { cursor: pointer; transition: background .12s; }
 .entry-row:hover { background: #f5f9ff; }
 .col-title { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.col-cat, .col-campus, .col-intent, .col-by, .col-at { color: #666; font-size: 12px; }
+.col-cat, .col-campus, .col-subcat, .col-intent, .col-by, .col-at { color: #666; font-size: 12px; }
 .col-actions { display: flex; gap: 6px; }
 .btn-edit, .btn-delete {
   padding: 4px 8px;
