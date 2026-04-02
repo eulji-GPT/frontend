@@ -85,6 +85,7 @@
           <!-- dev/admin 공용 메뉴 -->
           <ContentManager v-else-if="activeMenu === 'content' && permissions.content_management" />
           <KnowledgeManager v-else-if="activeMenu === 'knowledge' && permissions.knowledge_management" />
+          <RagDataManager v-else-if="activeMenu === 'rag-data' && permissions.rag_data_management" />
           <div v-else-if="activeMenu === 'dashboard' && permissions.dashboard" class="dashboard-content">
             <h2 class="section-title">대시보드</h2>
             <div class="stats-grid">
@@ -135,6 +136,7 @@ import UserManagement from '../components/admin/UserManagement.vue'
 import DatabaseBrowser from '../components/admin/DatabaseBrowser.vue'
 import ContentManager from '../components/admin/ContentManager.vue'
 import KnowledgeManager from '../components/admin/KnowledgeManager.vue'
+import RagDataManager from '../components/admin/RagDataManager.vue'
 import ChatLogViewer from '../components/admin/ChatLogViewer.vue'
 import DatabaseBackup from '../components/admin/DatabaseBackup.vue'
 import StatsCard from '../components/admin/StatsCard.vue'
@@ -158,6 +160,7 @@ interface Permissions {
   dashboard: boolean
   content_management: boolean
   knowledge_management: boolean
+  rag_data_management: boolean
   user_management: boolean
   db_browser: boolean
   role_management: boolean
@@ -176,6 +179,7 @@ const permissions = ref<Permissions>({
   dashboard: false,
   content_management: false,
   knowledge_management: false,
+  rag_data_management: false,
   user_management: false,
   db_browser: false,
   role_management: false,

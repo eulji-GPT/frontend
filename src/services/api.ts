@@ -1003,3 +1003,62 @@ export const knowledgeAPI = {
     return response.json();
   }
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RAG 지식 데이터 API  (/rag-data)
+// academic_info, calendar_info, static_info, regulations, lecture_reviews
+// ─────────────────────────────────────────────────────────────────────────────
+export const ragDataAPI = {
+  getFiles: (): Promise<KnowledgeFile[]> =>
+    apiRequest<KnowledgeFile[]>('/rag-data/files', { method: 'GET' }),
+
+  getEntries: (
+    tableName: string,
+    params: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      category?: string;
+      campus?: string;
+      sort?: 'index' | 'recent' | 'title';
+    } = {}
+  ): Promise<KnowledgeEntriesResponse> => {
+    const q = new URLSearchParams();
+    if (params.page)     q.append('page',     params.page.toString());
+    if (params.limit)    q.append('limit',    params.limit.toString());
+    if (params.search)   q.append('search',   params.search);
+    if (params.category) q.append('category', params.category);
+    if (params.campus)   q.append('campus',   params.campus);
+    if (params.sort)     q.append('sort',     params.sort);
+    const qs = q.toString();
+    return apiRequest<KnowledgeEntriesResponse>(
+      `/rag-data/files/${tableName}${qs ? `?${qs}` : ''}`,
+      { method: 'GET' }
+    );
+  },
+
+  getEntry: (tableName: string, entryId: string): Promise<KnowledgeEntry> =>
+    apiRequest<KnowledgeEntry>(`/rag-data/files/${tableName}/entries/${entryId}`, { method: 'GET' }),
+
+  updateEntry: (
+    tableName: string,
+    entryId: string,
+    data: Record<string, unknown>
+  ): Promise<{ success: boolean; entry: KnowledgeEntry }> =>
+    apiRequest<{ success: boolean; entry: KnowledgeEntry }>(
+      `/rag-data/files/${tableName}/entries/${entryId}`,
+      { method: 'PUT', body: JSON.stringify(data), headers: getUserHeaders() }
+    ),
+
+  deleteEntry: (tableName: string, entryId: string): Promise<{ success: boolean }> =>
+    apiRequest<{ success: boolean }>(
+      `/rag-data/files/${tableName}/entries/${entryId}`,
+      { method: 'DELETE' }
+    ),
+
+  getCategories: (tableName: string): Promise<{ categories: string[] }> =>
+    apiRequest<{ categories: string[] }>(`/rag-data/files/${tableName}/categories`, { method: 'GET' }),
+
+  getCampuses: (tableName: string): Promise<{ campuses: string[] }> =>
+    apiRequest<{ campuses: string[] }>(`/rag-data/files/${tableName}/campuses`, { method: 'GET' }),
+};

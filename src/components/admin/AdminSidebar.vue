@@ -65,6 +65,22 @@
         <span>콘텐츠 관리</span>
       </button>
 
+      <!-- RAG 데이터 관리: dev, admin 모두 접근 가능 -->
+      <button
+        v-if="permissions.rag_data_management"
+        class="nav-item"
+        :class="{ active: activeMenu === 'rag-data' }"
+        @click="$emit('menuChange', 'rag-data')"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+          <line x1="12" y1="17" x2="12" y2="17.01"></line>
+        </svg>
+        <span>RAG 데이터</span>
+      </button>
+
       <!-- 지식 관리: dev, admin 모두 접근 가능 -->
       <button
         v-if="permissions.knowledge_management"
@@ -123,6 +139,7 @@ interface Permissions {
   dashboard: boolean
   content_management: boolean
   knowledge_management: boolean
+  rag_data_management: boolean
   user_management: boolean
   db_browser: boolean
   role_management: boolean
